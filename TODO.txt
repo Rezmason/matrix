@@ -1,0 +1,17 @@
+TODO:
+
+Revisit rain logic
+  Rework columns to support multiple drops at once
+    Switch to some kind of continuous noise source
+        And remember, cycling needs to be continuous too
+    Give each glyph an XY for its four vertices, which doesn't change
+
+
+
+Reach out to Ashley's partner about producing sounds
+
+
+Much later:
+  Dissolve threejs project into webgl project
+    Maybe webgl2 project?
+  Flashing row effect?

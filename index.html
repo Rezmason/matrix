@@ -1,0 +1,288 @@
+<html><body style="height: 100vh; margin: 0; overflow: hidden; position: fixed; padding: 0; width: 100vw;">
+  <script src="./lib/three.js"></script>
+
+  <script src="./js/CopyShader.js"></script>
+
+  <script src="./js/EffectComposer.js"></script>
+  <script src="./js/RenderPass.js"></script>
+  <script src="./js/ShaderPass.js"></script>
+
+  <script src="./js/ColorMapPass.js"></script>
+  <script src="./js/HorizontalColorationPass.js"></script>
+  <script src="./js/FilmGrainPass.js"></script>
+  <script src="./js/LuminosityHighPassShader.js"></script>
+  <script src="./js/UnrealBloomPass.js"></script>
+
+  <script>
+
+    const sharpness = 0.5;
+    const animationSpeed = 1.01;
+
+    const mobilecheck = function() {
+      // TODO
+      return false;
+    };
+
+    const isOnMoble = mobilecheck();
+
+    document.ontouchmove = (e) => e.preventDefault();
+    const element = document.createElement("matrixcode");
+    document.body.appendChild(element);
+    const camera = new THREE.OrthographicCamera( -0.5, 0.5, 0.5, -0.5, 0.0001, 10000 );
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0, 0, 0);
+    scene.add(camera);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.sortObjects = true;
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    element.appendChild(renderer.domElement);
+    const composer = new THREE.EffectComposer( renderer );
+    const texture = new THREE.TextureLoader().load( './matrixcode_msdf.png' );
+    const material = new THREE.RawShaderMaterial({
+      uniforms: {
+        map: { "type": "t", value: texture },
+        sharpness: { "type": "f", value: sharpness },
+      },
+      vertexShader:`
+        attribute vec2 uv;
+        attribute vec3 position;
+        attribute float brightness;
+        uniform mat4 projectionMatrix;
+        uniform mat4 modelViewMatrix;
+        varying vec2 vUV;
+        varying float vBrightness;
+        void main(void) {
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          vUV = uv;
+          vBrightness = brightness;
+        }
+      `,
+      fragmentShader:`
+        #ifdef GL_OES_standard_derivatives
+        #extension GL_OES_standard_derivatives: enable
+        #endif
+        precision highp float;
+        #define BIG_ENOUGH 0.001
+        #define MODIFIED_ALPHATEST (0.02 * isBigEnough / BIG_ENOUGH)
+        uniform sampler2D map;
+        uniform float sharpness;
+        varying vec2 vUV;
+        varying float vBrightness;
+        float median(float r, float g, float b) {
+          return max(min(r, g), min(max(r, g), b));
+        }
+        void main() {
+          vec3 sample = texture2D(map, vUV).rgb;
+          float sigDist = median(sample.r, sample.g, sample.b) - 0.5;
+          float alpha = clamp(sigDist/fwidth(sigDist) + 0.5, 0.0, 1.0);
+          float dscale = 0.353505 / sharpness;
+          vec2 duv = dscale * (dFdx(vUV) + dFdy(vUV));
+          float isBigEnough = max(abs(duv.x), abs(duv.y));
+          if (isBigEnough > BIG_ENOUGH) {
+            float ratio = BIG_ENOUGH / isBigEnough;
+            alpha = ratio * alpha + (1.0 - ratio) * (sigDist + 0.5);
+          }
+          if (isBigEnough <= BIG_ENOUGH && alpha < 0.5) { discard; return; }
+          if (alpha < 0.5 * MODIFIED_ALPHATEST) { discard; return; }
+          gl_FragColor = vec4(vec3(vBrightness * alpha), 1);
+        }
+      `,
+    });
+
+    const glyphSequenceLength = 57;
+    const numRows = 80;
+    const numColumns = 80;
+    const numGlyphs = numRows * numColumns;
+
+    const fTexU = 1 / 8;
+    const fTexV = 1 / 8;
+    const [z, w] = [0, 1];
+    const glyphScale = 0.0;
+    const [minH, maxH] = [0 - glyphScale, 1 + glyphScale];
+    const [minV, maxV] = [0 - glyphScale, 1 + glyphScale];
+    const verticesPerGlyph = 4;
+
+    const glyphPositionTemplate = [[minH, maxV, z, w], [maxH, maxV, z, w], [minH, minV, z, w], [maxH, minV, z, w],];
+    const glyphBrightnessTemplate = [0, 0, 0, 0,];
+    const glyphUVTemplate = [[0, fTexV], [fTexU, fTexV], [0, 0], [fTexU, 0],];
+    const glyphIndexTemplate = [0, 2, 1, 2, 3, 1,];
+
+    const glyphPositionMarch = 4;
+    const glyphBrightnessMarch = 1;
+    const glyphUVMarch = 2;
+    const glyphIndexMarch = 4;
+
+    const glyphPositionArray = [];
+    const glyphBrightnessArray = [];
+    const glyphUVArray = [];
+    const glyphIndexArray = [];
+
+    const fRow = 1 / numRows;
+    const fColumn = 1 / numColumns;
+
+    for (let column = 0; column < numColumns; column++) {
+      for (let row = 0; row < numRows; row++) {
+        const index = row + column * numRows;
+        glyphPositionArray.push(...[].concat(...glyphPositionTemplate.map(([x, y, z, w]) => [
+          (x + column) / numColumns - 0.5,
+          (y + row) / numRows - 0.5,
+          z,
+          w,
+        ])));
+        glyphBrightnessArray.push(...glyphBrightnessTemplate);
+        glyphUVArray.push(...[].concat(...glyphUVTemplate));
+        glyphIndexArray.push(...[].concat(glyphIndexTemplate.map(i => i + index * glyphIndexMarch)));
+      }
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    const glyphPositionFloat32Array = new Float32Array(glyphPositionArray);
+    const glyphBrightnessFloat32Array = new Float32Array(glyphBrightnessArray);
+    const glyphUVFloat32Array = new Float32Array(glyphUVArray);
+
+    const initializeColumn = column => {
+      column.tailLength = (0.3 + Math.random() * 0.6) * 60 / numRows;
+      column.fallSpeed = (0.4 + Math.random() * 0.4) * 60 / numRows;
+      column.position = -(column.fallSpeed * Math.random() * 0.5);
+      return column;
+    }
+
+    const columns = Array(numColumns).fill().map((_, columnIndex) => {
+      const column = initializeColumn({
+        glyphs: Array(numRows).fill().map((_, index) => ({
+          startTime: 0,
+          symbol: (columnIndex + index) % glyphSequenceLength,
+          cycle: Math.random(),
+          brightness: index / numRows,
+        })),
+        brightnessArray: glyphBrightnessFloat32Array.subarray(numRows * (columnIndex) * glyphBrightnessMarch * verticesPerGlyph, numRows * (columnIndex + 1) * glyphBrightnessMarch * verticesPerGlyph),
+        uvArray: glyphUVFloat32Array.subarray(numRows * (columnIndex) * glyphUVMarch * verticesPerGlyph, numRows * (columnIndex + 1) * glyphUVMarch * verticesPerGlyph),
+      });
+      column.position = Math.random() * (column.tailLength + 1);
+      return column;
+    });
+
+    geometry.addAttribute('position', new THREE.BufferAttribute(glyphPositionFloat32Array, glyphPositionMarch));
+    geometry.addAttribute('brightness', new THREE.BufferAttribute(glyphBrightnessFloat32Array, glyphBrightnessMarch));
+    geometry.addAttribute('uv', new THREE.BufferAttribute(glyphUVFloat32Array, glyphUVMarch));
+    geometry.setIndex(glyphIndexArray);
+
+    // const stupidMaterial = new THREE.MeshBasicMaterial( { map: texture, flatShading: false, transparent:false } );
+
+    const mesh = new THREE.Mesh( geometry, material );
+    scene.add(mesh);
+
+    composer.addPass( new THREE.RenderPass( scene, camera ) );
+
+    const bloomPass = new THREE.UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.15, 0.3 );
+    composer.addPass( bloomPass );
+
+    const colorMap = new THREE.ColorMapPass([
+      {color: new THREE.Vector3(0.00, 0.00, 0.00), at: 0.01},
+      {color: new THREE.Vector3(0.05, 0.52, 0.17), at: 0.40},
+      {color: new THREE.Vector3(0.12, 0.82, 0.37), at: 0.84},
+      {color: new THREE.Vector3(0.29, 1.00, 0.64), at: 1.00},
+      // {color: new THREE.Vector3(0.90, 1.00, 0.90), at: 1.00},
+    ]);
+    composer.addPass( colorMap );
+
+    const horizontalColoration = new THREE.HorizontalColorationPass([
+      new THREE.Vector3(1, 0, 0),
+      new THREE.Vector3(1, 1, 0),
+      new THREE.Vector3(0, 1, 0),
+      new THREE.Vector3(0, 1, 1),
+      new THREE.Vector3(0, 0, 1),
+      new THREE.Vector3(1, 0, 1),
+
+
+      // new THREE.Vector3(1, 0, 0.5),
+      // new THREE.Vector3(1, 0, 0.5),
+      // new THREE.Vector3(0.5, 0, 1),
+      // new THREE.Vector3(0.5, 0, 1),
+      // new THREE.Vector3(0.25, 0.25, 1),
+      // new THREE.Vector3(0.25, 0.25, 1),
+    ]);
+    // composer.addPass(horizontalColoration);
+
+    const blurMag = 0.0001;
+    const ditherMag = 0.075;
+    const filmGrainPass = new THREE.FilmGrainPass(blurMag, ditherMag);
+    if (!isOnMoble) composer.addPass(filmGrainPass);
+
+    const windowResize = () => {
+      const [width, height] = [window.innerWidth, window.innerHeight];
+      const ratio = height / width;
+      const frac = 0.5;
+      if (ratio < 1) {
+        camera.left = -frac;
+        camera.right = frac;
+        camera.bottom = (camera.left - camera.right) * ratio + frac;
+        camera.top = frac;
+      } else {
+        camera.bottom = -frac;
+        camera.top = frac;
+        camera.left = camera.bottom / ratio;
+        camera.right = camera.top / ratio;
+      }
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+      bloomPass.setSize( window.innerWidth, window.innerHeight );
+    }
+    window.addEventListener("resize", windowResize, false);
+    window.addEventListener("orientationchange", windowResize, false);
+    windowResize();
+
+    const cycleSpeed = 0.12;
+    const flattenedUVTemplate = [].concat(...glyphUVTemplate);
+    const uvScrap = [];
+    let last = NaN;
+    const update = now => {
+      if (now - last > 50) {
+        last = now;
+        return;
+      }
+      const delta = ((isNaN(last) || now - last > 1000) ? 0 : now - last) / 1000 * animationSpeed;
+      last = now;
+      for (let columnIndex = 0; columnIndex < columns.length; columnIndex++) {
+        const column = columns[columnIndex];
+        column.position = column.position + delta * column.fallSpeed;
+        if (column.position > 1 + column.tailLength) initializeColumn(column);
+        for (let rowIndex = 0; rowIndex < column.glyphs.length; rowIndex++) {
+          const glyph = column.glyphs[rowIndex];
+          let val = ((1 - rowIndex / numRows) - (column.position - column.tailLength)) / column.tailLength;
+          if (val < 0 || val > 1) val = 0;
+          if (val > 0) {
+            glyph.cycle = (glyph.cycle + delta * cycleSpeed * (1 - val)) % 1;
+            const symbol = Math.floor(glyphSequenceLength * glyph.cycle);
+            if (glyph.symbol != symbol) {
+              glyph.symbol = symbol;
+              const symbolX = (symbol % 8) / 8;
+              const symbolY = (7 - (symbol - symbolX * 8) / 8) / 8;
+              for (let i = 0; i < 4; i++) {
+                uvScrap[i * 2 + 0] = flattenedUVTemplate[i * 2 + 0] + symbolX;
+                uvScrap[i * 2 + 1] = flattenedUVTemplate[i * 2 + 1] + symbolY;
+              }
+              column.uvArray.set(uvScrap, rowIndex * verticesPerGlyph * glyphUVMarch);
+            }
+          }
+          glyph.brightness = 0.8 + 0.9 * Math.log(val * 1.0);
+          column.brightnessArray.set(glyphBrightnessTemplate.map(() => glyph.brightness), rowIndex * verticesPerGlyph * glyphBrightnessMarch);
+        }
+      }
+      geometry.attributes.uv.needsUpdate = true;
+      geometry.attributes.brightness.needsUpdate = true;
+    };
+
+    composer.passes[composer.passes.length - 1].renderToScreen = true;
+
+    const render = () => {
+      requestAnimationFrame(render);
+      const now = Date.now();
+      update(now);
+      composer.render();
+    }
+    render();
+
+  </script>
+</body></html>
