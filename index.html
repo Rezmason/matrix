@@ -18,13 +18,6 @@
     const sharpness = 0.5;
     const animationSpeed = 1.01;
 
-    const mobilecheck = function() {
-      // TODO
-      return false;
-    };
-
-    const isOnMoble = mobilecheck();
-
     document.ontouchmove = (e) => e.preventDefault();
     const element = document.createElement("matrixcode");
     document.body.appendChild(element);
@@ -32,7 +25,7 @@
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0, 0, 0);
     scene.add(camera);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const renderer = new THREE.WebGLRenderer({ stencil: false, depth: false, precision: "lowp" });
     renderer.sortObjects = true;
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize( window.innerWidth, window.innerHeight );
@@ -62,7 +55,7 @@
         #ifdef GL_OES_standard_derivatives
         #extension GL_OES_standard_derivatives: enable
         #endif
-        precision highp float;
+        precision lowp float;
         #define BIG_ENOUGH 0.001
         #define MODIFIED_ALPHATEST (0.02 * isBigEnough / BIG_ENOUGH)
         uniform sampler2D map;
@@ -142,9 +135,9 @@
     const glyphUVFloat32Array = new Float32Array(glyphUVArray);
 
     const initializeColumn = column => {
-      column.tailLength = (0.3 + Math.random() * 0.6) * 60 / numRows;
-      column.fallSpeed = (0.4 + Math.random() * 0.4) * 60 / numRows;
-      column.position = -(column.fallSpeed * Math.random() * 0.5);
+      column.tailLength = 0.25 + Math.random() * 0.45;
+      column.fallSpeed = 0.3 + Math.random() * 0.3;
+      column.position = -column.fallSpeed * Math.random() * 0.5;
       return column;
     }
 
@@ -208,7 +201,7 @@
     const blurMag = 0.0001;
     const ditherMag = 0.075;
     const filmGrainPass = new THREE.FilmGrainPass(blurMag, ditherMag);
-    if (!isOnMoble) composer.addPass(filmGrainPass);
+    composer.addPass(filmGrainPass);
 
     const windowResize = () => {
       const [width, height] = [window.innerWidth, window.innerHeight];
@@ -237,6 +230,9 @@
     const flattenedUVTemplate = [].concat(...glyphUVTemplate);
     const uvScrap = [];
     let last = NaN;
+
+    const minimumPostProcessingFrameTime = 1;
+
     const update = now => {
       if (now - last > 50) {
         last = now;
@@ -244,6 +240,13 @@
       }
       const delta = ((isNaN(last) || now - last > 1000) ? 0 : now - last) / 1000 * animationSpeed;
       last = now;
+
+      bloomPass.enabled = delta < minimumPostProcessingFrameTime;
+      filmGrainPass.enabled = delta < minimumPostProcessingFrameTime;
+
+      composer.passes.filter(pass => !pass.enabled).renderToScreen = false;
+      composer.passes.filter(pass => pass.enabled).pop().renderToScreen = true;
+
       for (let columnIndex = 0; columnIndex < columns.length; columnIndex++) {
         const column = columns[columnIndex];
         column.position = column.position + delta * column.fallSpeed;
@@ -266,15 +269,15 @@
               column.uvArray.set(uvScrap, rowIndex * verticesPerGlyph * glyphUVMarch);
             }
           }
-          glyph.brightness = 0.8 + 0.9 * Math.log(val * 1.0);
+          glyph.brightness = Math.max(0, Math.min(1,
+            0.8 + 0.4 * Math.log(val * 0.5)
+          ));
           column.brightnessArray.set(glyphBrightnessTemplate.map(() => glyph.brightness), rowIndex * verticesPerGlyph * glyphBrightnessMarch);
         }
       }
       geometry.attributes.uv.needsUpdate = true;
       geometry.attributes.brightness.needsUpdate = true;
     };
-
-    composer.passes[composer.passes.length - 1].renderToScreen = true;
 
     const render = () => {
       requestAnimationFrame(render);

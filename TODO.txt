@@ -3,8 +3,9 @@ TODO:
 Revisit rain logic
   Rework columns to support multiple drops at once
     Switch to some kind of continuous noise source
-        And remember, cycling needs to be continuous too
-    Give each glyph an XY for its four vertices, which doesn't change
+        Remember, cycling needs to be continuous too (but then mod 1)
+        Vertex shader uses continuous function to derive UV and brightness
+    Static mesh: Give each vertex of a glyph the same XY, different vec2 corners
 
 
 
@@ -12,6 +13,8 @@ Reach out to Ashley's partner about producing sounds
 
 
 Much later:
+  Optimization: calculate texture derivatives on CPU, pass in as a uniform
+  Optimization: simpler bloom replacement
   Dissolve threejs project into webgl project
     Maybe webgl2 project?
   Flashing row effect?
