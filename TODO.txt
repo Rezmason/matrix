@@ -2,9 +2,10 @@ TODO:
 
 Revisit rain logic
   Rework columns to support multiple drops at once
-    Switch to some kind of continuous noise source
-        Remember, cycling needs to be continuous too (but then mod 1)
-        Vertex shader uses continuous function to derive UV and brightness
+    Idea 1: implement in JS, then migrate to shaders that operate on double buffer RTTs
+    Idea 2: switch to some kind of continuous noise source
+      Remember, cycling needs to be continuous too (but then mod 1)
+      Vertex shader uses continuous function to derive UV and brightness
     Static mesh: Give each vertex of a glyph the same XY, different vec2 corners
 
 
