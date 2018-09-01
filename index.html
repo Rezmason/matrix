@@ -15,8 +15,13 @@
 
   <script>
 
+    const urlParams = new Map(window.location.href.replace(/^[^\?]+\?/, "").split("&").map(pair => pair.split("=")));
+    const getParam = (key, defaultValue) => urlParams.has(key) ? urlParams.get(key) : defaultValue;
+
     const sharpness = 0.5;
-    const animationSpeed = 1.01;
+    const animationSpeed = parseFloat(getParam("animationSpeed", 1));
+    const fallSpeed = parseFloat(getParam("fallSpeed", 1));
+    const cycleSpeed = parseFloat(getParam("d", 1));
 
     document.ontouchmove = (e) => e.preventDefault();
     const element = document.createElement("matrixcode");
@@ -84,8 +89,8 @@
     });
 
     const glyphSequenceLength = 57;
-    const numRows = 80;
-    const numColumns = 80;
+    const numColumns = parseInt(getParam("width", 80));
+    const numRows = numColumns;
     const numGlyphs = numRows * numColumns;
 
     const fTexU = 1 / 8;
@@ -134,24 +139,18 @@
     const glyphBrightnessFloat32Array = new Float32Array(glyphBrightnessArray);
     const glyphUVFloat32Array = new Float32Array(glyphUVArray);
 
-    const initializeColumn = column => {
-      column.tailLength = 0.25 + Math.random() * 0.45;
-      column.fallSpeed = 0.3 + Math.random() * 0.3;
-      column.position = -column.fallSpeed * Math.random() * 0.5;
-      return column;
-    }
-
     const columns = Array(numColumns).fill().map((_, columnIndex) => {
-      const column = initializeColumn({
+      const column = {
+        offset: Math.random() * 1000,
+        speed: Math.random(),
         glyphs: Array(numRows).fill().map((_, index) => ({
-          startTime: 0,
-          symbol: (columnIndex + index) % glyphSequenceLength,
           cycle: Math.random(),
-          brightness: index / numRows,
+          symbol: 0,
+          brightness: 0,
         })),
         brightnessArray: glyphBrightnessFloat32Array.subarray(numRows * (columnIndex) * glyphBrightnessMarch * verticesPerGlyph, numRows * (columnIndex + 1) * glyphBrightnessMarch * verticesPerGlyph),
         uvArray: glyphUVFloat32Array.subarray(numRows * (columnIndex) * glyphUVMarch * verticesPerGlyph, numRows * (columnIndex + 1) * glyphUVMarch * verticesPerGlyph),
-      });
+      };
       column.position = Math.random() * (column.tailLength + 1);
       return column;
     });
@@ -226,12 +225,24 @@
     window.addEventListener("orientationchange", windowResize, false);
     windowResize();
 
-    const cycleSpeed = 0.12;
     const flattenedUVTemplate = [].concat(...glyphUVTemplate);
     const uvScrap = [];
     let last = NaN;
 
+    const SQRT_2 = Math.sqrt(2);
+    const SQRT_5 = Math.sqrt(5);
+
     const minimumPostProcessingFrameTime = 1;
+
+    const quadInOut = x => x < 0.5 ? 2 * x * x : (1 - 2 * (x * x - 2 * x + 1));
+
+    const a = parseFloat(getParam("a", 1.125));
+    const b = parseFloat(getParam("b", 1.125));
+    const c = parseFloat(getParam("c", 1.25));
+
+    const brightnessChangeBias = Math.min(1, Math.abs(animationSpeed));
+
+    const fract = x => x < 0 ? (1 - (-x % 1)) : (x % 1);
 
     const update = now => {
       if (now - last > 50) {
@@ -247,32 +258,31 @@
       composer.passes.filter(pass => !pass.enabled).renderToScreen = false;
       composer.passes.filter(pass => pass.enabled).pop().renderToScreen = true;
 
-      for (let columnIndex = 0; columnIndex < columns.length; columnIndex++) {
-        const column = columns[columnIndex];
-        column.position = column.position + delta * column.fallSpeed;
-        if (column.position > 1 + column.tailLength) initializeColumn(column);
+      for (const column of columns) {
         for (let rowIndex = 0; rowIndex < column.glyphs.length; rowIndex++) {
           const glyph = column.glyphs[rowIndex];
-          let val = ((1 - rowIndex / numRows) - (column.position - column.tailLength)) / column.tailLength;
-          if (val < 0 || val > 1) val = 0;
-          if (val > 0) {
-            glyph.cycle = (glyph.cycle + delta * cycleSpeed * (1 - val)) % 1;
-            const symbol = Math.floor(glyphSequenceLength * glyph.cycle);
-            if (glyph.symbol != symbol) {
-              glyph.symbol = symbol;
-              const symbolX = (symbol % 8) / 8;
-              const symbolY = (7 - (symbol - symbolX * 8) / 8) / 8;
-              for (let i = 0; i < 4; i++) {
-                uvScrap[i * 2 + 0] = flattenedUVTemplate[i * 2 + 0] + symbolX;
-                uvScrap[i * 2 + 1] = flattenedUVTemplate[i * 2 + 1] + symbolY;
-              }
-              column.uvArray.set(uvScrap, rowIndex * verticesPerGlyph * glyphUVMarch);
-            }
-          }
-          glyph.brightness = Math.max(0, Math.min(1,
-            0.8 + 0.4 * Math.log(val * 0.5)
-          ));
+          const time = rowIndex * 0.01 + now * animationSpeed * fallSpeed * 0.0008 * (0.3 + quadInOut(column.speed) * 0.3) + column.offset;
+          const value = 1 - fract((time + 0.3 * Math.sin(SQRT_2 * time) + 0.2 * Math.sin(SQRT_5 * time)));
+
+          const computedBrightness = a + b * Math.log(c * (value - 0.5));
+          const newBrightness = isNaN(computedBrightness) ? 0 : Math.min(1, Math.max(0, computedBrightness));
+          glyph.brightness = glyph.brightness * (1 - brightnessChangeBias) + newBrightness * brightnessChangeBias;
+
           column.brightnessArray.set(glyphBrightnessTemplate.map(() => glyph.brightness), rowIndex * verticesPerGlyph * glyphBrightnessMarch);
+
+          const glyphCycleSpeed = delta * animationSpeed * cycleSpeed * 0.2 * Math.pow(1 - glyph.brightness, 4);
+          glyph.cycle = fract(glyph.cycle + glyphCycleSpeed);
+          const symbol = Math.floor(glyphSequenceLength * glyph.cycle);
+          if (glyph.symbol != symbol) {
+            glyph.symbol = symbol;
+            const symbolX = (symbol % 8) / 8;
+            const symbolY = (7 - (symbol - symbolX * 8) / 8) / 8;
+            for (let i = 0; i < 4; i++) {
+              uvScrap[i * 2 + 0] = flattenedUVTemplate[i * 2 + 0] + symbolX;
+              uvScrap[i * 2 + 1] = flattenedUVTemplate[i * 2 + 1] + symbolY;
+            }
+            column.uvArray.set(uvScrap, rowIndex * verticesPerGlyph * glyphUVMarch);
+          }
         }
       }
       geometry.attributes.uv.needsUpdate = true;
