@@ -18,10 +18,14 @@
     const urlParams = new Map(window.location.href.replace(/^[^\?]+\?/, "").split("&").map(pair => pair.split("=")));
     const getParam = (key, defaultValue) => urlParams.has(key) ? urlParams.get(key) : defaultValue;
 
-    const sharpness = 0.5;
+    const sharpness = parseFloat(getParam("sharpness", 0.5));
     const animationSpeed = parseFloat(getParam("animationSpeed", 1));
     const fallSpeed = parseFloat(getParam("fallSpeed", 1));
-    const cycleSpeed = parseFloat(getParam("d", 1));
+    const cycleSpeed = parseFloat(getParam("cycleSpeed", 1));
+    const numColumns = parseInt(getParam("width", 80));
+    const numRows = numColumns;
+    const numGlyphs = numRows * numColumns;
+    const glyphSequenceLength = 57;
 
     document.ontouchmove = (e) => e.preventDefault();
     const element = document.createElement("matrixcode");
@@ -88,11 +92,6 @@
       `,
     });
 
-    const glyphSequenceLength = 57;
-    const numColumns = parseInt(getParam("width", 80));
-    const numRows = numColumns;
-    const numGlyphs = numRows * numColumns;
-
     const fTexU = 1 / 8;
     const fTexV = 1 / 8;
     const [z, w] = [0, 1];
@@ -141,8 +140,8 @@
 
     const columns = Array(numColumns).fill().map((_, columnIndex) => {
       const column = {
-        offset: Math.random() * 1000,
-        speed: Math.random(),
+        timeOffset: Math.random(),
+        speedOffset: Math.random(),
         glyphs: Array(numRows).fill().map((_, index) => ({
           cycle: Math.random(),
           symbol: 0,
@@ -151,7 +150,6 @@
         brightnessArray: glyphBrightnessFloat32Array.subarray(numRows * (columnIndex) * glyphBrightnessMarch * verticesPerGlyph, numRows * (columnIndex + 1) * glyphBrightnessMarch * verticesPerGlyph),
         uvArray: glyphUVFloat32Array.subarray(numRows * (columnIndex) * glyphUVMarch * verticesPerGlyph, numRows * (columnIndex + 1) * glyphUVMarch * verticesPerGlyph),
       };
-      column.position = Math.random() * (column.tailLength + 1);
       return column;
     });
 
@@ -171,11 +169,10 @@
     composer.addPass( bloomPass );
 
     const colorMap = new THREE.ColorMapPass([
-      {color: new THREE.Vector3(0.00, 0.00, 0.00), at: 0.01},
-      {color: new THREE.Vector3(0.05, 0.52, 0.17), at: 0.40},
-      {color: new THREE.Vector3(0.12, 0.82, 0.37), at: 0.84},
-      {color: new THREE.Vector3(0.29, 1.00, 0.64), at: 1.00},
-      // {color: new THREE.Vector3(0.90, 1.00, 0.90), at: 1.00},
+      {color: new THREE.Vector3(0.00, 0.00, 0.00), at: 0.0},
+      {color: new THREE.Vector3(0.05, 0.52, 0.17), at: 0.4},
+      {color: new THREE.Vector3(0.12, 0.82, 0.37), at: 0.8},
+      {color: new THREE.Vector3(0.29, 1.00, 0.64), at: 1.0},
     ]);
     composer.addPass( colorMap );
 
@@ -240,15 +237,18 @@
     const b = parseFloat(getParam("b", 1.125));
     const c = parseFloat(getParam("c", 1.25));
 
-    const brightnessChangeBias = Math.min(1, Math.abs(animationSpeed));
+    const brightnessChangeBias = animationSpeed == 0 ? 1 : Math.min(1, Math.abs(animationSpeed));
 
     const fract = x => x < 0 ? (1 - (-x % 1)) : (x % 1);
+
+    let [min, max] = [Infinity, -Infinity];
 
     const update = now => {
       if (now - last > 50) {
         last = now;
         return;
       }
+
       const delta = ((isNaN(last) || now - last > 1000) ? 0 : now - last) / 1000 * animationSpeed;
       last = now;
 
@@ -258,11 +258,16 @@
       composer.passes.filter(pass => !pass.enabled).renderToScreen = false;
       composer.passes.filter(pass => pass.enabled).pop().renderToScreen = true;
 
+      const simTime = now * animationSpeed * fallSpeed * 0.0005;
+
       for (const column of columns) {
+
+        const columnTime = (column.timeOffset * 1000 + simTime) * (0.5 + column.speedOffset * 0.5) + (Math.sin(simTime * 2 * column.speedOffset) * 0.2);
+
         for (let rowIndex = 0; rowIndex < column.glyphs.length; rowIndex++) {
           const glyph = column.glyphs[rowIndex];
-          const time = rowIndex * 0.01 + now * animationSpeed * fallSpeed * 0.0008 * (0.3 + quadInOut(column.speed) * 0.3) + column.offset;
-          const value = 1 - fract((time + 0.3 * Math.sin(SQRT_2 * time) + 0.2 * Math.sin(SQRT_5 * time)));
+          const glyphTime = rowIndex * 0.01 + columnTime;
+          const value = 1 - fract((glyphTime + 0.3 * Math.sin(SQRT_2 * glyphTime) + 0.2 * Math.sin(SQRT_5 * glyphTime)));
 
           const computedBrightness = a + b * Math.log(c * (value - 0.5));
           const newBrightness = isNaN(computedBrightness) ? 0 : Math.min(1, Math.max(0, computedBrightness));
@@ -270,7 +275,7 @@
 
           column.brightnessArray.set(glyphBrightnessTemplate.map(() => glyph.brightness), rowIndex * verticesPerGlyph * glyphBrightnessMarch);
 
-          const glyphCycleSpeed = delta * animationSpeed * cycleSpeed * 0.2 * Math.pow(1 - glyph.brightness, 4);
+          const glyphCycleSpeed = delta * cycleSpeed * 0.2 * Math.pow(1 - glyph.brightness, 4);
           glyph.cycle = fract(glyph.cycle + glyphCycleSpeed);
           const symbol = Math.floor(glyphSequenceLength * glyph.cycle);
           if (glyph.symbol != symbol) {
