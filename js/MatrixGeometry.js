@@ -89,12 +89,6 @@ const makeMatrixGeometry = ({
       const delta = ((isNaN(last) || now - last > 1000) ? 0 : now - last) / 1000 * animationSpeed;
       last = now;
 
-      bloomPass.enabled = delta < minimumPostProcessingFrameTime;
-      filmGrainPass.enabled = delta < minimumPostProcessingFrameTime;
-
-      composer.passes.filter(pass => !pass.enabled).renderToScreen = false;
-      composer.passes.filter(pass => pass.enabled).pop().renderToScreen = true;
-
       const simTime = now * animationSpeed * fallSpeed * 0.0005;
 
       for (const column of columns) {

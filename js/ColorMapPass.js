@@ -11,7 +11,7 @@ const easeInOutQuad = input => {
   return 1 - 2 * input * input;
 }
 
-THREE.ColorMapPass = function (entries) {
+THREE.ColorMapPass = function (entries, ditherMagnitude = 1) {
   const colors = Array(256).fill().map(_ => new THREE.Vector3());
   const sortedEntries = entries.slice().sort((e1, e2) => e1.at - e2.at).map(entry => ({
     color: entry.color,
@@ -44,7 +44,8 @@ THREE.ColorMapPass = function (entries) {
   this.shader = {
     uniforms: {
       tDiffuse: { value: null },
-      tColorData: { value: this.dataTexture }
+      tColorData: { value: this.dataTexture },
+      ditherMagnitude: { value: ditherMagnitude }
     },
 
     vertexShader: `
@@ -56,15 +57,21 @@ THREE.ColorMapPass = function (entries) {
     `,
 
     fragmentShader: `
+      #define PI 3.14159265359
+
       uniform sampler2D tDiffuse;
       uniform sampler2D tColorData;
+      uniform float ditherMagnitude;
       varying vec2 vUv;
 
+      highp float rand( const in vec2 uv ) {
+        const highp float a = 12.9898, b = 78.233, c = 43758.5453;
+        highp float dt = dot( uv.xy, vec2( a,b ) ), sn = mod( dt, PI );
+        return fract(sin(sn) * c);
+      }
+
       void main() {
-        gl_FragColor = vec4(
-          texture2D( tColorData, vec2( texture2D( tDiffuse, vUv ).r, 0.0 ) ).rgb,
-          1.0
-        );
+        gl_FragColor = texture2D( tColorData, vec2( texture2D( tDiffuse, vUv ).r - rand( gl_FragCoord.xy ) * ditherMagnitude, 0.0 ) );
       }
     `
   };

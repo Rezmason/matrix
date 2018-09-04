@@ -5,10 +5,16 @@ Migrate rain logic to shaders that operate on double buffer RTTs
 Reach out to Ashley's partner about producing sounds
 
 Much later:
-  Optimization: calculate texture derivatives on CPU, pass in as a uniform
-  Optimization: simpler bloom replacement
+  Optimizations
+    calculate texture derivatives on CPU, pass in as a uniform
+    simpler bloom replacement
   Dissolve threejs project into webgl project
     Maybe webgl2 project?
-  Flashing row effect?
+  Deluxe
+    Flashing row effect?
+      https://youtu.be/z_KmNZNT5xw?t=16
+    Square event?
+      https://youtu.be/ngnlBZNuVb8?t=200
+      https://youtu.be/721sG2D_9-U?t=67
   More patterns?
     Symbol duplication is common

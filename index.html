@@ -9,9 +9,9 @@
 
   <script src="./js/ColorMapPass.js"></script>
   <script src="./js/HorizontalColorationPass.js"></script>
-  <script src="./js/FilmGrainPass.js"></script>
   <script src="./js/LuminosityHighPassShader.js"></script>
   <script src="./js/UnrealBloomPass.js"></script>
+  <script src="./js/ImageOverlayPass.js"></script>
 
   <script src="./js/MatrixMaterial.js"></script>
   <script src="./js/MatrixGeometry.js"></script>
@@ -32,6 +32,8 @@
     const a = parseFloat(getParam("a", 1.125));
     const b = parseFloat(getParam("b", 1.125));
     const c = parseFloat(getParam("c", 1.25));
+
+    const effect = getParam("effect", "plain");
 
     document.ontouchmove = (e) => e.preventDefault();
     const element = document.createElement("matrixcode");
@@ -56,46 +58,53 @@
       glyphSequenceLength,
     });
 
-    // const stupidMaterial = new THREE.MeshBasicMaterial( { map: texture, flatShading: false, transparent:false } );
-
     const mesh = new THREE.Mesh( geometry, material );
     scene.add(mesh);
 
     composer.addPass( new THREE.RenderPass( scene, camera ) );
 
-    const bloomPass = new THREE.UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.15, 0.3 );
+    const bloomPass = new THREE.UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 2, 0.5, 0.3 );
     composer.addPass( bloomPass );
 
-    const colorMap = new THREE.ColorMapPass([
-      {color: new THREE.Vector3(0.00, 0.00, 0.00), at: 0.0},
-      {color: new THREE.Vector3(0.05, 0.52, 0.17), at: 0.4},
-      {color: new THREE.Vector3(0.12, 0.82, 0.37), at: 0.8},
-      {color: new THREE.Vector3(0.29, 1.00, 0.64), at: 1.0},
-    ]);
-    composer.addPass( colorMap );
+    switch (effect) {
+      case "plain":
+        composer.addPass(new THREE.ColorMapPass([
+          {color: new THREE.Vector3(0.00, 0.00, 0.00), at: 0.0},
+          {color: new THREE.Vector3(0.05, 0.52, 0.17), at: 0.4},
+          {color: new THREE.Vector3(0.12, 0.82, 0.37), at: 0.8},
+          {color: new THREE.Vector3(0.29, 1.00, 0.64), at: 1.0},
+        ], 0.1));
+        break;
+      case "pride":
+        composer.addPass(new THREE.HorizontalColorationPass([
+          new THREE.Vector3(1, 0, 0),
+          new THREE.Vector3(1, 0.5, 0),
+          new THREE.Vector3(1, 1, 0),
+          new THREE.Vector3(0, 1, 0),
+          new THREE.Vector3(0, 0, 1),
+          new THREE.Vector3(0.8, 0, 1),
+        ], 0.1));
+        break;
+      case "customStripes":
+        const flagColorData = getParam("colors", "0.4,0.15,0.1,0.4,0.15,0.1,0.8,0.8,0.6,0.8,0.8,0.6,1.0,0.7,0.8,1.0,0.7,0.8,").split(",").map(parseFloat);
+        const numFlagColors = Math.floor(flagColorData.length / 3);
+        const colors = [];
+        for (let i = 0; i < numFlagColors; i++) {
+          colors.push(new THREE.Vector3(flagColorData[i * 3 + 0], flagColorData[i * 3 + 1], flagColorData[i * 3 + 2]));
+        }
+        composer.addPass(new THREE.HorizontalColorationPass(colors, 0.1));
+        break;
+      case "none":
+        break;
+      case "image":
+        const imageURL = getParam("url", "https://upload.wikimedia.org/wikipedia/commons/0/0a/Flammarion_Colored.jpg");
+        window.texture2 = new THREE.TextureLoader().load( imageURL );
+        composer.addPass(new THREE.ImageOverlayPass(texture2));
+        break;
+    }
 
-    const horizontalColoration = new THREE.HorizontalColorationPass([
-      new THREE.Vector3(1, 0, 0),
-      new THREE.Vector3(1, 1, 0),
-      new THREE.Vector3(0, 1, 0),
-      new THREE.Vector3(0, 1, 1),
-      new THREE.Vector3(0, 0, 1),
-      new THREE.Vector3(1, 0, 1),
-
-
-      // new THREE.Vector3(1, 0, 0.5),
-      // new THREE.Vector3(1, 0, 0.5),
-      // new THREE.Vector3(0.5, 0, 1),
-      // new THREE.Vector3(0.5, 0, 1),
-      // new THREE.Vector3(0.25, 0.25, 1),
-      // new THREE.Vector3(0.25, 0.25, 1),
-    ]);
-    // composer.addPass(horizontalColoration);
-
-    const blurMag = 0.0001;
-    const ditherMag = 0.075;
-    const filmGrainPass = new THREE.FilmGrainPass(blurMag, ditherMag);
-    composer.addPass(filmGrainPass);
+    composer.passes.filter(pass => !pass.enabled).renderToScreen = false;
+    composer.passes.filter(pass => pass.enabled).pop().renderToScreen = true;
 
     const windowResize = () => {
       const [width, height] = [window.innerWidth, window.innerHeight];
@@ -122,8 +131,7 @@
 
     const render = () => {
       requestAnimationFrame(render);
-      const now = Date.now();
-      update(now);
+      update(Date.now());
       composer.render();
     }
     render();
