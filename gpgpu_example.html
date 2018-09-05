@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<body style="height: 100vh; margin: 0; overflow: hidden; position: fixed; padding: 0; width: 100vw;">
+  <script src="./lib/three.js"></script>
+  <script src="./js/GPUComputationRenderer.js"></script>
+  <script>
+    const WIDTH = 64;
+    const NUM_TEXELS = WIDTH * WIDTH;
+    const BOUNDS = 512;
+    const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 3000 );
+    camera.position.set( 0, 200, 350 );
+    camera.rotation.set(Math.PI * -0.25, 0, 0);
+    const scene = new THREE.Scene();
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setClearColor(new THREE.Color(1, 1, 1), 1);
+    renderer.setPixelRatio( window.devicePixelRatio );
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    document.body.appendChild( renderer.domElement );
+
+    const material = new THREE.MeshBasicMaterial( { map: null, flatShading: false, transparent:false } );
+    const plane = new THREE.Mesh( new THREE.PlaneBufferGeometry( BOUNDS, BOUNDS ), material );
+    plane.rotation.x = - Math.PI / 2;
+    scene.add( plane );
+
+    // Creates the gpu computation class and sets it up
+    const gpuCompute = new GPUComputationRenderer( WIDTH, WIDTH, renderer );
+    const heightmap0 = gpuCompute.createTexture();
+    const waterMaxHeight = 10;
+    const pixels = heightmap0.image.data;
+    let p = 0;
+    for ( let j = 0; j < WIDTH; j++ ) {
+      for ( let i = 0; i < WIDTH; i++ ) {
+        pixels[ p + 0 ] = 0;
+        pixels[ p + 1 ] = 0;
+        pixels[ p + 2 ] = 0;
+        pixels[ p + 3 ] = 1;
+        p += 4;
+      }
+    }
+    const heightmapVariable = gpuCompute.addVariable(
+      "heightmap",
+      `
+      #include <common>
+      uniform vec2 mousePos;
+      uniform float mouseSize;
+      uniform float viscosityConstant;
+      #define deltaTime ( 1.0 / 60.0 )
+      #define GRAVITY_CONSTANT ( resolution.x * deltaTime * 3.0 )
+      void main()  {
+        vec2 cellSize = 1.0 / resolution.xy;
+        vec2 uv = gl_FragCoord.xy * cellSize;
+        // heightmapValue.x == height
+        // heightmapValue.y == velocity
+        // heightmapValue.z, heightmapValue.w not used
+        vec4 heightmapValue = texture2D( heightmap, uv );
+        // Get neighbours
+        vec4 north = texture2D( heightmap, uv + vec2( 0.0, cellSize.y ) );
+        vec4 south = texture2D( heightmap, uv + vec2( 0.0, - cellSize.y ) );
+        vec4 east = texture2D( heightmap, uv + vec2( cellSize.x, 0.0 ) );
+        vec4 west = texture2D( heightmap, uv + vec2( - cellSize.x, 0.0 ) );
+        float sump = north.x + south.x + east.x + west.x - 4.0 * heightmapValue.x;
+        float accel = sump * GRAVITY_CONSTANT;
+        // Dynamics
+        heightmapValue.y += accel;
+        heightmapValue.x += heightmapValue.y * deltaTime;
+        // Viscosity
+        heightmapValue.x += sump * viscosityConstant;
+        // Mouse influence
+        float mousePhase = clamp( length( ( uv - vec2( 0.5 ) ) * BOUNDS - vec2( mousePos.x, - mousePos.y ) ) * PI / mouseSize, 0.0, PI );
+        heightmapValue.x += cos( mousePhase ) + 1.0;
+        gl_FragColor = heightmapValue;
+      }
+      `
+      ,
+      heightmap0
+      );
+    gpuCompute.setVariableDependencies( heightmapVariable, [ heightmapVariable ] );
+    heightmapVariable.material.uniforms.mousePos = { value: new THREE.Vector2( 10000, 10000 ) };
+    heightmapVariable.material.uniforms.mouseSize = { value: 20.0 };
+    heightmapVariable.material.uniforms.viscosityConstant = { value: 0.03 };
+    heightmapVariable.material.defines.BOUNDS = BOUNDS.toFixed( 1 );
+    const error = gpuCompute.init();
+    if ( error !== null ) {
+      console.error( error );
+    }
+    const smoothShader = gpuCompute.createShaderMaterial(
+      `
+      uniform sampler2D texture;
+      void main()  {
+        vec2 cellSize = 1.0 / resolution.xy;
+        vec2 uv = gl_FragCoord.xy * cellSize;
+        // Computes the mean of texel and 4 neighbours
+        vec4 textureValue = texture2D( texture, uv );
+        textureValue += texture2D( texture, uv + vec2( 0.0, cellSize.y ) );
+        textureValue += texture2D( texture, uv + vec2( 0.0, - cellSize.y ) );
+        textureValue += texture2D( texture, uv + vec2( cellSize.x, 0.0 ) );
+        textureValue += texture2D( texture, uv + vec2( - cellSize.x, 0.0 ) );
+        textureValue /= 5.0;
+        gl_FragColor = textureValue;
+      }
+      `,
+      { texture: { value: null } }
+      );
+
+    const smoothWater = () => {
+      const currentRenderTarget = gpuCompute.getCurrentRenderTarget( heightmapVariable );
+      const alternateRenderTarget = gpuCompute.getAlternateRenderTarget( heightmapVariable );
+      for ( const i = 0; i < 10; i++ ) {
+        smoothShader.uniforms.texture.value = currentRenderTarget.texture;
+        gpuCompute.doRenderTarget( smoothShader, alternateRenderTarget );
+        smoothShader.uniforms.texture.value = alternateRenderTarget.texture;
+        gpuCompute.doRenderTarget( smoothShader, currentRenderTarget );
+      }
+    }
+
+    setInterval(() => {
+      heightmapVariable.material.uniforms.mousePos.value.set(
+        (Math.random() - 0.5) * BOUNDS,
+        (Math.random() - 0.5) * BOUNDS
+        );
+    }, 1000);
+
+    const animate = () => {
+      requestAnimationFrame( animate );
+      gpuCompute.compute(); // Do the gpu computation
+      material.map = gpuCompute.getCurrentRenderTarget( heightmapVariable ).texture; // Get compute output in custom uniform
+      renderer.render( scene, camera );
+      heightmapVariable.material.uniforms.mousePos.value.set( 10000, 10000 );
+    }
+
+    animate();
+  </script>
+</body>
+</html>

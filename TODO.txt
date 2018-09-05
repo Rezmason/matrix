@@ -11,6 +11,9 @@ Much later:
   Dissolve threejs project into webgl project
     Maybe webgl2 project?
   Deluxe
+    Raindrop sound
+      https://youtu.be/KoQOKq1C3O4?t=30
+      https://youtu.be/h1vLZeVAp5o?t=28
     Flashing row effect?
       https://youtu.be/z_KmNZNT5xw?t=16
     Square event?
@@ -18,3 +21,10 @@ Much later:
       https://youtu.be/721sG2D_9-U?t=67
   More patterns?
     Symbol duplication is common
+
+
+
+
+Also interesting:
+  The Matrix code for the Zion Control construct is sparser, slower, bluer, and annotated
+    https://www.youtube.com/watch?v=Jt5z3OEjDzU
