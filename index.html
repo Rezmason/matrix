@@ -20,8 +20,7 @@
   <script src="./js/ImageOverlayPass.js"></script>
   <script src="./js/GPUComputationRenderer.js"></script>
 
-  <script src="./js/MatrixMaterial.js"></script>
-  <script src="./js/MatrixGeometry.js"></script>
+  <script src="./js/MatrixRenderer.js"></script>
 
   <script>
 
@@ -33,22 +32,14 @@
     const fallSpeed = parseFloat(getParam("fallSpeed", 1));
     const cycleSpeed = parseFloat(getParam("cycleSpeed", 1));
     const numColumns = parseInt(getParam("width", 80));
-    const numRows = numColumns;
     const glyphSequenceLength = 57;
-
-    const a = parseFloat(getParam("a", 1.125));
-    const b = parseFloat(getParam("b", 1.125));
-    const c = parseFloat(getParam("c", 1.25));
+    const numGlyphColumns = 8;
 
     const effect = getParam("effect", "plain");
 
     document.ontouchmove = (e) => e.preventDefault();
     const element = document.createElement("matrixcode");
     document.body.appendChild(element);
-    const camera = new THREE.OrthographicCamera( -0.5, 0.5, 0.5, -0.5, 0.0001, 10000 );
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0, 0, 0);
-    scene.add(camera);
     const renderer = new THREE.WebGLRenderer({ stencil: false, depth: false, precision: "lowp" });
     renderer.sortObjects = true;
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -57,18 +48,17 @@
     const composer = new THREE.EffectComposer( renderer );
 
     const texture = new THREE.TextureLoader().load( './matrixcode_msdf.png' );
-    const material = makeMatrixMaterial(texture, sharpness);
-    const {geometry, update} = makeMatrixGeometry({
-      numRows, numColumns,
+
+    const matrixRenderer = makeMatrixRenderer(renderer, texture, {
+      sharpness,
+      numColumns,
       animationSpeed, fallSpeed, cycleSpeed,
-      a, b, c,
       glyphSequenceLength,
+      numGlyphColumns
     });
 
-    const mesh = new THREE.Mesh( geometry, material );
-    scene.add(mesh);
-
-    composer.addPass( new THREE.RenderPass( scene, camera ) );
+    matrixRenderer.pass.renderToScreen = false;
+    composer.addPass( matrixRenderer.pass );
 
     const bloomPass = new THREE.UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), 2, 0.5, 0.3 );
     composer.addPass( bloomPass );
@@ -110,26 +100,12 @@
         break;
     }
 
-    composer.passes.filter(pass => !pass.enabled).renderToScreen = false;
-    composer.passes.filter(pass => pass.enabled).pop().renderToScreen = true;
+    composer.passes[composer.passes.length - 1].renderToScreen = true;
 
     const windowResize = () => {
       const [width, height] = [window.innerWidth, window.innerHeight];
-      const ratio = height / width;
-      const frac = 0.5;
-      if (ratio < 1) {
-        camera.left = -frac;
-        camera.right = frac;
-        camera.bottom = (camera.left - camera.right) * ratio + frac;
-        camera.top = frac;
-      } else {
-        camera.bottom = -frac;
-        camera.top = frac;
-        camera.left = camera.bottom / ratio;
-        camera.right = camera.top / ratio;
-      }
-      camera.updateProjectionMatrix();
       renderer.setSize(width, height);
+      matrixRenderer.resize(width, height);
       bloomPass.setSize( window.innerWidth, window.innerHeight );
     }
     window.addEventListener("resize", windowResize, false);
@@ -138,7 +114,7 @@
 
     const render = () => {
       requestAnimationFrame(render);
-      update(Date.now());
+      matrixRenderer.render();
       composer.render();
     }
     render();

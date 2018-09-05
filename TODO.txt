@@ -1,8 +1,15 @@
 TODO:
 
-Migrate rain logic to shaders that operate on double buffer RTTs
-
 Reach out to Ashley's partner about producing sounds
+  Raindrop sound
+    https://youtu.be/KoQOKq1C3O4?t=30
+    https://youtu.be/h1vLZeVAp5o?t=28
+  Flashing row sound
+    https://youtu.be/z_KmNZNT5xw?t=16
+  Square sound
+    https://youtu.be/ngnlBZNuVb8?t=204
+    https://youtu.be/721sG2D_9-U?t=67
+  And some kind of ambient sound that they play over
 
 Much later:
   Optimizations
@@ -11,14 +18,8 @@ Much later:
   Dissolve threejs project into webgl project
     Maybe webgl2 project?
   Deluxe
-    Raindrop sound
-      https://youtu.be/KoQOKq1C3O4?t=30
-      https://youtu.be/h1vLZeVAp5o?t=28
-    Flashing row effect?
-      https://youtu.be/z_KmNZNT5xw?t=16
-    Square event?
-      https://youtu.be/ngnlBZNuVb8?t=200
-      https://youtu.be/721sG2D_9-U?t=67
+    Flashing row effect
+    Square event
   More patterns?
     Symbol duplication is common
 
