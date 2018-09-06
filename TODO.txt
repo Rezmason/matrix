@@ -12,14 +12,12 @@ Reach out to Ashley's partner about producing sounds
   And some kind of ambient sound that they play over
 
 Much later:
-  Optimizations
-    calculate texture derivatives on CPU, pass in as a uniform
-    simpler bloom replacement
-  Dissolve threejs project into webgl project
-    Maybe webgl2 project?
-  Deluxe
+  Deluxe compute variables
     Flashing row effect
     Square event
+      Expanding white outline of a box
+      Delay it like the raindrop particles
+  Simpler bloom replacement?
   More patterns?
     Symbol duplication is common
 
