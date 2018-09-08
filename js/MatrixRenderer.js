@@ -3,7 +3,8 @@ const makeMatrixRenderer = (renderer, texture, {
   numColumns,
   animationSpeed, fallSpeed, cycleSpeed,
   glyphSequenceLength,
-  numGlyphColumns
+  numGlyphColumns,
+  hasThunder
 }) => {
   const matrixRenderer = {};
   const camera = new THREE.OrthographicCamera( -0.5, 0.5, 0.5, -0.5, 0.0001, 10000 );
@@ -18,7 +19,7 @@ const makeMatrixRenderer = (renderer, texture, {
     pixels[i * 4 + 3] = 0;
   }
 
-  const glyphVariable = gpuCompute.addVariable(
+const glyphVariable = gpuCompute.addVariable(
     "glyph",
     `
     precision highp float;
@@ -53,16 +54,27 @@ const makeMatrixRenderer = (renderer, texture, {
       float brightness = data.r;
       float cycle = data.g;
 
-      float simTime = now * 0.0005 * animationSpeed * fallSpeed;
-      float columnTime = (columnTimeOffset * 1000.0 + simTime) * (0.5 + columnSpeedOffset * 0.5) + (sin(simTime * 2.0 * columnSpeedOffset) * 0.2);
+      float simTime = now * 0.0005 * animationSpeed;
+      float columnTime = (columnTimeOffset * 1000.0 + simTime * fallSpeed) * (0.5 + columnSpeedOffset * 0.5) + (sin(simTime * fallSpeed * 2.0 * columnSpeedOffset) * 0.2);
       float glyphTime = gl_FragCoord.y * 0.01 + columnTime;
 
       float value = 1.0 - fract((glyphTime + 0.3 * sin(SQRT_2 * glyphTime) + 0.2 * sin(SQRT_5 * glyphTime)));
 
-      // float newBrightness = clamp(b * 3.0 * log(c * value), 0.0, 1.0);
       float newBrightness = 3.0 * log(value * 1.25);
 
-      brightness = mix(brightness, newBrightness, brightnessChangeBias);
+      #ifdef hasThunder
+        float thunder = 10.0 * (pow(sin(SQRT_5 * simTime), 1000.0) + pow(sin(SQRT_2 * simTime), 1000.0)) + 0.5;
+
+        newBrightness *= thunder;
+
+        if (newBrightness > brightness) {
+          brightness = newBrightness;
+        } else {
+          brightness = mix(brightness, newBrightness, brightnessChangeBias * 0.1);
+        }
+      #else
+        brightness = mix(brightness, newBrightness, brightnessChangeBias);
+      #endif
 
 
       float glyphCycleSpeed = delta * cycleSpeed * 0.2 * pow(1.0 - brightness, 4.0);
@@ -94,6 +106,9 @@ const makeMatrixRenderer = (renderer, texture, {
     numGlyphColumns: {type: "f", value: numGlyphColumns },
     brightnessChangeBias: { type: "f", value: brightnessChangeBias },
   });
+  if (hasThunder) {
+    glyphVariable.material.defines.hasThunder = 1.0;
+  }
 
   const error = gpuCompute.init();
   if ( error !== null ) {

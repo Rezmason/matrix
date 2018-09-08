@@ -24,16 +24,51 @@
 
   <script>
 
+    const versions = {
+      nightmare: {
+        texture: './gothic_msdf.png',
+        glyphSequenceLength: 27,
+        palette: [
+          {color: new THREE.Vector3(0.00, 0.00, 0.00), at: 0.0},
+          {color: new THREE.Vector3(0.52, 0.00, 0.00), at: 0.4},
+          {color: new THREE.Vector3(0.82, 0.05, 0.05), at: 0.8},
+          {color: new THREE.Vector3(1.00, 0.40, 0.30), at: 1.0},
+        ],
+        fallSpeed: 0.4,
+        cycleSpeed: 0.5,
+        hasThunder: true,
+        numColumns: 60
+      },
+      ["1999"]: {
+        texture: './matrixcode_msdf.png',
+        glyphSequenceLength: 57,
+        palette: [
+          {color: new THREE.Vector3(0.00, 0.00, 0.00), at: 0.0},
+          {color: new THREE.Vector3(0.05, 0.52, 0.17), at: 0.4},
+          {color: new THREE.Vector3(0.12, 0.82, 0.37), at: 0.8},
+          {color: new THREE.Vector3(0.29, 1.00, 0.64), at: 1.0},
+        ],
+        fallSpeed: 1,
+        cycleSpeed: 1,
+        hasThunder: false,
+        numColumns: 80
+      }
+    };
+
     const urlParams = new Map(window.location.href.replace(/^[^\?]+\?/, "").split("&").map(pair => pair.split("=")));
     const getParam = (key, defaultValue) => urlParams.has(key) ? urlParams.get(key) : defaultValue;
 
+    const version = versions[getParam("version", "1999")];
+
     const sharpness = parseFloat(getParam("sharpness", 0.5));
     const animationSpeed = parseFloat(getParam("animationSpeed", 1));
-    const fallSpeed = parseFloat(getParam("fallSpeed", 1));
-    const cycleSpeed = parseFloat(getParam("cycleSpeed", 1));
-    const numColumns = parseInt(getParam("width", 80));
-    const glyphSequenceLength = 57;
+    const fallSpeed = parseFloat(getParam("fallSpeed", 1)) * version.fallSpeed;
+    const cycleSpeed = parseFloat(getParam("cycleSpeed", 1)) * version.cycleSpeed;
+    const numColumns = parseInt(getParam("width", version.numColumns));
     const numGlyphColumns = 8;
+    const glyphSequenceLength = version.glyphSequenceLength;
+    const palette = version.palette;
+    const hasThunder = version.hasThunder;
 
     const effect = getParam("effect", "plain");
 
@@ -47,14 +82,15 @@
     element.appendChild(renderer.domElement);
     const composer = new THREE.EffectComposer( renderer );
 
-    const texture = new THREE.TextureLoader().load( './matrixcode_msdf.png' );
+    const texture = new THREE.TextureLoader().load( version.texture );
 
     const matrixRenderer = makeMatrixRenderer(renderer, texture, {
       sharpness,
       numColumns,
       animationSpeed, fallSpeed, cycleSpeed,
       glyphSequenceLength,
-      numGlyphColumns
+      numGlyphColumns,
+      hasThunder
     });
 
     matrixRenderer.pass.renderToScreen = false;
@@ -65,12 +101,7 @@
 
     switch (effect) {
       case "plain":
-        composer.addPass(new THREE.ColorMapPass([
-          {color: new THREE.Vector3(0.00, 0.00, 0.00), at: 0.0},
-          {color: new THREE.Vector3(0.05, 0.52, 0.17), at: 0.4},
-          {color: new THREE.Vector3(0.12, 0.82, 0.37), at: 0.8},
-          {color: new THREE.Vector3(0.29, 1.00, 0.64), at: 1.0},
-        ], 0.1));
+        composer.addPass(new THREE.ColorMapPass(palette, 0.1));
         break;
       case "pride":
         composer.addPass(new THREE.HorizontalColorationPass([

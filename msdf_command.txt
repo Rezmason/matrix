@@ -1,1 +1,2 @@
 ./msdfgen/out/msdfgen msdf -svg ./svg\ sources/texture_simplified.svg -size 512 512 -pxrange 4 -o ./matrixcode_msdf.png
+./msdfgen/out/msdfgen msdf -svg ./svg\ sources/gothic_texture_simplified.svg -size 512 512 -pxrange 4 -o ./gothic_msdf.png
