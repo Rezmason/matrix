@@ -16,7 +16,7 @@ You can customize the digital rain by putting a '?' at the end of the link above
 
 Here's a list of customization options:
 
-- **version** - the version of the Matrix to simulate. Can be "nightmare" or "1999" (default).
+- **version** - the version of the Matrix to simulate. Can be "paradise", "nightmare" or "1999" (default).
 - **width** - the number of columns (and rows) to draw. Default is 80.
 - **animationSpeed** - the overall speed of the animation. Can be any number, even negative! Default is 1.0.
 - **fallSpeed** - the speed of the rain. Can be any number, even negative! Default is 1.0.
@@ -31,6 +31,8 @@ The Matrix glyphs in this project are cleaned up vectors [from an old SWF](https
 (Please support the [Internet Archive!](https://archive.org/about/))
 
 The Gothic glyphs in this project are derived from [Dr. jur. Robert Pfeffer's font "Silubur"](http://www.robert-pfeffer.net/gotica/englisch/index.html), which are inspired by the uncial script found in the [Codex Argenteus](https://en.wikipedia.org/wiki/Codex_Argenteus).
+
+The Coptic glyphs in this project are derived from [George Douros's font "Symbola"](http://users.teilar.gr/~g1951d), due to their similarity to the script in [CG II of Nag Hammadi](https://en.wikipedia.org/wiki/Nag_Hammadi_Codex_II).
 
 The glyphs are formatted as a multi-channel distance field (or MSDF) via Victor Chlumsky's [msdfgen](https://github.com/Chlumsky/msdfgen). This format preserves the crisp edges and corners of vector graphics when rendered as textures. Chlumsky's thesis paper, which is in English and is also easy to read, is [available to download here](https://dspace.cvut.cz/handle/10467/62770).
 

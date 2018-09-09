@@ -11,21 +11,23 @@ const easeInOutQuad = input => {
   return 1 - 2 * input * input;
 }
 
+const ARRAY_SIZE = 2048;
+
 THREE.ColorMapPass = function (entries, ditherMagnitude = 1) {
-  const colors = Array(256).fill().map(_ => new THREE.Vector3());
+  const colors = Array(ARRAY_SIZE).fill().map(_ => new THREE.Vector3(0, 0, 0));
   const sortedEntries = entries.slice().sort((e1, e2) => e1.at - e2.at).map(entry => ({
     color: entry.color,
-    at255: Math.floor(Math.max(Math.min(1, entry.at), 0) * (colors.length - 1))
+    arrayIndex: Math.floor(Math.max(Math.min(1, entry.at), 0) * (ARRAY_SIZE - 1))
   }));
-  sortedEntries.unshift({color:sortedEntries[0].color, at255:0});
-  sortedEntries.push({color:sortedEntries[sortedEntries.length - 1].color, at255:255});
+  sortedEntries.unshift({color:sortedEntries[0].color, arrayIndex:0});
+  sortedEntries.push({color:sortedEntries[sortedEntries.length - 1].color, arrayIndex:ARRAY_SIZE - 1});
   sortedEntries.forEach((entry, index) => {
-    colors[entry.at255].copy(entry.color);
+    colors[entry.arrayIndex].copy(entry.color);
     if (index + 1 < sortedEntries.length) {
       const nextEntry = sortedEntries[index + 1];
-      const diff = nextEntry.at255 - entry.at255;
+      const diff = nextEntry.arrayIndex - entry.arrayIndex;
       for (let i = 0; i < diff; i++) {
-        colors[entry.at255 + i].lerpVectors(entry.color, nextEntry.color, i / diff);
+        colors[entry.arrayIndex + i].lerpVectors(entry.color, nextEntry.color, i / diff);
       }
     }
   });

@@ -4,7 +4,9 @@ const makeMatrixRenderer = (renderer, texture, {
   animationSpeed, fallSpeed, cycleSpeed,
   glyphSequenceLength,
   numGlyphColumns,
-  hasThunder
+  hasThunder,
+  hasSun,
+  isPolar
 }) => {
   const matrixRenderer = {};
   const camera = new THREE.OrthographicCamera( -0.5, 0.5, 0.5, -0.5, 0.0001, 10000 );
@@ -41,6 +43,10 @@ const glyphVariable = gpuCompute.addVariable(
       return fract(sin(sn) * c);
     }
 
+    highp float blast( const in float x, const in float power ) {
+      return pow(pow(pow(x, power), power), power);
+    }
+
     void main()  {
 
       vec2 cellSize = 1.0 / resolution.xy;
@@ -62,17 +68,22 @@ const glyphVariable = gpuCompute.addVariable(
 
       float newBrightness = 3.0 * log(value * 1.25);
 
-      #ifdef hasThunder
-        float thunder = 10.0 * (pow(pow(sin(SQRT_5 * simTime), 10.0), 10.0) + pow(pow(sin(SQRT_2 * simTime), 10.0), 10.0)) + 0.6;
+      #ifdef hasSun
+        newBrightness = pow(fract(newBrightness * 0.5), 3.0) * uv.y * 2.0;
+      #endif
 
-        newBrightness *= thunder;
+      #ifdef hasThunder
+        vec2 distVec = (gl_FragCoord.xy / resolution.xy - vec2(0.5, 1.0)) * vec2(1.0, 2.0);
+        float thunder = (blast(sin(SQRT_5 * simTime * 2.0), 10.0) + blast(sin(SQRT_2 * simTime * 2.0), 10.0));
+        thunder *= 20.0 * (1.0 - 1.5 * length(distVec));
+
+        newBrightness *= max(0.0, thunder) * 0.4 + 0.6;
 
         if (newBrightness > brightness) {
           brightness = newBrightness;
         } else {
           brightness = mix(brightness, newBrightness, brightnessChangeBias * 0.1);
         }
-        brightness = min(1.0, brightness);
       #else
         brightness = mix(brightness, newBrightness, brightnessChangeBias);
       #endif
@@ -84,7 +95,7 @@ const glyphVariable = gpuCompute.addVariable(
       float symbolX = mod(symbol, numGlyphColumns);
       float symbolY = ((numGlyphColumns - 1.0) - (symbol - symbolX) / numGlyphColumns);
 
-      gl_FragColor = vec4(1.0);
+      gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
       gl_FragColor.r = brightness;
       gl_FragColor.g = cycle;
       gl_FragColor.b = symbolX / numGlyphColumns;
@@ -96,7 +107,7 @@ const glyphVariable = gpuCompute.addVariable(
     );
   gpuCompute.setVariableDependencies( glyphVariable, [ glyphVariable ] );
 
-  const brightnessChangeBias = animationSpeed == 0 ? 1 : Math.min(1, Math.abs(animationSpeed));
+  const brightnessChangeBias = (animationSpeed * fallSpeed) == 0 ? 1 : Math.min(1, Math.abs(animationSpeed * fallSpeed));
   Object.assign(glyphVariable.material.uniforms, {
     now: { type: "f", value: 0 },
     delta: { type: "f", value: 0.01 },
@@ -109,6 +120,9 @@ const glyphVariable = gpuCompute.addVariable(
   });
   if (hasThunder) {
     glyphVariable.material.defines.hasThunder = 1.0;
+  }
+  if (hasSun) {
+    glyphVariable.material.defines.hasSun = 1.0;
   }
 
   const error = gpuCompute.init();
@@ -140,6 +154,7 @@ const glyphVariable = gpuCompute.addVariable(
       }
       `,
       fragmentShader: `
+      #define PI 3.14159265359
       #ifdef GL_OES_standard_derivatives
       #extension GL_OES_standard_derivatives: enable
       #endif
@@ -159,17 +174,26 @@ const glyphVariable = gpuCompute.addVariable(
 
       void main() {
 
+        #ifdef isPolar
+          vec2 diff = vUV - vec2(0.5, 1.25);
+          float radius = length(diff);
+          float angle = atan(diff.y, diff.x) + PI;
+          vec2 uv = vec2(angle / PI, 1.0 - pow(radius * 0.75, 0.6));
+        #else
+          vec2 uv = vUV;
+        #endif
+
         // Unpack the values from the glyph texture
-        vec4 glyph = texture2D(glyphs, vUV);
+        vec4 glyph = texture2D(glyphs, uv);
         float brightness = glyph.r;
         vec2 symbolUV = glyph.ba;
-        vec4 sample = texture2D(msdf, fract(vUV * numColumns) / numGlyphColumns + symbolUV);
+        vec4 sample = texture2D(msdf, fract(uv * numColumns) / numGlyphColumns + symbolUV);
 
         // The rest is straight up MSDF
         float sigDist = median(sample.r, sample.g, sample.b) - 0.5;
         float alpha = clamp(sigDist/fwidth(sigDist) + 0.5, 0.0, 1.0);
         float dscale = 0.353505 / sharpness;
-        vec2 duv = dscale * (dFdx(vUV) + dFdy(vUV));
+        vec2 duv = dscale * (dFdx(uv) + dFdy(uv));
         float isBigEnough = max(abs(duv.x), abs(duv.y));
         if (isBigEnough > BIG_ENOUGH) {
           float ratio = BIG_ENOUGH / isBigEnough;
@@ -183,6 +207,13 @@ const glyphVariable = gpuCompute.addVariable(
       `
     })
   );
+
+  if (isPolar) {
+    mesh.material.defines.isPolar = 1.0;
+  }
+
+  // mesh.material = new THREE.MeshBasicMaterial({map: glyphRTT});
+
   scene.add( mesh );
 
   let start = NaN;
