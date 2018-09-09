@@ -63,7 +63,7 @@ const glyphVariable = gpuCompute.addVariable(
       float newBrightness = 3.0 * log(value * 1.25);
 
       #ifdef hasThunder
-        float thunder = 10.0 * (pow(sin(SQRT_5 * simTime), 1000.0) + pow(sin(SQRT_2 * simTime), 1000.0)) + 0.5;
+        float thunder = 10.0 * (pow(pow(sin(SQRT_5 * simTime), 10.0), 10.0) + pow(pow(sin(SQRT_2 * simTime), 10.0), 10.0)) + 0.6;
 
         newBrightness *= thunder;
 
@@ -72,6 +72,7 @@ const glyphVariable = gpuCompute.addVariable(
         } else {
           brightness = mix(brightness, newBrightness, brightnessChangeBias * 0.1);
         }
+        brightness = min(1.0, brightness);
       #else
         brightness = mix(brightness, newBrightness, brightnessChangeBias);
       #endif
