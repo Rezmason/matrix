@@ -1,14 +1,20 @@
 TODO:
 
+Make sure all the pass textures are resizing properly when the window resizes
+  Whatever it is, it affects the bloom shader even though it has resize ability
+
 Reach out to Ashley's partner about producing sounds
   Raindrop sound
-    https://youtu.be/KoQOKq1C3O4?t=30
-    https://youtu.be/h1vLZeVAp5o?t=28
-  Flashing row sound
-    https://youtu.be/z_KmNZNT5xw?t=16
+    https://youtu.be/bPhu01wpf0k?t=34
+    https://youtu.be/Yt2-h13XK7Y?t=33
+  Deja vu sound
+    https://youtu.be/XfEuxRDYiyc?t=17
   Square sound
     https://youtu.be/ngnlBZNuVb8?t=204
-    https://youtu.be/721sG2D_9-U?t=67
+    https://youtu.be/-al0i3zSyj0?t=68
+    https://youtu.be/d8My5jIaXoY?t=191
+  Neo flying, apparently
+    https://youtu.be/gZzTVJ-NLYQ?t=230
   And some kind of ambient sound that they play over
 
 
