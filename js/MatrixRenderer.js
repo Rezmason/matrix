@@ -175,19 +175,19 @@ const glyphVariable = gpuCompute.addVariable(
 
       void main() {
 
+        vec2 uv = vUV;
         #ifdef isPolar
           vec2 diff = vUV - vec2(0.5, 1.25);
           float radius = length(diff);
           float angle = atan(diff.y, diff.x) + PI;
-          vec2 uv = vec2(angle / PI, 1.0 - pow(radius * 0.75, 0.6));
-        #elif isSlanted
+          uv = vec2(angle / PI, 1.0 - pow(radius * 0.75, 0.6));
+        #endif
+        #ifdef isSlanted
           float angle = PI * 0.125;
           vec2 rotation = vec2(cos(angle), sin(angle));
-          vec2 uv = vec2(
+          uv = vec2(
              (vUV.x - 0.5) * rotation.x + (vUV.y - 0.5) * rotation.y,
              (vUV.y - 0.5) * rotation.x - (vUV.x - 0.5) * rotation.y) * 0.75 + 0.5;
-        #else
-          vec2 uv = vUV;
         #endif
 
         // Unpack the values from the glyph texture
