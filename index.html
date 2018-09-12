@@ -116,8 +116,8 @@
     document.body.appendChild(element);
     const renderer = new THREE.WebGLRenderer({ stencil: false, depth: false, precision: "lowp" });
     renderer.sortObjects = true;
-    renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize( window.innerWidth, window.innerHeight );
+    renderer.setPixelRatio(window.devicePixelRatio);
     element.appendChild(renderer.domElement);
     const composer = new THREE.EffectComposer( renderer );
 
@@ -176,8 +176,9 @@
 
     const windowResize = () => {
       const [width, height] = [window.innerWidth, window.innerHeight];
-      renderer.setSize(width, height);
       matrixRenderer.resize(width, height);
+      renderer.setSize(width, height);
+      composer.setSize(width, height);
       bloomPass.setSize( window.innerWidth, window.innerHeight );
     }
     window.addEventListener("resize", windowResize, false);

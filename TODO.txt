@@ -1,8 +1,5 @@
 TODO:
 
-Make sure all the pass textures are resizing properly when the window resizes
-  Whatever it is, it affects the bloom shader even though it has resize ability
-
 Reach out to Ashley's partner about producing sounds
   Raindrop sound
     https://youtu.be/bPhu01wpf0k?t=34
@@ -27,6 +24,8 @@ Much later:
     Square event
       Expanding white outline of a box
       Delay it like the raindrop particles
+    Neo flying
+      Staticky julia set looking silhouette
   Simpler bloom replacement?
   More patterns?
     Symbol duplication is common
