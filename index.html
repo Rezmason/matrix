@@ -44,6 +44,7 @@
         cycleSpeed: 0.05,
         hasThunder: false,
         hasSun: true,
+        isSlanted: false,
         isPolar: true,
         numColumns: 50
       },
@@ -62,10 +63,11 @@
           {color: new THREE.Vector3(1.00, 0.60, 0.30), at: 0.8},
           {color: new THREE.Vector3(1.00, 1.00, 0.90), at: 1.0},
         ],
-        fallSpeed: 0.4,
+        fallSpeed: 2.0,
         cycleSpeed: 0.02,
         hasThunder: true,
         hasSun: false,
+        isSlanted: true,
         isPolar: false,
         numColumns: 60
       },
@@ -87,6 +89,7 @@
         cycleSpeed: 1,
         hasThunder: false,
         hasSun: false,
+        isSlanted: false,
         isPolar: false,
         numColumns: 80
       }
@@ -104,10 +107,6 @@
     const numColumns = parseInt(getParam("width", version.numColumns));
     const numGlyphColumns = 8;
     const glyphSequenceLength = version.glyphSequenceLength;
-    const palette = version.palette;
-    const hasThunder = version.hasThunder;
-    const hasSun = version.hasSun;
-    const isPolar = version.isPolar;
 
     const effect = getParam("effect", "plain");
 
@@ -129,9 +128,10 @@
       animationSpeed, fallSpeed, cycleSpeed,
       glyphSequenceLength,
       numGlyphColumns,
-      hasThunder,
-      hasSun,
-      isPolar,
+      hasThunder: version.hasThunder,
+      hasSun: version.hasSun,
+      isPolar: version.isPolar,
+      isSlanted: version.isSlanted,
     });
 
     matrixRenderer.pass.renderToScreen = false;
@@ -142,7 +142,7 @@
 
     switch (effect) {
       case "plain":
-        composer.addPass(new THREE.ColorMapPass(palette, 0.1));
+        composer.addPass(new THREE.ColorMapPass(version.palette, 0.1));
         break;
       case "pride":
         composer.addPass(new THREE.HorizontalColorationPass([

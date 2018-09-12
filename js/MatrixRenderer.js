@@ -6,7 +6,8 @@ const makeMatrixRenderer = (renderer, texture, {
   numGlyphColumns,
   hasThunder,
   hasSun,
-  isPolar
+  isPolar,
+  isSlanted
 }) => {
   const matrixRenderer = {};
   const camera = new THREE.OrthographicCamera( -0.5, 0.5, 0.5, -0.5, 0.0001, 10000 );
@@ -75,9 +76,9 @@ const glyphVariable = gpuCompute.addVariable(
       #ifdef hasThunder
         vec2 distVec = (gl_FragCoord.xy / resolution.xy - vec2(0.5, 1.0)) * vec2(1.0, 2.0);
         float thunder = (blast(sin(SQRT_5 * simTime * 2.0), 10.0) + blast(sin(SQRT_2 * simTime * 2.0), 10.0));
-        thunder *= 20.0 * (1.0 - 1.5 * length(distVec));
+        thunder *= 30.0 * (1.0 - 1.0 * length(distVec));
 
-        newBrightness *= max(0.0, thunder) * 0.4 + 0.6;
+        newBrightness *= max(0.0, thunder) * 1.0 + 0.7;
 
         if (newBrightness > brightness) {
           brightness = newBrightness;
@@ -179,6 +180,12 @@ const glyphVariable = gpuCompute.addVariable(
           float radius = length(diff);
           float angle = atan(diff.y, diff.x) + PI;
           vec2 uv = vec2(angle / PI, 1.0 - pow(radius * 0.75, 0.6));
+        #elif isSlanted
+          float angle = PI * 0.125;
+          vec2 rotation = vec2(cos(angle), sin(angle));
+          vec2 uv = vec2(
+             (vUV.x - 0.5) * rotation.x + (vUV.y - 0.5) * rotation.y,
+             (vUV.y - 0.5) * rotation.x - (vUV.x - 0.5) * rotation.y) * 0.75 + 0.5;
         #else
           vec2 uv = vUV;
         #endif
@@ -210,6 +217,10 @@ const glyphVariable = gpuCompute.addVariable(
 
   if (isPolar) {
     mesh.material.defines.isPolar = 1.0;
+  }
+
+  if (isSlanted) {
+    mesh.material.defines.isSlanted = 1.0;
   }
 
   // mesh.material = new THREE.MeshBasicMaterial({map: glyphRTT});
