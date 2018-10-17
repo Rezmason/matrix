@@ -1,3 +1,5 @@
+![Matrix screenshot](/screenshot.png?raw=true "Matrix's default appearance.")
+
 # matrix (web-based green code rain, made with love)
 
 ### TL;DR
