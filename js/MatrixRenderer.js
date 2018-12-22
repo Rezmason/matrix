@@ -142,16 +142,16 @@ const glyphVariable = gpuCompute.addVariable(
         numColumns: {type: "f", value: numColumns},
         sharpness: { type: "f", value: sharpness },
         numGlyphColumns: {type: "f", value: numGlyphColumns},
+        resolution: {type: "v2", value: new THREE.Vector2() },
       },
       vertexShader: `
       attribute vec2 uv;
       attribute vec3 position;
-      uniform mat4 projectionMatrix;
-      uniform mat4 modelViewMatrix;
+      uniform vec2 resolution;
       varying vec2 vUV;
       void main() {
         vUV = uv;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+        gl_Position = vec4( resolution * position.xy, 0.0, 1.0 );
       }
       `,
       fragmentShader: `
@@ -209,11 +209,14 @@ const glyphVariable = gpuCompute.addVariable(
         if (isBigEnough <= BIG_ENOUGH && alpha < 0.5) { discard; return; }
         if (alpha < 0.5 * MODIFIED_ALPHATEST) { discard; return; }
 
-        gl_FragColor = vec4(vec3(brightness * alpha), 1);
+        gl_FragColor = vec4(vec3(brightness * alpha), 1.0);
+
+        // gl_FragColor = vec4(glyph.r, glyph.b, glyph.a, 1.0);
       }
       `
     })
   );
+  mesh.frustumCulled = false;
 
   if (isPolar) {
     mesh.material.defines.isPolar = 1.0;
@@ -222,8 +225,6 @@ const glyphVariable = gpuCompute.addVariable(
   if (isSlanted) {
     mesh.material.defines.isSlanted = 1.0;
   }
-
-  // mesh.material = new THREE.MeshBasicMaterial({map: glyphRTT});
 
   scene.add( mesh );
 
@@ -250,25 +251,16 @@ const glyphVariable = gpuCompute.addVariable(
     glyphVariable.material.uniforms.now.value = now;
     glyphVariable.material.uniforms.delta.value = delta;
 
-    gpuCompute.compute(); // Do the gpu computation
+    gpuCompute.compute();
     renderer.render( scene, camera );
   };
 
   matrixRenderer.resize = (width, height) => {
-    const ratio = height / width;
-    const frac = 0.5;
-    if (ratio < 1) {
-      camera.left = -frac;
-      camera.right = frac;
-      camera.bottom = (camera.left - camera.right) * ratio + frac;
-      camera.top = frac;
+    if (width > height) {
+      mesh.material.uniforms.resolution.value.set(2, 2 * width / height);
     } else {
-      camera.bottom = -frac;
-      camera.top = frac;
-      camera.left = camera.bottom / ratio;
-      camera.right = camera.top / ratio;
+      mesh.material.uniforms.resolution.value.set(2 * height / width, 2);
     }
-    camera.updateProjectionMatrix();
   };
 
   return matrixRenderer;
