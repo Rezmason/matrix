@@ -13,7 +13,7 @@ const easeInOutQuad = input => {
 
 const ARRAY_SIZE = 2048;
 
-THREE.ColorMapPass = function (entries, ditherMagnitude = 1) {
+THREE.ColorMapPass = function (entries, ditherMagnitude = 1, graininess = 100) {
   const colors = Array(ARRAY_SIZE).fill().map(_ => new THREE.Vector3(0, 0, 0));
   const sortedEntries = entries.slice().sort((e1, e2) => e1.at - e2.at).map(entry => ({
     color: entry.color,
@@ -42,12 +42,14 @@ THREE.ColorMapPass = function (entries, ditherMagnitude = 1) {
     THREE.UVMapping);
   this.dataTexture.magFilter = THREE.LinearFilter;
   this.dataTexture.needsUpdate = true;
+  this.graininess = graininess;
 
   this.shader = {
     uniforms: {
       tDiffuse: { value: null },
       tColorData: { value: this.dataTexture },
-      ditherMagnitude: { value: ditherMagnitude }
+      ditherMagnitude: { value: ditherMagnitude },
+      tTime: { value: 0 }
     },
 
     vertexShader: `
@@ -64,16 +66,17 @@ THREE.ColorMapPass = function (entries, ditherMagnitude = 1) {
       uniform sampler2D tDiffuse;
       uniform sampler2D tColorData;
       uniform float ditherMagnitude;
+      uniform float tTime;
       varying vec2 vUv;
 
-      highp float rand( const in vec2 uv ) {
+      highp float rand( const in vec2 uv, const in float t ) {
         const highp float a = 12.9898, b = 78.233, c = 43758.5453;
         highp float dt = dot( uv.xy, vec2( a,b ) ), sn = mod( dt, PI );
-        return fract(sin(sn) * c);
+        return fract(sin(sn) * c + t);
       }
 
       void main() {
-        gl_FragColor = texture2D( tColorData, vec2( texture2D( tDiffuse, vUv ).r - rand( gl_FragCoord.xy ) * ditherMagnitude, 0.0 ) );
+        gl_FragColor = texture2D( tColorData, vec2( texture2D( tDiffuse, vUv ).r - rand( gl_FragCoord.xy, tTime ) * ditherMagnitude, 0.0 ) );
       }
     `
   };
@@ -85,6 +88,7 @@ THREE.ColorMapPass.prototype = Object.assign( Object.create( THREE.Pass.prototyp
   constructor: THREE.ColorMapPass,
   render: function() {
     this.uniforms[ "tColorData" ].value = this.dataTexture;
+    this.uniforms[ "tTime" ].value = (Date.now() % this.graininess) / this.graininess;
     THREE.ShaderPass.prototype.render.call(this, ...arguments);
   }
 });
