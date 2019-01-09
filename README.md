@@ -12,6 +12,7 @@
 - [Pride colors](https://rezmason.github.io/matrix/?effect=pride)
 - [Custom stripes (`colors=R,G,B,R,G,B,R,G,B, etc`)](https://rezmason.github.io/matrix/?effect=customStripes&colors=1,0,0,1,1,0,0,1,0)
 - [Custom image (`url=www.website.com/picture.jpg`)](https://rezmason.github.io/matrix/?effect=image&url=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg)
+- [Raw compute texture (`effect=none`) (_epilepsy warning_: lots of flickering)](https://rezmason.github.io/matrix/?effect=none)
 
 - [The free font (TrueType).](https://github.com/Rezmason/matrix/raw/master/Matrix-Code.ttf)
 ---
@@ -40,7 +41,7 @@ While there have been a lot of attempts at #1 and #3, they're all missing import
 - **Capture the glyph sequence.** Yes, the symbols in the sequels' opening titles, which are arguably the highest quality versions of the 2D effect, change according to a repeating sequence (see `glyph order.txt`).
 - **Make it free, open source and web based.** Because someone could probably improve on what I've done, and I'd like to see that, and maybe incorporate their improvements back into this project.
 - **Whip up some artistic license and depict the *previous* Matrix versions.** The sequels describe [a paradisiacal predecessor](https://rezmason.github.io/matrix?version=paradise) to the Matrix that was too idyllic, [and another earlier, nightmarish Hobbesian version](https://rezmason.github.io/matrix?version=nightmare) that proved too campy. They depict some programs running older, differently colored code, so it's time someone tried rendering them.
-- **Include the following statement in the README.md:** Sure, you can enjoy movies, including *The Matrix*, without reading too deeply into them, but if you're going to really think about a film, make it this one. And here's the thing: **The Matrix is a story about transitioning, directed by two siblings who transitioned**. Bam. There's plenty more themes in it and its sequels than that, and plenty of room for interpretation, but no room for the misogynistic ideas that led to that gross subreddit we all know about. Wake up from your prejudices, boys. Here's a chance to open our minds, not shut them.
+- **Include the following statement in the README.md:** Sure, you can enjoy movies, including *The Matrix*, without reading too deeply into them, but if you're going to really think about a film, make it this one. And here's the thing: **The Matrix is a story about transitioning, directed by two siblings who transitioned**. So there! There's plenty more themes in it and its sequels than that, and plenty of room for interpretation, but no room for the misogynistic ideas that led to that gross subreddit we all know about. Wake up from your prejudices, boys. Here's a chance to open our minds, not shut them.
 
 ---
 ### customization
@@ -57,6 +58,7 @@ Now you know link fu. Here's a list of customization options:
 - **fallSpeed** - the speed of the rain. Can be any number, even negative! Default is 1.0.
 - **cycleSpeed** - the speed that the glyphs change their symbol. Can be any number, even negative! Default is 1.0.
 - **effect** - alternatives to the default post-processing effect. Can be "plain", "pride", "customStripes", "none", or "image".
+  - ("none" displays the texture whose RGBA values represent the glyph shape and brightness data. _epilepsy warning_: lots of flickering)
 - **colors** - if you set the effect to "customStripes", you can specify the colors of vertical stripes as alternating *R,G,B* numeric values, like so: [https://rezmason.github.io/matrix/?effect=customStripes&colors=1,0,0,1,1,0,0,1,0](https://rezmason.github.io/matrix/?effect=customStripes&colors=1,0,0,1,1,0,0,1,0)
 - **url** - if you set the effect to "image", this is how you specify which image to load. It doesn't work with any URL; I suggest grabbing them from Wikipedia: [https://rezmason.github.io/matrix/?effect=image&url=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg](https://rezmason.github.io/matrix/?effect=image&url=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg)
 

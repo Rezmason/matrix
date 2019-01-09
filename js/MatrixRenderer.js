@@ -7,7 +7,9 @@ const makeMatrixRenderer = (renderer, texture, {
   hasThunder,
   hasSun,
   isPolar,
-  isSlanted
+  isSlanted,
+  showRTT,
+  dropLength
 }) => {
   const matrixRenderer = {};
   const camera = new THREE.OrthographicCamera( -0.5, 0.5, 0.5, -0.5, 0.0001, 10000 );
@@ -37,6 +39,7 @@ const glyphVariable = gpuCompute.addVariable(
     uniform float brightnessChangeBias;
     uniform float glyphSequenceLength;
     uniform float numGlyphColumns;
+    uniform float dropLength;
 
     highp float rand( const in vec2 uv ) {
       const highp float a = 12.9898, b = 78.233, c = 43758.5453;
@@ -63,7 +66,7 @@ const glyphVariable = gpuCompute.addVariable(
 
       float simTime = now * 0.0005 * animationSpeed;
       float columnTime = (columnTimeOffset * 1000.0 + simTime * fallSpeed) * (0.5 + columnSpeedOffset * 0.5) + (sin(simTime * fallSpeed * 2.0 * columnSpeedOffset) * 0.2);
-      float glyphTime = gl_FragCoord.y * 0.01 + columnTime;
+      float glyphTime = (gl_FragCoord.y * 0.01 + columnTime) / dropLength;
 
       float value = 1.0 - fract((glyphTime + 0.3 * sin(SQRT_2 * glyphTime) + 0.2 * sin(SQRT_5 * glyphTime)));
 
@@ -89,8 +92,7 @@ const glyphVariable = gpuCompute.addVariable(
         brightness = mix(brightness, newBrightness, brightnessChangeBias);
       #endif
 
-
-      float glyphCycleSpeed = delta * cycleSpeed * 0.2 * pow(1.0 - brightness, 4.0);
+      float glyphCycleSpeed = (brightness < 0.0) ? 0.0 : delta * cycleSpeed * 0.2 * pow(1.0 - brightness, 4.0);
       cycle = fract(cycle + glyphCycleSpeed);
       float symbol = floor(glyphSequenceLength * cycle);
       float symbolX = mod(symbol, numGlyphColumns);
@@ -99,8 +101,15 @@ const glyphVariable = gpuCompute.addVariable(
       gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
       gl_FragColor.r = brightness;
       gl_FragColor.g = cycle;
-      gl_FragColor.b = symbolX / numGlyphColumns;
-      gl_FragColor.a = symbolY / numGlyphColumns;
+
+      #ifdef showRTT
+        // Better use of the blue channel, for show and tell
+        gl_FragColor.b = min(1.0, glyphCycleSpeed * 500.0);
+        gl_FragColor.a = 1.0;
+      #else
+        gl_FragColor.b = symbolX / numGlyphColumns;
+        gl_FragColor.a = symbolY / numGlyphColumns;
+      #endif
     }
     `
     ,
@@ -117,6 +126,7 @@ const glyphVariable = gpuCompute.addVariable(
     cycleSpeed: {type: "f", value: cycleSpeed },
     glyphSequenceLength: { type: "f", value: glyphSequenceLength },
     numGlyphColumns: {type: "f", value: numGlyphColumns },
+    dropLength: {type: "f", value: dropLength },
     brightnessChangeBias: { type: "f", value: brightnessChangeBias },
   });
   if (hasThunder) {
@@ -124,6 +134,9 @@ const glyphVariable = gpuCompute.addVariable(
   }
   if (hasSun) {
     glyphVariable.material.defines.hasSun = 1.0;
+  }
+  if (showRTT) {
+    glyphVariable.material.defines.showRTT = 1.0;
   }
 
   const error = gpuCompute.init();
@@ -190,8 +203,14 @@ const glyphVariable = gpuCompute.addVariable(
              (vUV.y - 0.5) * rotation.x - (vUV.x - 0.5) * rotation.y) * 0.75 + 0.5;
         #endif
 
-        // Unpack the values from the glyph texture
         vec4 glyph = texture2D(glyphs, uv);
+
+        #ifdef showRTT
+          gl_FragColor = glyph;
+          return;
+        #endif
+
+        // Unpack the values from the glyph texture
         float brightness = glyph.r;
         vec2 symbolUV = glyph.ba;
         vec4 sample = texture2D(msdf, fract(uv * numColumns) / numGlyphColumns + symbolUV);
@@ -206,12 +225,10 @@ const glyphVariable = gpuCompute.addVariable(
           float ratio = BIG_ENOUGH / isBigEnough;
           alpha = ratio * alpha + (1.0 - ratio) * (sigDist + 0.5);
         }
+
         if (isBigEnough <= BIG_ENOUGH && alpha < 0.5) { discard; return; }
         if (alpha < 0.5 * MODIFIED_ALPHATEST) { discard; return; }
-
         gl_FragColor = vec4(vec3(brightness * alpha), 1.0);
-
-        // gl_FragColor = vec4(glyph.r, glyph.b, glyph.a, 1.0);
       }
       `
     })
@@ -224,6 +241,10 @@ const glyphVariable = gpuCompute.addVariable(
 
   if (isSlanted) {
     mesh.material.defines.isSlanted = 1.0;
+  }
+
+  if (showRTT) {
+    mesh.material.defines.showRTT = 1.0;
   }
 
   scene.add( mesh );

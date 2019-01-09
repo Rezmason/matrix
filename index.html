@@ -27,6 +27,7 @@
     const versions = {
       paradise: {
         texture: './coptic_msdf.png',
+        dropLength: 0.5,
         glyphSequenceLength: 32,
         bloom: {
           strength: 4,
@@ -50,6 +51,7 @@
       },
       nightmare: {
         texture: './gothic_msdf.png',
+        dropLength: 0.6,
         glyphSequenceLength: 27,
         bloom: {
           strength: 2,
@@ -73,6 +75,7 @@
       },
       ["1999"]: {
         texture: './matrixcode_msdf.png',
+        dropLength: 1,
         glyphSequenceLength: 57,
         bloom: {
           strength: 2,
@@ -123,6 +126,7 @@
     const fallSpeed = parseFloat(getParam("fallSpeed", 1)) * version.fallSpeed;
     const cycleSpeed = parseFloat(getParam("cycleSpeed", 1)) * version.cycleSpeed;
     const numColumns = parseInt(getParam("width", version.numColumns));
+    const dropLength = parseFloat(getParam("dropLength", version.dropLength));
     const numGlyphColumns = 8;
     const glyphSequenceLength = version.glyphSequenceLength;
 
@@ -150,13 +154,17 @@
       hasSun: version.hasSun,
       isPolar: version.isPolar,
       isSlanted: version.isSlanted,
+      showRTT: effect === "none",
+      dropLength
     });
 
     matrixRenderer.pass.renderToScreen = false;
     composer.addPass( matrixRenderer.pass );
 
     const bloomPass = new THREE.UnrealBloomPass( new THREE.Vector2( window.innerWidth, window.innerHeight ), version.bloom.strength, version.bloom.radius, version.bloom.threshold );
-    composer.addPass( bloomPass );
+    if (effect !== "none") {
+      composer.addPass( bloomPass );
+    }
 
     switch (effect) {
       case "plain":
