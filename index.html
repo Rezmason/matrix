@@ -88,23 +88,23 @@
           // {color: new THREE.Vector3(0.12, 0.82, 0.37), at: 0.8},
           // {color: new THREE.Vector3(0.29, 1.00, 0.64), at: 1.0},
 
-          {color: new THREE.Vector3(  0/255,   0/255,   0/255), at: Math.pow( 0/16, 1.5)},
-          {color: new THREE.Vector3(  6/255,  16/255,   8/255), at: Math.pow( 1/16, 1.5)},
-          {color: new THREE.Vector3( 11/255,  28/255,  15/255), at: Math.pow( 2/16, 1.5)},
-          {color: new THREE.Vector3( 17/255,  41/255,  23/255), at: Math.pow( 3/16, 1.5)},
-          {color: new THREE.Vector3( 20/255,  58/255,  31/255), at: Math.pow( 4/16, 1.5)},
-          {color: new THREE.Vector3( 23/255,  84/255,  39/255), at: Math.pow( 5/16, 1.5)},
-          {color: new THREE.Vector3( 30/255, 113/255,  48/255), at: Math.pow( 6/16, 1.5)},
-          {color: new THREE.Vector3( 43/255, 142/255,  60/255), at: Math.pow( 7/16, 1.5)},
-          {color: new THREE.Vector3( 57/255, 160/255,  72/255), at: Math.pow( 8/16, 1.5)},
-          {color: new THREE.Vector3( 70/255, 175/255,  81/255), at: Math.pow( 9/16, 1.5)},
-          {color: new THREE.Vector3( 75/255, 187/255,  85/255), at: Math.pow(10/16, 1.5)},
-          {color: new THREE.Vector3( 78/255, 196/255,  91/255), at: Math.pow(11/16, 1.5)},
-          {color: new THREE.Vector3( 83/255, 203/255, 102/255), at: Math.pow(12/16, 1.5)},
-          {color: new THREE.Vector3( 92/255, 212/255, 114/255), at: Math.pow(13/16, 1.5)},
-          {color: new THREE.Vector3(109/255, 223/255, 130/255), at: Math.pow(14/16, 1.5)},
-          {color: new THREE.Vector3(129/255, 232/255, 148/255), at: Math.pow(15/16, 1.5)},
-          {color: new THREE.Vector3(140/255, 235/255, 157/255), at: Math.pow(16/16, 1.5)},
+          {color: new THREE.Vector3(  0/255,   0/255,   0/255), at:  0/16},
+          {color: new THREE.Vector3(  6/255,  16/255,   8/255), at:  1/16},
+          {color: new THREE.Vector3( 11/255,  28/255,  15/255), at:  2/16},
+          {color: new THREE.Vector3( 17/255,  41/255,  23/255), at:  3/16},
+          {color: new THREE.Vector3( 20/255,  58/255,  31/255), at:  4/16},
+          {color: new THREE.Vector3( 23/255,  84/255,  39/255), at:  5/16},
+          {color: new THREE.Vector3( 30/255, 113/255,  48/255), at:  6/16},
+          {color: new THREE.Vector3( 43/255, 142/255,  60/255), at:  7/16},
+          {color: new THREE.Vector3( 57/255, 160/255,  72/255), at:  8/16},
+          {color: new THREE.Vector3( 70/255, 175/255,  81/255), at:  9/16},
+          {color: new THREE.Vector3( 75/255, 187/255,  85/255), at: 10/16},
+          {color: new THREE.Vector3( 78/255, 196/255,  91/255), at: 11/16},
+          {color: new THREE.Vector3( 83/255, 203/255, 102/255), at: 12/16},
+          {color: new THREE.Vector3( 92/255, 212/255, 114/255), at: 13/16},
+          {color: new THREE.Vector3(109/255, 223/255, 130/255), at: 14/16},
+          {color: new THREE.Vector3(129/255, 232/255, 148/255), at: 15/16},
+          {color: new THREE.Vector3(140/255, 235/255, 157/255), at: 16/16},
         ],
         fallSpeed: 1,
         cycleSpeed: 1,
@@ -168,7 +168,7 @@
 
     switch (effect) {
       case "plain":
-        composer.addPass(new THREE.ColorMapPass(version.palette, 0.1));
+        composer.addPass(new THREE.ColorMapPass(version.palette, 0.05, 100));
         break;
       case "pride":
         composer.addPass(new THREE.HorizontalColorationPass([
