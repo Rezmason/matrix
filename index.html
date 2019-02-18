@@ -26,8 +26,8 @@
 
     const versions = {
       paradise: {
-        texture: './coptic_msdf.png',
-        dropLength: 0.5,
+        fontTexture: './coptic_msdf.png',
+        raindropLength: 0.5,
         glyphSequenceLength: 32,
         bloom: {
           strength: 4,
@@ -45,13 +45,13 @@
         cycleSpeed: 0.05,
         hasThunder: false,
         hasSun: true,
-        isSlanted: false,
+        slant: 0,
         isPolar: true,
         numColumns: 50
       },
       nightmare: {
-        texture: './gothic_msdf.png',
-        dropLength: 0.6,
+        fontTexture: './gothic_msdf.png',
+        raindropLength: 0.6,
         glyphSequenceLength: 27,
         bloom: {
           strength: 2,
@@ -69,13 +69,13 @@
         cycleSpeed: 0.02,
         hasThunder: true,
         hasSun: false,
-        isSlanted: true,
+        slant: 360 / 16,
         isPolar: false,
         numColumns: 60
       },
       ["1999"]: {
-        texture: './matrixcode_msdf.png',
-        dropLength: 1,
+        fontTexture: './matrixcode_msdf.png',
+        raindropLength: 1,
         glyphSequenceLength: 57,
         bloom: {
           strength: 2,
@@ -110,14 +110,23 @@
         cycleSpeed: 1,
         hasThunder: false,
         hasSun: false,
-        isSlanted: false,
+        slant: 0,
         isPolar: false,
         numColumns: 80
       }
     };
 
     const urlParams = new Map(window.location.href.replace(/^[^\?]+\?/, "").split("&").map(pair => pair.split("=")));
-    const getParam = (key, defaultValue) => urlParams.has(key) ? urlParams.get(key) : defaultValue;
+    const getParam = (keyOrKeys, defaultValue) => {
+      if (Array.isArray(keyOrKeys)) {
+        const keys = keyOrKeys;
+        const key = keys.find(key => urlParams.has(key));
+        return key != null ? urlParams.get(key) : defaultValue;
+      } else {
+        const key = keyOrKeys;
+        return urlParams.has(key) ? urlParams.get(key) : defaultValue;
+      }
+    };
 
     const version = versions[getParam("version", "1999")] || versions["1999"];
 
@@ -126,9 +135,10 @@
     const fallSpeed = parseFloat(getParam("fallSpeed", 1)) * version.fallSpeed;
     const cycleSpeed = parseFloat(getParam("cycleSpeed", 1)) * version.cycleSpeed;
     const numColumns = parseInt(getParam("width", version.numColumns));
-    const dropLength = parseFloat(getParam("dropLength", version.dropLength));
-    const numGlyphColumns = 8;
+    const raindropLength = parseFloat(getParam(["raindropLength", "dropLength"], version.raindropLength));
+    const numFontColumns = 8;
     const glyphSequenceLength = version.glyphSequenceLength;
+    const slant = parseFloat(getParam(["slant", "angle"], version.slant)) * Math.PI / 180;
 
     const effect = getParam("effect", "plain");
 
@@ -142,20 +152,20 @@
     element.appendChild(renderer.domElement);
     const composer = new THREE.EffectComposer( renderer );
 
-    const texture = new THREE.TextureLoader().load( version.texture );
+    const fontTexture = new THREE.TextureLoader().load( version.fontTexture );
 
-    const matrixRenderer = makeMatrixRenderer(renderer, texture, {
+    const matrixRenderer = makeMatrixRenderer(renderer, fontTexture, {
       sharpness,
       numColumns,
       animationSpeed, fallSpeed, cycleSpeed,
       glyphSequenceLength,
-      numGlyphColumns,
+      numFontColumns,
       hasThunder: version.hasThunder,
       hasSun: version.hasSun,
       isPolar: version.isPolar,
-      isSlanted: version.isSlanted,
-      showRTT: effect === "none",
-      dropLength
+      slant,
+      showComputationTexture: effect === "none",
+      raindropLength
     });
 
     matrixRenderer.pass.renderToScreen = false;

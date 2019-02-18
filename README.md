@@ -54,7 +54,8 @@ Now you know link fu. Here's a list of customization options:
 
 - **version** - the version of the Matrix to simulate. Can be "paradise", "nightmare" or "1999" (default).
 - **width** - the number of columns (and rows) to draw. Default is 80.
-- **dropLength** - the vertical scale of "raindrops" in the columns. Can be any number, even negative! Default is 1.0.
+- **slant** - which angle is up, in degrees. Default is 0.
+- **raindropLength** - the vertical scale of "raindrops" in the columns. Can be any number, even negative! Default is 1.0.
 - **animationSpeed** - the overall speed of the animation. Can be any number, even negative! Default is 1.0.
 - **fallSpeed** - the speed of the rain. Can be any number, even negative! Default is 1.0.
 - **cycleSpeed** - the speed that the glyphs change their symbol. Can be any number, even negative! Default is 1.0.
