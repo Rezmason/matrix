@@ -16,7 +16,7 @@ const ARRAY_SIZE = 2048;
 THREE.ColorMapPass = function (entries, ditherMagnitude = 1, graininess = 100) {
   const colors = Array(ARRAY_SIZE).fill().map(_ => new THREE.Vector3(0, 0, 0));
   const sortedEntries = entries.slice().sort((e1, e2) => e1.at - e2.at).map(entry => ({
-    color: entry.color,
+    color: new THREE.Vector3(entry.r, entry.g, entry.b),
     arrayIndex: Math.floor(Math.max(Math.min(1, entry.at), 0) * (ARRAY_SIZE - 1))
   }));
   sortedEntries.unshift({color:sortedEntries[0].color, arrayIndex:0});
