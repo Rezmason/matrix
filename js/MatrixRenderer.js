@@ -104,7 +104,7 @@ const glyphVariable = gpuCompute.addVariable(
         if (brightness > 0.0) glyphCycleSpeed = pow(1.0 - brightness, 4.0);
       #endif
       #ifdef cycleRandomly
-        glyphCycleSpeed = 1.0; // TODO: should be similar to brightness
+        glyphCycleSpeed = fract((glyphTime + 0.7 * sin(SQRT_2 * glyphTime) + 1.1 * sin(SQRT_5 * glyphTime))) * 0.75;
       #endif
       glyphCycle = fract(glyphCycle + deltaTime * cycleSpeed * 0.2 * glyphCycleSpeed);
       float symbol = floor(glyphSequenceLength * glyphCycle);
@@ -246,7 +246,7 @@ const glyphVariable = gpuCompute.addVariable(
         float brightness = glyph.r;
         #ifndef fade
           if (brightness < -1.0) { discard; return; }
-          if (brightness > 0.55) {
+          if (brightness > 0.65) {
             brightness *= 2.0;
           } else {
             brightness = 0.25;
