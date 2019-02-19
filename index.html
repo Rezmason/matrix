@@ -26,7 +26,7 @@
 
     const versions = {
       paradise: {
-        fontTexture: './coptic_msdf.png',
+        fontTexture: "./coptic_msdf.png",
         raindropLength: 0.5,
         glyphSequenceLength: 32,
         bloom: {
@@ -46,11 +46,15 @@
         hasThunder: false,
         hasSun: true,
         slant: 0,
+        glyphEdgeCrop: 0.0,
+        glyphHeightToWidth:1,
         isPolar: true,
-        numColumns: 50
+        numColumns: 50,
+        fade: true,
+        cycleStyle: "cycleFasterWhenDimmed"
       },
       nightmare: {
-        fontTexture: './gothic_msdf.png',
+        fontTexture: "./gothic_msdf.png",
         raindropLength: 0.6,
         glyphSequenceLength: 27,
         bloom: {
@@ -70,11 +74,15 @@
         hasThunder: true,
         hasSun: false,
         slant: 360 / 16,
+        glyphEdgeCrop: 0.0,
+        glyphHeightToWidth:1,
         isPolar: false,
-        numColumns: 60
+        numColumns: 60,
+        fade: true,
+        cycleStyle: "cycleFasterWhenDimmed"
       },
       ["1999"]: {
-        fontTexture: './matrixcode_msdf.png',
+        fontTexture: "./matrixcode_msdf.png",
         raindropLength: 1,
         glyphSequenceLength: 57,
         bloom: {
@@ -111,8 +119,12 @@
         hasThunder: false,
         hasSun: false,
         slant: 0,
+        glyphEdgeCrop: 0.0,
+        glyphHeightToWidth:1,
         isPolar: false,
-        numColumns: 80
+        numColumns: 80,
+        fade: true,
+        cycleStyle: "cycleFasterWhenDimmed"
       }
     };
 
@@ -139,6 +151,9 @@
     const numFontColumns = 8;
     const glyphSequenceLength = version.glyphSequenceLength;
     const slant = parseFloat(getParam(["slant", "angle"], version.slant)) * Math.PI / 180;
+    const glyphEdgeCrop = parseFloat(getParam("encroach", version.glyphEdgeCrop));
+    const glyphHeightToWidth = parseFloat(getParam("stretch", version.glyphHeightToWidth));
+    const fade = getParam("fade", version.fade).toString() == "true";
 
     const effect = getParam("effect", "plain");
 
@@ -164,8 +179,12 @@
       hasSun: version.hasSun,
       isPolar: version.isPolar,
       slant,
+      glyphEdgeCrop,
+      glyphHeightToWidth,
+      fade,
       showComputationTexture: effect === "none",
-      raindropLength
+      raindropLength,
+      cycleStyle: version.cycleStyle
     });
 
     matrixRenderer.pass.renderToScreen = false;

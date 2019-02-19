@@ -8,8 +8,12 @@ const makeMatrixRenderer = (renderer, texture, {
   hasSun,
   isPolar,
   slant,
+  glyphHeightToWidth,
+  glyphEdgeCrop,
+  fade,
   showComputationTexture,
-  raindropLength
+  raindropLength,
+  cycleStyle
 }) => {
   const matrixRenderer = {};
   const camera = new THREE.OrthographicCamera( -0.5, 0.5, 0.5, -0.5, 0.0001, 10000 );
@@ -22,7 +26,7 @@ const makeMatrixRenderer = (renderer, texture, {
 
   for (let i = 0; i < numColumns * numColumns; i++) {
     pixels[i * 4 + 0] = 0;
-    pixels[i * 4 + 1] = showComputationTexture ? 0 : scramble(i);
+    pixels[i * 4 + 1] = scramble(i);
     pixels[i * 4 + 2] = 0;
     pixels[i * 4 + 3] = 0;
   }
@@ -95,7 +99,13 @@ const glyphVariable = gpuCompute.addVariable(
         brightness = mix(brightness, newBrightness, brightnessChangeBias);
       #endif
 
-      float glyphCycleSpeed = (brightness <= 0.0) ? 0.0 : pow(1.0 - brightness, 4.0);
+      float glyphCycleSpeed = 0.0;
+      #ifdef cycleFasterWhenDimmed
+        if (brightness > 0.0) glyphCycleSpeed = pow(1.0 - brightness, 4.0);
+      #endif
+      #ifdef cycleRandomly
+        glyphCycleSpeed = 1.0; // TODO: should be similar to brightness
+      #endif
       glyphCycle = fract(glyphCycle + deltaTime * cycleSpeed * 0.2 * glyphCycleSpeed);
       float symbol = floor(glyphSequenceLength * glyphCycle);
       float symbolX = mod(symbol, numFontColumns);
@@ -120,7 +130,8 @@ const glyphVariable = gpuCompute.addVariable(
     );
   gpuCompute.setVariableDependencies( glyphVariable, [ glyphVariable ] );
 
-  const brightnessChangeBias = (animationSpeed * fallSpeed) == 0 ? 1 : Math.min(1, Math.abs(animationSpeed * fallSpeed));
+  // const brightnessChangeBias = (animationSpeed * fallSpeed) == 0 ? 1 : Math.min(1, Math.abs(animationSpeed * fallSpeed));
+  const brightnessChangeBias = 1;
   Object.assign(glyphVariable.material.uniforms, {
     time: { type: "f", value: 0 },
     deltaTime: { type: "f", value: 0.01 },
@@ -142,6 +153,17 @@ const glyphVariable = gpuCompute.addVariable(
     glyphVariable.material.defines.showComputationTexture = 1.0;
   }
 
+  switch (cycleStyle) {
+    case "cycleFasterWhenDimmed":
+      glyphVariable.material.defines.cycleFasterWhenDimmed = 1.0;
+      break;
+    case "cycleRandomly":
+    default:
+      glyphVariable.material.defines.cycleRandomly = 1.0;
+      break;
+  }
+
+
   const error = gpuCompute.init();
   if ( error !== null ) {
     console.error( error );
@@ -159,7 +181,9 @@ const glyphVariable = gpuCompute.addVariable(
         sharpness: { type: "f", value: sharpness },
         numFontColumns: {type: "f", value: numFontColumns},
         resolution: {type: "v2", value: new THREE.Vector2() },
-        slant: {type: "v2", value: new THREE.Vector2(Math.cos(slant), Math.sin(slant)) }
+        slant: {type: "v2", value: new THREE.Vector2(Math.cos(slant), Math.sin(slant)) },
+        glyphHeightToWidth: {type: "f", value: glyphHeightToWidth},
+        glyphEdgeCrop: {type: "f", value: glyphEdgeCrop},
       },
       vertexShader: `
       attribute vec2 uv;
@@ -185,6 +209,8 @@ const glyphVariable = gpuCompute.addVariable(
       uniform float numColumns;
       uniform float numFontColumns;
       uniform vec2 slant;
+      uniform float glyphHeightToWidth;
+      uniform float glyphEdgeCrop;
       varying vec2 vUV;
 
       float median(float r, float g, float b) {
@@ -207,6 +233,8 @@ const glyphVariable = gpuCompute.addVariable(
           uv = vec2(angle / PI, 1.0 - pow(radius * 0.75, 0.6));
         #endif
 
+        uv.y /= glyphHeightToWidth;
+
         vec4 glyph = texture2D(glyphs, uv);
 
         #ifdef showComputationTexture
@@ -216,8 +244,20 @@ const glyphVariable = gpuCompute.addVariable(
 
         // Unpack the values from the glyph texture
         float brightness = glyph.r;
+        #ifndef fade
+          if (brightness < -1.0) { discard; return; }
+          if (brightness > 0.55) {
+            brightness *= 2.0;
+          } else {
+            brightness = 0.25;
+          }
+        #endif
         vec2 symbolUV = glyph.ba;
-        vec4 sample = texture2D(msdf, fract(uv * numColumns) / numFontColumns + symbolUV);
+        vec2 glyphUV = fract(uv * numColumns);
+        glyphUV -= 0.5;
+        glyphUV *= clamp(1.0 - glyphEdgeCrop, 0.0, 1.0);
+        glyphUV += 0.5;
+        vec4 sample = texture2D(msdf, glyphUV / numFontColumns + symbolUV);
 
         // The rest is straight up MSDF
         float sigDist = median(sample.r, sample.g, sample.b) - 0.5;
@@ -241,6 +281,11 @@ const glyphVariable = gpuCompute.addVariable(
 
   if (isPolar) {
     mesh.material.defines.isPolar = 1.0;
+  }
+
+  console.log(fade);
+  if (fade) {
+    mesh.material.defines.fade = 1.0;
   }
 
   if (showComputationTexture) {
