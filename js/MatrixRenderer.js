@@ -1,4 +1,5 @@
-const makeMatrixRenderer = (renderer, texture, {
+const makeMatrixRenderer = (renderer, {
+  fontTexture,
   sharpness,
   numColumns,
   animationSpeed, fallSpeed, cycleSpeed,
@@ -176,7 +177,7 @@ const glyphVariable = gpuCompute.addVariable(
     new THREE.RawShaderMaterial({
       uniforms: {
         glyphs: { type: "t", value: glyphRTT },
-        msdf: { type: "t", value: texture },
+        msdf: { type: "t", value: fontTexture },
         numColumns: {type: "f", value: numColumns},
         sharpness: { type: "f", value: sharpness },
         numFontColumns: {type: "f", value: numFontColumns},
@@ -242,7 +243,7 @@ const glyphVariable = gpuCompute.addVariable(
           return;
         #endif
 
-        // Unpack the values from the glyph texture
+        // Unpack the values from the font texture
         float brightness = glyph.r;
         #ifndef fade
           if (brightness < -1.0) { discard; return; }
@@ -283,7 +284,6 @@ const glyphVariable = gpuCompute.addVariable(
     mesh.material.defines.isPolar = 1.0;
   }
 
-  console.log(fade);
   if (fade) {
     mesh.material.defines.fade = 1.0;
   }
