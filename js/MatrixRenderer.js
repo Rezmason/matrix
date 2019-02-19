@@ -27,7 +27,7 @@ const makeMatrixRenderer = (renderer, {
 
   for (let i = 0; i < numColumns * numColumns; i++) {
     pixels[i * 4 + 0] = 0;
-    pixels[i * 4 + 1] = scramble(i);
+    pixels[i * 4 + 1] = showComputationTexture ? 0.5 : scramble(i);
     pixels[i * 4 + 2] = 0;
     pixels[i * 4 + 3] = 0;
   }
