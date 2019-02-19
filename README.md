@@ -5,6 +5,7 @@
 ### TL;DR
 
 - [Classic Matrix code](https://rezmason.github.io/matrix)
+- [Throwback Matrix code](https://rezmason.github.io/matrix?version=throwback)
 - [Code of the "Nightmare Matrix"](https://rezmason.github.io/matrix?version=nightmare)
   - [(you know, this stuff).](http://matrix.wikia.com/wiki/Nightmare_Matrix)
 - [Code of the "Paradise Matrix"](https://rezmason.github.io/matrix?version=paradise)
@@ -52,7 +53,11 @@ You can customize the digital rain quite a bit by stapling "URL variables" to it
 
 Now you know link fu. Here's a list of customization options:
 
-- **version** - the version of the Matrix to simulate. Can be "paradise", "nightmare" or "1999" (default).
+- **version** - the version of the Matrix to simulate. Can be "paradise", "nightmare", "throwback" or "1999" (default).
+  - "1999" is the Matrix code as portrayed throughout the franchise.
+  - "paradise" is how the Matrix's idyllic predecessor may have appeared: warm, simplistic, encompassing.
+  - "nightmare" is how the Matrix may have appeared in the Merovingian's heyday: flashy, foreboding, relentless.
+  - "throwback" is an attempt at portraying the matrix code as it appears in the first movie's opening titles: flatter, crowded, rudimentary.
 - **width** - the number of columns (and rows) to draw. Default is 80.
 - **slant** - which angle is up, in degrees. Default is 0.
 - **raindropLength** - the vertical scale of "raindrops" in the columns. Can be any number, even negative! Default is 1.0.
