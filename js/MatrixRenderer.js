@@ -131,8 +131,7 @@ const glyphVariable = gpuCompute.addVariable(
     );
   gpuCompute.setVariableDependencies( glyphVariable, [ glyphVariable ] );
 
-  // const brightnessChangeBias = (animationSpeed * fallSpeed) == 0 ? 1 : Math.min(1, Math.abs(animationSpeed * fallSpeed));
-  const brightnessChangeBias = 1;
+  const brightnessChangeBias = fade ? (animationSpeed * fallSpeed) == 0 ? 1 : Math.min(1, Math.abs(animationSpeed * fallSpeed)) : 1;
   Object.assign(glyphVariable.material.uniforms, {
     time: { type: "f", value: 0 },
     deltaTime: { type: "f", value: 0.01 },
