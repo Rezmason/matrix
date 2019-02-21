@@ -11,7 +11,7 @@ const makeMatrixRenderer = (renderer, {
   slant,
   glyphHeightToWidth,
   glyphEdgeCrop,
-  fade,
+  brightnessThreshold,
   showComputationTexture,
   raindropLength,
   cycleStyle
@@ -131,7 +131,7 @@ const glyphVariable = gpuCompute.addVariable(
     );
   gpuCompute.setVariableDependencies( glyphVariable, [ glyphVariable ] );
 
-  const brightnessChangeBias = fade ? (animationSpeed * fallSpeed) == 0 ? 1 : Math.min(1, Math.abs(animationSpeed * fallSpeed)) : 1;
+  const brightnessChangeBias = (brightnessThreshold <= 0) ? (animationSpeed * fallSpeed) == 0 ? 1 : Math.min(1, Math.abs(animationSpeed * fallSpeed)) : 1;
   Object.assign(glyphVariable.material.uniforms, {
     time: { type: "f", value: 0 },
     deltaTime: { type: "f", value: 0.01 },
@@ -244,9 +244,9 @@ const glyphVariable = gpuCompute.addVariable(
 
         // Unpack the values from the font texture
         float brightness = glyph.r;
-        #ifndef fade
+        #ifdef brightnessThreshold
           if (brightness < -1.0) { discard; return; }
-          if (brightness > 0.65) {
+          if (brightness > brightnessThreshold) {
             brightness *= 2.0;
           } else {
             brightness = 0.25;
@@ -283,8 +283,8 @@ const glyphVariable = gpuCompute.addVariable(
     mesh.material.defines.isPolar = 1.0;
   }
 
-  if (fade) {
-    mesh.material.defines.fade = 1.0;
+  if (brightnessThreshold > 0) {
+    mesh.material.defines.brightnessThreshold = brightnessThreshold;
   }
 
   if (showComputationTexture) {
