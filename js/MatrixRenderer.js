@@ -1,6 +1,5 @@
 const makeMatrixRenderer = (renderer, {
   fontTexture,
-  sharpness,
   numColumns,
   animationSpeed, fallSpeed, cycleSpeed,
   glyphSequenceLength,
@@ -178,7 +177,6 @@ const glyphVariable = gpuCompute.addVariable(
         glyphs: { type: "t", value: glyphRTT },
         msdf: { type: "t", value: fontTexture },
         numColumns: {type: "f", value: numColumns},
-        sharpness: { type: "f", value: sharpness },
         numFontColumns: {type: "f", value: numFontColumns},
         resolution: {type: "v2", value: new THREE.Vector2() },
         slant: {type: "v2", value: new THREE.Vector2(Math.cos(slant), Math.sin(slant)) },
@@ -201,9 +199,7 @@ const glyphVariable = gpuCompute.addVariable(
       #extension GL_OES_standard_derivatives: enable
       #endif
       precision lowp float;
-      #define BIG_ENOUGH 0.001
-      #define MODIFIED_ALPHATEST (0.02 * isBigEnough / BIG_ENOUGH)
-      uniform float sharpness;
+
       uniform sampler2D msdf;
       uniform sampler2D glyphs;
       uniform float numColumns;
@@ -262,16 +258,7 @@ const glyphVariable = gpuCompute.addVariable(
         // The rest is straight up MSDF
         float sigDist = median(sample.r, sample.g, sample.b) - 0.5;
         float alpha = clamp(sigDist/fwidth(sigDist) + 0.5, 0.0, 1.0);
-        float dscale = 0.353505 / sharpness;
-        vec2 duv = dscale * (dFdx(uv) + dFdy(uv));
-        float isBigEnough = max(abs(duv.x), abs(duv.y));
-        if (isBigEnough > BIG_ENOUGH) {
-          float ratio = BIG_ENOUGH / isBigEnough;
-          alpha = ratio * alpha + (1.0 - ratio) * (sigDist + 0.5);
-        }
 
-        if (isBigEnough <= BIG_ENOUGH && alpha < 0.5) { discard; return; }
-        if (alpha < 0.5 * MODIFIED_ALPHATEST) { discard; return; }
         gl_FragColor = vec4(vec3(brightness * alpha), 1.0);
       }
       `

@@ -174,7 +174,6 @@
 
     const version = versions[getParam("version", "1999")] || versions["1999"];
 
-    const sharpness = parseFloat(getParam("sharpness", 0.5));
     const animationSpeed = parseFloat(getParam("animationSpeed", 1));
     const fallSpeed = parseFloat(getParam("fallSpeed", 1)) * version.fallSpeed;
     const cycleSpeed = parseFloat(getParam("cycleSpeed", 1)) * version.cycleSpeed;
@@ -215,7 +214,6 @@
       numColumns,
       numFontColumns,
       raindropLength,
-      sharpness,
       showComputationTexture: effect === "none",
       slant,
     });
@@ -263,11 +261,11 @@
     composer.passes[composer.passes.length - 1].renderToScreen = true;
 
     const windowResize = () => {
-      const [width, height] = [window.innerWidth, window.innerHeight];
+      const [width, height, pixelRatio] = [window.innerWidth, window.innerHeight, window.devicePixelRatio];
       matrixRenderer.resize(width, height);
       renderer.setSize(width, height);
-      composer.setSize(width, height);
-      bloomPass.setSize( window.innerWidth, window.innerHeight );
+      composer.setSize(width * pixelRatio, height * pixelRatio);
+      bloomPass.setSize( window.innerWidth * pixelRatio, window.innerHeight * pixelRatio );
     }
     window.addEventListener("resize", windowResize, false);
     window.addEventListener("orientationchange", windowResize, false);
