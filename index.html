@@ -24,6 +24,9 @@
 
   <script>
 
+    // iOS STOP SCROLLING DAMN IT
+    document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+
     const fonts = {
       coptic: {
         textureURL: "./coptic_msdf.png",
