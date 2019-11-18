@@ -109,7 +109,7 @@
         raindropLength: 0.6,
         slant: 360 / 16,
       },
-      ["1999"]: {
+      classic: {
         bloom: {
           radius: 0.5,
           strength: 2,
@@ -154,7 +154,7 @@
         raindropLength: 1,
         slant: 0,
       },
-      throwback: {
+      operator: {
         bloom: {
           radius: 0.3,
           strength: 1.45,
@@ -186,6 +186,8 @@
         slant: 0,
       }
     };
+    versions.throwback = versions.operator;
+    versions["1999"] = versions.classic;
 
     const urlParams = new Map(window.location.href.replace(/^[^\?]+\?/, "").split("&").map(pair => pair.split("=")));
     const getParam = (keyOrKeys, defaultValue) => {
@@ -199,7 +201,7 @@
       }
     };
 
-    const version = versions[getParam("version", "1999")] || versions["1999"];
+    const version = versions[getParam("version", "classic")] || versions.classic;
 
     const animationSpeed = parseFloat(getParam("animationSpeed", 1));
     const fallSpeed = parseFloat(getParam("fallSpeed", 1)) * version.fallSpeed;
