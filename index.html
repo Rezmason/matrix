@@ -45,13 +45,15 @@
     const versions = {
       paradise: {
         bloom: {
-          radius: 1,
-          strength: 4,
+          radius: 1.15,
+          strength: 3.5,
           threshold: 0
         },
         cycleSpeed: 0.05,
         cycleStyle: "cycleFasterWhenDimmed",
-        brightnessThreshold: 0,
+        cursorEffectThreshold: 1,
+        brightnessOffset: 0.0,
+        brightnessMultiplier: 1.0,
         fallSpeed: 0.05,
         font: fonts.coptic,
         glyphEdgeCrop: 0.0,
@@ -59,7 +61,11 @@
         hasSun: true,
         hasThunder: false,
         isPolar: true,
-        numColumns: 50,
+        rippleType: "circle",
+        rippleThickness: 0.2,
+        rippleScale: 30,
+        rippleSpeed: 0.2,
+        numColumns: 30,
         palette: [
           {r: 0.00, g:  0.00, b:  0.00, at: 0.0},
           {r: 0.52, g:  0.17, b:  0.05, at: 0.4},
@@ -78,7 +84,9 @@
         },
         cycleSpeed: 0.02,
         cycleStyle: "cycleFasterWhenDimmed",
-        brightnessThreshold: 0,
+        cursorEffectThreshold: 1,
+        brightnessOffset: 0.0,
+        brightnessMultiplier: 1.0,
         fallSpeed: 2.0,
         font: fonts.gothic,
         glyphEdgeCrop: 0.0,
@@ -86,6 +94,10 @@
         hasSun: false,
         hasThunder: true,
         isPolar: false,
+        rippleType: null,
+        rippleThickness: 0.2,
+        rippleScale: 30,
+        rippleSpeed: 0.2,
         numColumns: 60,
         palette: [
           {r: 0.00, g:  0.00, b:  0.00, at: 0.0},
@@ -105,7 +117,9 @@
         },
         cycleSpeed: 1,
         cycleStyle: "cycleFasterWhenDimmed",
-        brightnessThreshold: 0,
+        cursorEffectThreshold: 1,
+        brightnessOffset: 0.0,
+        brightnessMultiplier: 1.0,
         fallSpeed: 1,
         font: fonts.matrixcode,
         glyphEdgeCrop: 0.0,
@@ -113,6 +127,10 @@
         hasSun: false,
         hasThunder: false,
         isPolar: false,
+        rippleType: null,
+        rippleThickness: 0.2,
+        rippleScale: 30,
+        rippleSpeed: 0.2,
         numColumns: 80,
         palette: [
           {r:   0/255, g:    0/255, b:    0/255, at:  0/16},
@@ -142,9 +160,11 @@
           strength: 1.45,
           threshold: 0.0
         },
-        cycleSpeed: 0.4,
+        cycleSpeed: 0.05,
         cycleStyle: "cycleRandomly",
-        brightnessThreshold: 0.6375,
+        cursorEffectThreshold: 0.466,
+        brightnessOffset: 0.25,
+        brightnessMultiplier: 0.0,
         fallSpeed: 0.6,
         font: fonts.matrixcode,
         glyphEdgeCrop: 0.15,
@@ -152,6 +172,10 @@
         hasSun: false,
         hasThunder: false,
         isPolar: false,
+        rippleType: "box",
+        rippleThickness: 0.2,
+        rippleScale: 30,
+        rippleSpeed: 0.2,
         numColumns: 108,
         palette: [
           {r: 0.00, g:  0.00, b:  0.00, at: 0.0},
@@ -187,7 +211,7 @@
     const slant = parseFloat(getParam(["slant", "angle"], version.slant)) * Math.PI / 180;
     const glyphEdgeCrop = parseFloat(getParam("encroach", version.glyphEdgeCrop));
     const glyphHeightToWidth = parseFloat(getParam("stretch", version.glyphHeightToWidth));
-    const brightnessThreshold = getParam("brightnessThreshold", version.brightnessThreshold);
+    const cursorEffectThreshold = getParam("cursorEffectThreshold", version.cursorEffectThreshold);
 
     const effect = getParam("effect", "plain");
 
@@ -206,7 +230,7 @@
     const matrixRenderer = makeMatrixRenderer(renderer, {
       animationSpeed, fallSpeed, cycleSpeed,
       cycleStyle: version.cycleStyle,
-      brightnessThreshold,
+      cursorEffectThreshold,
       fontTexture,
       glyphSequenceLength: version.font.sequenceLength,
       glyphEdgeCrop,
@@ -214,6 +238,12 @@
       hasSun: version.hasSun,
       hasThunder: version.hasThunder,
       isPolar: version.isPolar,
+      rippleType: version.rippleType,
+      rippleThickness: version.rippleThickness,
+      rippleScale: version.rippleScale,
+      rippleSpeed: version.rippleSpeed,
+      brightnessMultiplier: version.brightnessMultiplier,
+      brightnessOffset: version.brightnessOffset,
       numColumns,
       numFontColumns,
       raindropLength,

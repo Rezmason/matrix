@@ -10,10 +10,16 @@ const makeMatrixRenderer = (renderer, {
   slant,
   glyphHeightToWidth,
   glyphEdgeCrop,
-  brightnessThreshold,
+  cursorEffectThreshold,
   showComputationTexture,
   raindropLength,
-  cycleStyle
+  cycleStyle,
+  rippleType,
+  rippleScale,
+  rippleSpeed,
+  rippleThickness,
+  brightnessMultiplier,
+  brightnessOffset,
 }) => {
   const matrixRenderer = {};
   const camera = new THREE.OrthographicCamera( -0.5, 0.5, 0.5, -0.5, 0.0001, 10000 );
@@ -35,18 +41,36 @@ const glyphVariable = gpuCompute.addVariable(
     "glyph",
     `
     precision highp float;
+
     #define PI 3.14159265359
     #define SQRT_2 1.4142135623730951
     #define SQRT_5 2.23606797749979
-    uniform float time;
-    uniform float deltaTime;
-    uniform float animationSpeed;
-    uniform float fallSpeed;
-    uniform float cycleSpeed;
+
+    uniform bool hasSun;
+    uniform bool hasThunder;
+    uniform bool showComputationTexture;
+
     uniform float brightnessChangeBias;
+    uniform float brightnessMultiplier;
+    uniform float brightnessOffset;
+    uniform float cursorEffectThreshold;
+
+    uniform float time;
+    uniform float animationSpeed;
+    uniform float cycleSpeed;
+    uniform float deltaTime;
+    uniform float fallSpeed;
+    uniform float raindropLength;
+
+    uniform float glyphHeightToWidth;
     uniform float glyphSequenceLength;
     uniform float numFontColumns;
-    uniform float raindropLength;
+    uniform int cycleStyle;
+
+    uniform float rippleScale;
+    uniform float rippleSpeed;
+    uniform float rippleThickness;
+    uniform int rippleType;
 
     highp float rand( const in vec2 uv ) {
       const highp float a = 12.9898, b = 78.233, c = 43758.5453;
@@ -54,8 +78,41 @@ const glyphVariable = gpuCompute.addVariable(
       return fract(sin(sn) * c);
     }
 
+    float max2(vec2 v) {
+      return max(v.x, v.y);
+    }
+
+    vec2 rand2(vec2 p) {
+      return fract(vec2(sin(p.x * 591.32 + p.y * 154.077), cos(p.x * 391.32 + p.y * 49.077)));
+    }
+
     highp float blast( const in float x, const in float power ) {
       return pow(pow(pow(x, power), power), power);
+    }
+
+    float ripple(vec2 uv, float simTime) {
+      if (rippleType == -1) {
+        return 0.;
+      }
+
+      float rippleTime = (simTime + 0.2 * sin(simTime * 2.0)) * rippleSpeed + 1.;
+
+      vec2 offset = rand2(vec2(floor(rippleTime), 0.)) - 0.5;
+      vec2 ripplePos = uv + offset;
+      float rippleDistance;
+      if (rippleType == 0) {
+        rippleDistance = max2(abs(ripplePos) * vec2(1.0, glyphHeightToWidth));
+      } else if (rippleType == 1) {
+        rippleDistance = length(ripplePos);
+      }
+
+      float rippleValue = fract(rippleTime) * rippleScale - rippleDistance;
+
+      if (rippleValue > 0. && rippleValue < rippleThickness) {
+        return 0.75;
+      } else {
+        return 0.;
+      }
     }
 
     void main()  {
@@ -79,11 +136,11 @@ const glyphVariable = gpuCompute.addVariable(
 
       float newBrightness = 3.0 * log(value * 1.25);
 
-      #ifdef hasSun
+      if (hasSun) {
         newBrightness = pow(fract(newBrightness * 0.5), 3.0) * uv.y * 2.0;
-      #endif
+      }
 
-      #ifdef hasThunder
+      if (hasThunder) {
         vec2 distVec = (gl_FragCoord.xy / resolution.xy - vec2(0.5, 1.0)) * vec2(1.0, 2.0);
         float thunder = (blast(sin(SQRT_5 * simTime * 2.0), 10.0) + blast(sin(SQRT_2 * simTime * 2.0), 10.0));
         thunder *= 30.0 * (1.0 - 1.0 * length(distVec));
@@ -95,34 +152,46 @@ const glyphVariable = gpuCompute.addVariable(
         } else {
           brightness = mix(brightness, newBrightness, brightnessChangeBias * 0.1);
         }
-      #else
+      } else {
         brightness = mix(brightness, newBrightness, brightnessChangeBias);
-      #endif
+      }
 
       float glyphCycleSpeed = 0.0;
-      #ifdef cycleFasterWhenDimmed
-        if (brightness > 0.0) glyphCycleSpeed = pow(1.0 - brightness, 4.0);
-      #endif
-      #ifdef cycleRandomly
+      if (cycleStyle == 1) {
         glyphCycleSpeed = fract((glyphTime + 0.7 * sin(SQRT_2 * glyphTime) + 1.1 * sin(SQRT_5 * glyphTime))) * 0.75;
-      #endif
+      } else if (cycleStyle == 0) {
+        if (brightness > 0.0) glyphCycleSpeed = pow(1.0 - brightness, 4.0);
+      }
+
       glyphCycle = fract(glyphCycle + deltaTime * cycleSpeed * 0.2 * glyphCycleSpeed);
       float symbol = floor(glyphSequenceLength * glyphCycle);
       float symbolX = mod(symbol, numFontColumns);
       float symbolY = ((numFontColumns - 1.0) - (symbol - symbolX) / numFontColumns);
 
+      float effect = 0.;
+
+      effect += ripple(gl_FragCoord.xy / resolution.xy * 2.0 - 1.0, simTime);
+
+      if (brightness >= cursorEffectThreshold) {
+        effect = 1.0;
+      }
+
+      if (brightness > -1.) {
+        brightness = brightness * brightnessMultiplier + brightnessOffset;
+      }
+
       gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
       gl_FragColor.r = brightness;
       gl_FragColor.g = glyphCycle;
 
-      #ifdef showComputationTexture
+      if (showComputationTexture) {
         // Better use of the blue channel, for show and tell
         gl_FragColor.b = min(1.0, glyphCycleSpeed);
         gl_FragColor.a = 1.0;
-      #else
-        gl_FragColor.b = symbolX / numFontColumns;
-        gl_FragColor.a = symbolY / numFontColumns;
-      #endif
+      } else {
+        gl_FragColor.b = symbolY * numFontColumns + symbolX;
+        gl_FragColor.a = effect;
+      }
     }
     `
     ,
@@ -130,7 +199,31 @@ const glyphVariable = gpuCompute.addVariable(
     );
   gpuCompute.setVariableDependencies( glyphVariable, [ glyphVariable ] );
 
-  const brightnessChangeBias = (brightnessThreshold <= 0) ? (animationSpeed * fallSpeed) == 0 ? 1 : Math.min(1, Math.abs(animationSpeed * fallSpeed)) : 1;
+  const brightnessChangeBias = (animationSpeed * fallSpeed) == 0 ? 1 : Math.min(1, Math.abs(animationSpeed * fallSpeed));
+
+  let cycleStyleInt;
+  switch (cycleStyle) {
+    case "cycleFasterWhenDimmed":
+      cycleStyleInt = 0;
+      break;
+    case "cycleRandomly":
+    default:
+      cycleStyleInt = 1;
+      break;
+  }
+
+  let rippleTypeInt;
+  switch (rippleType) {
+    case "box":
+      rippleTypeInt = 0;
+      break;
+    case "circle":
+      rippleTypeInt = 1;
+      break;
+    default:
+      rippleTypeInt = -1;
+  }
+
   Object.assign(glyphVariable.material.uniforms, {
     time: { type: "f", value: 0 },
     deltaTime: { type: "f", value: 0.01 },
@@ -141,27 +234,19 @@ const glyphVariable = gpuCompute.addVariable(
     numFontColumns: {type: "f", value: numFontColumns },
     raindropLength: {type: "f", value: raindropLength },
     brightnessChangeBias: { type: "f", value: brightnessChangeBias },
+    rippleThickness: { type: "f", value: rippleThickness},
+    rippleScale: { type: "f", value: rippleScale},
+    rippleSpeed: { type: "f", value: rippleSpeed},
+    cursorEffectThreshold: { type: "f", value: cursorEffectThreshold},
+    brightnessMultiplier: { type: "f", value: brightnessMultiplier},
+    brightnessOffset: { type: "f", value: brightnessOffset},
+    glyphHeightToWidth: {type: "f", value: glyphHeightToWidth},
+    hasSun: { type: "b", value: hasSun },
+    hasThunder: { type: "b", value: hasThunder },
+    rippleType: { type: "i", value: rippleTypeInt },
+    showComputationTexture: { type: "b", value: showComputationTexture },
+    cycleStyle: { type: "i", value: cycleStyleInt },
   });
-  if (hasThunder) {
-    glyphVariable.material.defines.hasThunder = 1.0;
-  }
-  if (hasSun) {
-    glyphVariable.material.defines.hasSun = 1.0;
-  }
-  if (showComputationTexture) {
-    glyphVariable.material.defines.showComputationTexture = 1.0;
-  }
-
-  switch (cycleStyle) {
-    case "cycleFasterWhenDimmed":
-      glyphVariable.material.defines.cycleFasterWhenDimmed = 1.0;
-      break;
-    case "cycleRandomly":
-    default:
-      glyphVariable.material.defines.cycleRandomly = 1.0;
-      break;
-  }
-
 
   const error = gpuCompute.init();
   if ( error !== null ) {
@@ -182,6 +267,8 @@ const glyphVariable = gpuCompute.addVariable(
         slant: {type: "v2", value: new THREE.Vector2(Math.cos(slant), Math.sin(slant)) },
         glyphHeightToWidth: {type: "f", value: glyphHeightToWidth},
         glyphEdgeCrop: {type: "f", value: glyphEdgeCrop},
+        isPolar: { type: "b", value: isPolar },
+        showComputationTexture: { type: "b", value: showComputationTexture },
       },
       vertexShader: `
       attribute vec2 uv;
@@ -207,6 +294,10 @@ const glyphVariable = gpuCompute.addVariable(
       uniform vec2 slant;
       uniform float glyphHeightToWidth;
       uniform float glyphEdgeCrop;
+
+      uniform bool isPolar;
+      uniform bool showComputationTexture;
+
       varying vec2 vUV;
 
       float median(float r, float g, float b) {
@@ -217,43 +308,42 @@ const glyphVariable = gpuCompute.addVariable(
 
         vec2 uv = vUV;
 
-        uv = vec2(
-           (uv.x - 0.5) * slant.x + (uv.y - 0.5) * slant.y,
-           (uv.y - 0.5) * slant.x - (uv.x - 0.5) * slant.y
-        ) * 0.75 + 0.5;
-
-        #ifdef isPolar
-          vec2 diff = uv - vec2(0.5, 1.25);
-          float radius = length(diff);
-          float angle = atan(diff.y, diff.x) + PI;
-          uv = vec2(angle / PI, 1.0 - pow(radius * 0.75, 0.6));
-        #endif
+        if (isPolar) {
+          uv -= 0.5;
+          uv *= 0.5;
+          uv.y -= 0.5;
+          float radius = length(uv);
+          float angle = atan(uv.y, uv.x) / (2. * PI) + 0.5;
+          uv = vec2(angle * 4. - 0.5, 1.25 - radius * 1.5);
+        } else {
+          uv = vec2(
+             (uv.x - 0.5) * slant.x + (uv.y - 0.5) * slant.y,
+             (uv.y - 0.5) * slant.x - (uv.x - 0.5) * slant.y
+          ) * 0.75 + 0.5;
+        }
 
         uv.y /= glyphHeightToWidth;
 
         vec4 glyph = texture2D(glyphs, uv);
 
-        #ifdef showComputationTexture
+        if (showComputationTexture) {
           gl_FragColor = glyph;
           return;
-        #endif
+        }
 
         // Unpack the values from the font texture
         float brightness = glyph.r;
-        #ifdef brightnessThreshold
-          if (brightness < -1.0) { discard; return; }
-          if (brightness > brightnessThreshold) {
-            brightness *= 2.0;
-          } else {
-            brightness = 0.25;
-          }
-        #endif
-        vec2 symbolUV = glyph.ba;
+
+        float effect = glyph.a;
+        brightness = max(effect, brightness);
+
+        float symbolIndex = glyph.b;
+        vec2 symbolUV = vec2(mod(symbolIndex, numFontColumns), floor(symbolIndex / numFontColumns));
         vec2 glyphUV = fract(uv * numColumns);
         glyphUV -= 0.5;
         glyphUV *= clamp(1.0 - glyphEdgeCrop, 0.0, 1.0);
         glyphUV += 0.5;
-        vec4 sample = texture2D(msdf, glyphUV / numFontColumns + symbolUV);
+        vec4 sample = texture2D(msdf, (glyphUV + symbolUV) / numFontColumns);
 
         // The rest is straight up MSDF
         float sigDist = median(sample.r, sample.g, sample.b) - 0.5;
@@ -265,18 +355,6 @@ const glyphVariable = gpuCompute.addVariable(
     })
   );
   mesh.frustumCulled = false;
-
-  if (isPolar) {
-    mesh.material.defines.isPolar = 1.0;
-  }
-
-  if (brightnessThreshold > 0) {
-    mesh.material.defines.brightnessThreshold = brightnessThreshold;
-  }
-
-  if (showComputationTexture) {
-    mesh.material.defines.showComputationTexture = 1.0;
-  }
 
   scene.add( mesh );
 
