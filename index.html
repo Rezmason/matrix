@@ -214,6 +214,7 @@
     const glyphEdgeCrop = parseFloat(getParam("encroach", version.glyphEdgeCrop));
     const glyphHeightToWidth = parseFloat(getParam("stretch", version.glyphHeightToWidth));
     const cursorEffectThreshold = getParam("cursorEffectThreshold", version.cursorEffectThreshold);
+    const bloomSize = Math.max(0.01, Math.min(1, parseFloat(getParam("bloomSize", 0.5))));
 
     const effect = getParam("effect", "plain");
 
@@ -300,7 +301,7 @@
       matrixRenderer.resize(width, height);
       renderer.setSize(width, height);
       composer.setSize(width * pixelRatio, height * pixelRatio);
-      bloomPass.setSize( window.innerWidth * pixelRatio, window.innerHeight * pixelRatio );
+      bloomPass.setSize( window.innerWidth * pixelRatio * bloomSize, window.innerHeight * pixelRatio * bloomSize );
     }
     window.addEventListener("resize", windowResize, false);
     window.addEventListener("orientationchange", windowResize, false);

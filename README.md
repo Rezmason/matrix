@@ -60,6 +60,7 @@ Now you know link fu. Here's a list of customization options:
   - "operator" is more reminiscent of the matrix code as it appears in the first movie's opening titles, and on operators' screens: flatter, crowded, without a gradient, and with occasional effects (such as a square ripple).
 - **width** - the number of columns (and rows) to draw. Default is 80.
 - **slant** - which angle is up, in degrees. Default is 0.
+- **bloomSize** - The glow quality, from 0 to 1. Default is 0.5. Lowering this value may help the digital rain run smoother on your device.
 - **raindropLength** - the vertical scale of "raindrops" in the columns. Can be any number, even negative! Default is 1.0.
 - **animationSpeed** - the overall speed of the animation. Can be any number, even negative! Default is 1.0.
 - **fallSpeed** - the speed of the rain. Can be any number, even negative! Default is 1.0.
@@ -68,6 +69,7 @@ Now you know link fu. Here's a list of customization options:
   - ("none" displays the texture whose RGBA values represent the glyph shape and brightness data. _epilepsy warning_: lots of flickering)
 - **colors** - if you set the effect to "customStripes", you can specify the colors of vertical stripes as alternating *R,G,B* numeric values, like so: [https://rezmason.github.io/matrix/?effect=customStripes&colors=1,0,0,1,1,0,0,1,0](https://rezmason.github.io/matrix/?effect=customStripes&colors=1,0,0,1,1,0,0,1,0)
 - **url** - if you set the effect to "image", this is how you specify which image to load. It doesn't work with any URL; I suggest grabbing them from Wikipedia: [https://rezmason.github.io/matrix/?effect=image&url=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg](https://rezmason.github.io/matrix/?effect=image&url=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg)
+
 
 ---
 ### other details
