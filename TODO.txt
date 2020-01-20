@@ -1,6 +1,6 @@
 TODO:
 
-Reach out to Ashley's partner about producing sounds
+Reach out to someone about producing sounds
   Raindrop sound
     https://youtu.be/bPhu01wpf0k?t=34
     https://youtu.be/Yt2-h13XK7Y?t=33
@@ -14,19 +14,11 @@ Reach out to Ashley's partner about producing sounds
     https://youtu.be/gZzTVJ-NLYQ?t=230
   And some kind of ambient sound that they play over
 
-
-Why's it look different on Mobile Safari?
-
-
 Much later:
   Deluxe compute variables
     Flashing row effect
-    Square event
-      Expanding white outline of a box
-      Delay it like the raindrop particles
     Neo flying
       Staticky julia set looking silhouette
-  Simpler bloom replacement?
   More patterns?
     Symbol duplication is common
 

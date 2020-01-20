@@ -19,7 +19,7 @@
 ---
 ### about
 
-This project is a WebGL implementation of the raining green code seen in _The Matrix Trilogy_. It's currently dependent on [Three.js](https://github.com/mrdoob/three.js), though this may not be permanent.
+This project is a WebGL implementation of the raining green code seen in _The Matrix Trilogy_. It's currently built on top of the functional WebGL wrapper, [REGL](http://regl.party); its previous Three.js version is maintained in a separate branch.
 
 ---
 ### goals
@@ -32,15 +32,16 @@ The way I see it, there's four kinds of Matrix effects people call ["digital rai
 
 While there have been a lot of attempts at #1 and #3, they're all missing important parts of #4 that make digital rain so iconic. Here are the requirements for my implementation:
 
-- **Get the right glyphs**. Like the actual ones. Everyone knows Matrix glyphs are some treatment of [Katakana](https://en.wikipedia.org/wiki/Katakana), but they're also a few characters from [Susan Kare's Chicago typeface](https://en.wikipedia.org/wiki/Chicago_(typeface)). The Matrix glyphs in *this* project come from the source: cleaned up vectors [from an old SWF](https://web.archive.org/web/20070914173039/http://www.atari.com:80/thematrixpathofneo/) for an official Matrix product, archived back in 2007. That's how deep this rabbit hole goes, friends.
+- **Get the right glyphs**. Like the actual ones. Everyone knows Matrix glyphs are some treatment of [Katakana](https://en.wikipedia.org/wiki/Katakana), but they also include a few characters from [Susan Kare's Chicago typeface](https://en.wikipedia.org/wiki/Chicago_(typeface)). The Matrix glyphs in *this* project come from the source: cleaned up vectors [from an old SWF](https://web.archive.org/web/20070914173039/http://www.atari.com:80/thematrixpathofneo/) for an official Matrix product, archived back in 2007. That's how deep this rabbit hole goes, friends.
 (Please support the [Internet Archive!](https://archive.org/about/))
 - **Make it look sweet in 2D**. This is not a cop-out. There is just no scene in the movies as iconic as the digital rain itself, and while depth effects are cool, they take away from these other details that make the difference between a goodtrix and a *greatrix*.
 - **The glyphs are in a *fixed grid* and *don't move*.** The "raindrops" we see in the 2D effect are changes in the brightness of symbols that occupy a column. To get a closer look at this, try setting the `fallSpeed` to a number close to 0.
 - **Get the glow and color right.** Matrix symbols aren't just some shade of phosphorous green; they're first given a bloom effect, and then get tone-mapped to the green color palette.
 - **Symbols change shape faster as they dim.** When symbols light up, they almost never change shape, but their cycle speed increases the darker and darker they get.
-- **Two "raindrops" can occupy the same column.** This is complicated, because we can't allow them to collide.
+- **Two "raindrops" can occupy the same column.** This is complicated, because we can't allow them to collide. A useful approach to thinking about this is, each column's glyph brightness is a kind of [sawtooth wave](http://mathworld.wolfram.com/SawtoothWave.html).
 - **Capture the glyph sequence.** Yes, the symbols in the sequels' opening titles, which are arguably the highest quality versions of the 2D effect, change according to a repeating sequence (see `glyph order.txt`).
 - **Make it free, open source and web based.** Because someone could probably improve on what I've done, and I'd like to see that, and maybe incorporate their improvements back into this project.
+- **Support as many browsers and devices as possible.** This project used to rely on Three.js's GPUComputationRenderer, which only worked in browsers supporting WebGL's [oes_texture_float extension](https://caniuse.com/#search=OES_texture_float). The rewrite dropped this dependency, and gained support for a broader range of browsers and devices.
 - **Whip up some artistic license and depict the *previous* Matrix versions.** The sequels describe [a paradisiacal predecessor](https://rezmason.github.io/matrix?version=paradise) to the Matrix that was too idyllic, [and another earlier, nightmarish Hobbesian version](https://rezmason.github.io/matrix?version=nightmare) that proved too campy. They depict some programs running older, differently colored code, so it's time someone tried rendering them.
 - **Include the following statement in the README.md:** Sure, you can enjoy movies, including *The Matrix*, without reading too deeply into them, but if you're going to really think about a film, make it this one. And here's the thing: **The Matrix is a story about transitioning, directed by two siblings who transitioned**. So there! There's plenty more themes in it and its sequels than that, and plenty of room for interpretation, but no room for the misogynistic ideas that led to that gross subreddit we all know about. Wake up from your prejudices, boys. Here's a chance to open our minds, not shut them.
 
@@ -55,9 +56,9 @@ Now you know link fu. Here's a list of customization options:
 
 - **version** - the version of the Matrix to simulate. Can be "paradise", "nightmare", "operator" or "classic" (default).
   - "classic" is the Matrix code everyone knows and loves, mostly based on the sequels' opening title graphics.
+  - "operator" is more reminiscent of the matrix code as it appears in the first movie's opening titles, and on operators' screens: flatter, crowded, without a gradient, and with occasional effects (such as a square ripple).
   - "paradise" is how the Matrix's idyllic predecessor may have appeared: warm, simplistic, encompassing.
   - "nightmare" is how the Matrix may have appeared in the Merovingian's heyday: flashy, foreboding, relentless.
-  - "operator" is more reminiscent of the matrix code as it appears in the first movie's opening titles, and on operators' screens: flatter, crowded, without a gradient, and with occasional effects (such as a square ripple).
 - **width** - the number of columns (and rows) to draw. Default is 80.
 - **slant** - which angle is up, in degrees. Default is 0.
 - **bloomSize** - The glow quality, from 0 to 1. Default is 0.5. Lowering this value may help the digital rain run smoother on your device.
