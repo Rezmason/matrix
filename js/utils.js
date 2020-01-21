@@ -10,6 +10,8 @@ const makePassTexture = regl =>
 
 const makePassFBO = regl => regl.framebuffer({ color: makePassTexture(regl) });
 
+// A pyramid is just an array of FBOs, where each FBO is half the width
+// and half the height of the FBO below it.
 const makePyramid = (regl, height) =>
   Array(height)
     .fill()
@@ -80,6 +82,16 @@ const makeFullScreenQuad = (regl, uniforms) =>
     count: 3
   });
 
+const makePalette = (regl, data) =>
+  regl.texture({
+    data,
+    width: data.length / 3,
+    height: 1,
+    format: "rgb",
+    mag: "linear",
+    min: "linear"
+  });
+
 export {
   makePassTexture,
   makePassFBO,
@@ -87,5 +99,6 @@ export {
   resizePyramid,
   loadImage,
   loadImages,
-  makeFullScreenQuad
+  makeFullScreenQuad,
+  makePalette
 };

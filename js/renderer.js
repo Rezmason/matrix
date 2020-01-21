@@ -1,6 +1,13 @@
 import { makePassFBO } from "./utils.js";
 
 export default (regl, config) => {
+  // These two framebuffers are used to compute the raining code.
+  // they take turns being the source and destination of the "compute" shader.
+  // The half float data type is crucial! It lets us store almost any real number,
+  // whereas the default type limits us to integers between 0 and 255.
+
+  // These FBOs are smaller than the screen, because their pixels correspond
+  // with glyphs in the final image, and the glyphs are much larger than a pixel.
   const state = Array(2)
     .fill()
     .map(() =>
@@ -191,9 +198,10 @@ export default (regl, config) => {
       lastState: ({ tick }) => state[tick % 2]
     },
 
-    framebuffer: ({ tick }) => state[(tick + 1) % 2]
+    framebuffer: ({ tick }) => state[(tick + 1) % 2] // The crucial state FBO alternator
   });
 
+  // We render the code into an FBO using MSDFs: https://github.com/Chlumsky/msdfgen
   const render = regl({
     vert: `
       attribute vec2 aPosition;

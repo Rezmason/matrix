@@ -1,5 +1,11 @@
 import { makePassFBO } from "./utils.js";
 
+// rendered texture's values are mapped to colors in a palette texture.
+// A little noise is introduced, to hide the banding that appears
+// in subtle gradients. The noise is also time-driven, so its grain
+// won't persist across subsequent frames. This is a safe trick
+// in screen space.
+
 const colorizeByPalette = regl =>
   regl({
     frag: `

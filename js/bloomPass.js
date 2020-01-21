@@ -1,5 +1,7 @@
 import { makePassFBO, makePyramid, resizePyramid } from "./utils.js";
 
+// The bloom pass is basically an added high-pass blur.
+
 const pyramidHeight = 5;
 const levelStrengths = Array(pyramidHeight)
   .fill()
@@ -22,6 +24,7 @@ export default (regl, config, input) => {
   const verticalBlurPyramid = makePyramid(regl, pyramidHeight);
   const fbo = makePassFBO(regl);
 
+  // The high pass restricts the blur to bright things in our input texture.
   const highPass = regl({
     frag: `
       precision mediump float;
@@ -42,6 +45,9 @@ export default (regl, config, input) => {
     framebuffer: regl.prop("fbo")
   });
 
+  // A 2D gaussian blur is just a 1D blur done horizontally, then done vertically.
+  // The FBO pyramid's levels represent separate levels of detail;
+  // by blurring them all, this 3x1 blur approximates a more complex gaussian.
   const blur = regl({
     frag: `
       precision mediump float;
@@ -68,6 +74,7 @@ export default (regl, config, input) => {
     framebuffer: regl.prop("fbo")
   });
 
+  // The pyramid of textures gets flattened onto the source texture.
   const combineBloom = regl({
     frag: `
       precision mediump float;
@@ -102,6 +109,7 @@ export default (regl, config, input) => {
   return {
     fbo,
     resize: (viewportWidth, viewportHeight) => {
+      // The blur pyramids can be lower resolution than the screen.
       resizePyramid(
         highPassPyramid,
         viewportWidth,

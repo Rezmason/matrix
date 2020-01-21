@@ -22,7 +22,28 @@
   <body>
     <script src="lib/regl.min.js"></script>
     <script type="module">
-      import { loadImages, makeFullScreenQuad } from "./js/utils.js";
+      /*
+
+        This is an implementation of the green code seen in The Matrix film and video game franchise.
+        This project demonstrates five concepts:
+            1. Drawing to floating point frame buffer objects, or 'FBO's,
+               for performing computation and post-processing
+            2. GPU-side computation, with a fragment shader
+               updating two alternating FBOs
+            3. Rendering crisp "vector" graphics, with a multiple-channel
+               signed distance field (or 'MSDF')
+            4. Creating a blur/bloom effect from a texture pyramid
+            5. Color mapping with noise, to hide banding
+
+        For more information, please visit: https://github.com/Rezmason/matrix
+
+      */
+
+      import {
+        loadImages,
+        makeFullScreenQuad,
+        makePalette
+      } from "./js/utils.js";
       import makeConfig from "./js/config.js";
       import makeMatrixRenderer from "./js/renderer.js";
       import makeBloomPass from "./js/bloomPass.js";
@@ -37,6 +58,7 @@
       const regl = createREGL({
         canvas,
         extensions: ["OES_texture_half_float", "OES_texture_half_float_linear"],
+        // These extensions are also needed, but Safari misreports that they are missing
         optionalExtensions: [
           "EXT_color_buffer_half_float",
           "WEBGL_color_buffer_float",
@@ -45,16 +67,10 @@
       });
 
       const [config, uniforms] = makeConfig(window.location.search, data =>
-        regl.texture({
-          data,
-          width: data.length / 3,
-          height: 1,
-          format: "rgb",
-          mag: "linear",
-          min: "linear"
-        })
+        makePalette(regl, data)
       );
 
+      // All this takes place in a full screen quad.
       const fullScreenQuad = makeFullScreenQuad(regl, uniforms);
       const renderer = makeMatrixRenderer(regl, config);
       const bloomPass = makeBloomPass(regl, config, renderer.fbo);
@@ -82,10 +98,12 @@
         });
 
         const loop = regl.frame(({ viewportWidth, viewportHeight }) => {
+          // All the FBOs except the compute FBOs need to be sized to the window.
           renderer.resize(viewportWidth, viewportHeight);
           bloomPass.resize(viewportWidth, viewportHeight);
           colorPass.resize(viewportWidth, viewportHeight);
 
+          // And here is the full draw sequence.
           fullScreenQuad(() => {
             renderer.update();
             renderer.render(resources);
