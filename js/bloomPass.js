@@ -13,7 +13,7 @@ const levelStrengths = Array(pyramidHeight)
 export default (regl, config, input) => {
   if (config.effect === "none") {
     return {
-      fbo: input,
+      output: input,
       resize: () => {},
       render: () => {}
     };
@@ -22,7 +22,7 @@ export default (regl, config, input) => {
   const highPassPyramid = makePyramid(regl, pyramidHeight);
   const horizontalBlurPyramid = makePyramid(regl, pyramidHeight);
   const verticalBlurPyramid = makePyramid(regl, pyramidHeight);
-  const fbo = makePassFBO(regl);
+  const output = makePassFBO(regl);
 
   // The high pass restricts the blur to bright things in our input texture.
   const highPass = regl({
@@ -103,11 +103,11 @@ export default (regl, config, input) => {
         verticalBlurPyramid.map((fbo, index) => [`tex_${index}`, fbo])
       )
     ),
-    framebuffer: fbo
+    framebuffer: output
   });
 
   return {
-    fbo,
+    output,
     resize: (viewportWidth, viewportHeight) => {
       // The blur pyramids can be lower resolution than the screen.
       resizePyramid(
@@ -128,7 +128,7 @@ export default (regl, config, input) => {
         viewportHeight,
         config.bloomSize
       );
-      fbo.resize(viewportWidth, viewportHeight);
+      output.resize(viewportWidth, viewportHeight);
     },
     render: () => {
       highPassPyramid.forEach(fbo => highPass({ fbo, tex: input }));

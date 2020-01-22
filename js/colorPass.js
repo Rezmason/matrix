@@ -63,20 +63,20 @@ const colorizeByStripes = regl =>
     }
   });
 
-const colorizeByImage = regl =>
+const colorizeByImage = (regl, bgTex) =>
   regl({
     frag: `
     precision mediump float;
     uniform sampler2D tex;
-    uniform sampler2D backgroundTex;
+    uniform sampler2D bgTex;
     varying vec2 vUV;
 
     void main() {
-      gl_FragColor = vec4(texture2D(backgroundTex, vUV).rgb * (pow(texture2D(tex, vUV).r, 1.5) * 0.995 + 0.005), 1.0);
+      gl_FragColor = vec4(texture2D(bgTex, vUV).rgb * (pow(texture2D(tex, vUV).r, 1.5) * 0.995 + 0.005), 1.0);
     }
   `,
     uniforms: {
-      backgroundTex: regl.prop("backgroundTex")
+      bgTex
     }
   });
 
@@ -87,35 +87,35 @@ const colorizersByEffect = {
   image: colorizeByImage
 };
 
-export default (regl, config, inputFBO) => {
-  const fbo = makePassFBO(regl);
-
+export default (regl, config, { bgTex }, input) => {
   if (config.effect === "none") {
     return {
-      fbo: inputFBO,
+      output: input,
       resize: () => {},
       render: () => {}
     };
   }
 
+  const output = makePassFBO(regl);
+
   const colorize = regl({
     uniforms: {
       tex: regl.prop("tex")
     },
-    framebuffer: fbo
+    framebuffer: output
   });
 
   const colorizer = (config.effect in colorizersByEffect
     ? colorizersByEffect[config.effect]
-    : colorizeByPalette)(regl);
+    : colorizeByPalette)(regl, bgTex);
 
   return {
-    fbo,
-    resize: fbo.resize,
+    output,
+    resize: output.resize,
     render: resources => {
       colorize(
         {
-          tex: inputFBO
+          tex: input
         },
         () => colorizer(resources)
       );

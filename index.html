@@ -70,17 +70,6 @@
         makePalette(regl, data)
       );
 
-      // All this takes place in a full screen quad.
-      const fullScreenQuad = makeFullScreenQuad(regl, uniforms);
-      const renderer = makeMatrixRenderer(regl, config);
-      const bloomPass = makeBloomPass(regl, config, renderer.fbo);
-      const colorPass = makeColorPass(regl, config, bloomPass.fbo);
-      const drawToScreen = regl({
-        uniforms: {
-          tex: colorPass.fbo
-        }
-      });
-
       const resize = () => {
         canvas.width = canvas.clientWidth;
         canvas.height = canvas.clientHeight;
@@ -88,27 +77,29 @@
       window.onresize = resize;
       resize();
 
-      fullScreenQuad(renderer.update);
-
       document.body.onload = async () => {
-        const resources = await loadImages(regl, {
+        const images = await loadImages(regl, {
           msdfTex: config.glyphTexURL,
-          backgroundTex:
-            config.effect === "image" ? config.backgroundImage : null
+          bgTex: config.effect === "image" ? config.bgURL : null
         });
 
-        const loop = regl.frame(({ viewportWidth, viewportHeight }) => {
-          // All the FBOs except the compute FBOs need to be sized to the window.
-          renderer.resize(viewportWidth, viewportHeight);
-          bloomPass.resize(viewportWidth, viewportHeight);
-          colorPass.resize(viewportWidth, viewportHeight);
+        // All this takes place in a full screen quad.
+        const fullScreenQuad = makeFullScreenQuad(regl, uniforms);
+        const renderer = makeMatrixRenderer(regl, config, images);
+        const bloomPass = makeBloomPass(regl, config, renderer.output);
+        const colorPass = makeColorPass(regl, config, images, bloomPass.output);
+        const drawToScreen = regl({
+          uniforms: {
+            tex: colorPass.output
+          }
+        });
 
-          // And here is the full draw sequence.
+        const passes = [renderer, bloomPass, colorPass];
+
+        const loop = regl.frame(({ viewportWidth, viewportHeight }) => {
+          passes.forEach(pass => pass.resize(viewportWidth, viewportHeight));
           fullScreenQuad(() => {
-            renderer.update();
-            renderer.render(resources);
-            bloomPass.render();
-            colorPass.render(resources);
+            passes.forEach(pass => pass.render());
             drawToScreen();
           });
         });

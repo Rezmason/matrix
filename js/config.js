@@ -204,7 +204,7 @@ export default (searchString, makePaletteTexture) => {
     config.animationSpeed * config.fallSpeed == 0
       ? 1
       : Math.min(1, Math.abs(config.animationSpeed * config.fallSpeed));
-  config.backgroundImage = getParam(
+  config.bgURL = getParam(
     "url",
     "https://upload.wikimedia.org/wikipedia/commons/0/0a/Flammarion_Colored.jpg"
   );

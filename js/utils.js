@@ -17,6 +17,21 @@ const makePyramid = (regl, height) =>
     .fill()
     .map(_ => makePassFBO(regl));
 
+const makeDoubleBuffer = (regl, props) => {
+  const state = Array(2)
+    .fill()
+    .map(() =>
+      regl.framebuffer({
+        color: regl.texture(props),
+        depthStencil: false
+      })
+    );
+  return {
+    front: ({ tick }) => state[tick % 2],
+    back: ({ tick }) => state[(tick + 1) % 2]
+  };
+};
+
 const resizePyramid = (pyramid, vw, vh, scale) =>
   pyramid.forEach((fbo, index) =>
     fbo.resize(
@@ -48,7 +63,7 @@ const loadImage = async (regl, url) => {
   });
 };
 
-const makeFullScreenQuad = (regl, uniforms) =>
+const makeFullScreenQuad = (regl, uniforms = {}, context = {}) =>
   regl({
     vert: `
     precision mediump float;
@@ -78,6 +93,8 @@ const makeFullScreenQuad = (regl, uniforms) =>
       time: regl.context("time")
     },
 
+    context,
+
     depth: { enable: false },
     count: 3
   });
@@ -95,6 +112,7 @@ const makePalette = (regl, data) =>
 export {
   makePassTexture,
   makePassFBO,
+  makeDoubleBuffer,
   makePyramid,
   resizePyramid,
   loadImage,

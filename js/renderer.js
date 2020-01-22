@@ -1,27 +1,20 @@
-import { makePassFBO } from "./utils.js";
+import { makePassFBO, makeDoubleBuffer } from "./utils.js";
 
-export default (regl, config) => {
+export default (regl, config, { msdfTex }) => {
   // These two framebuffers are used to compute the raining code.
   // they take turns being the source and destination of the "compute" shader.
   // The half float data type is crucial! It lets us store almost any real number,
   // whereas the default type limits us to integers between 0 and 255.
 
-  // These FBOs are smaller than the screen, because their pixels correspond
+  // This double buffer is smaller than the screen, because its pixels correspond
   // with glyphs in the final image, and the glyphs are much larger than a pixel.
-  const state = Array(2)
-    .fill()
-    .map(() =>
-      regl.framebuffer({
-        color: regl.texture({
-          radius: config.numColumns,
-          wrapT: "clamp",
-          type: "half float"
-        }),
-        depthStencil: false
-      })
-    );
+  const doubleBuffer = makeDoubleBuffer(regl, {
+    radius: config.numColumns,
+    wrapT: "clamp",
+    type: "half float"
+  });
 
-  const fbo = makePassFBO(regl);
+  const output = makePassFBO(regl);
 
   const update = regl({
     frag: `
@@ -195,10 +188,10 @@ export default (regl, config) => {
     `,
 
     uniforms: {
-      lastState: ({ tick }) => state[tick % 2]
+      lastState: doubleBuffer.back
     },
 
-    framebuffer: ({ tick }) => state[(tick + 1) % 2] // The crucial state FBO alternator
+    framebuffer: doubleBuffer.front
   });
 
   // We render the code into an FBO using MSDFs: https://github.com/Chlumsky/msdfgen
@@ -290,19 +283,21 @@ export default (regl, config) => {
     `,
 
     uniforms: {
-      msdfTex: regl.prop("msdfTex"),
+      msdfTex,
       height: regl.context("viewportWidth"),
       width: regl.context("viewportHeight"),
-      lastState: ({ tick }) => state[tick % 2]
+      lastState: doubleBuffer.front
     },
 
-    framebuffer: fbo
+    framebuffer: output
   });
 
   return {
-    resize: fbo.resize,
-    fbo,
-    update,
-    render
+    resize: output.resize,
+    output,
+    render: resources => {
+      update();
+      render(resources);
+    }
   };
 };
