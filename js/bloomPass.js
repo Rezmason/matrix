@@ -1,4 +1,4 @@
-import { makePassFBO, makePyramid, resizePyramid } from "./utils.js";
+import { makePassFBO, makePyramid, resizePyramid, makePass } from "./utils.js";
 
 // The bloom pass is basically an added high-pass blur.
 
@@ -11,32 +11,30 @@ const levelStrengths = Array(pyramidHeight)
   .reverse();
 
 export default (regl, config, input) => {
-  if (config.effect === "none") {
-    return {
-      output: input,
-      resize: () => {},
-      render: () => {}
-    };
+  if (!config.performBloom) {
+    return makePass(input, null, null);
   }
 
   const highPassPyramid = makePyramid(regl, pyramidHeight);
-  const horizontalBlurPyramid = makePyramid(regl, pyramidHeight);
-  const verticalBlurPyramid = makePyramid(regl, pyramidHeight);
+  const hBlurPyramid = makePyramid(regl, pyramidHeight);
+  const vBlurPyramid = makePyramid(regl, pyramidHeight);
   const output = makePassFBO(regl);
 
   // The high pass restricts the blur to bright things in our input texture.
   const highPass = regl({
     frag: `
+      #define lumaMag vec3(0.2126, 0.7152, 0.0722)
       precision mediump float;
       varying vec2 vUV;
       uniform sampler2D tex;
       uniform float highPassThreshold;
       void main() {
-        float value = texture2D(tex, vUV).r;
-        if (value < highPassThreshold) {
-          value = 0.;
+        vec3 lumaColor = texture2D(tex, vUV).rgb * lumaMag;
+        float luma = lumaColor.r + lumaColor.g + lumaColor.b;
+        if (luma < highPassThreshold) {
+          luma = 0.;
         }
-        gl_FragColor = vec4(vec3(value), 1.0);
+        gl_FragColor = vec4(vec3(luma), 1.0);
       }
     `,
     uniforms: {
@@ -79,70 +77,51 @@ export default (regl, config, input) => {
     frag: `
       precision mediump float;
       varying vec2 vUV;
-      ${verticalBlurPyramid
-        .map((_, index) => `uniform sampler2D tex_${index};`)
+      ${vBlurPyramid
+        .map((_, index) => `uniform sampler2D pyr_${index};`)
         .join("\n")}
       uniform sampler2D tex;
       uniform float bloomStrength;
       void main() {
         vec4 total = vec4(0.);
-        ${verticalBlurPyramid
+        ${vBlurPyramid
           .map(
             (_, index) =>
-              `total += texture2D(tex_${index}, vUV) * ${levelStrengths[index]};`
+              `total += texture2D(pyr_${index}, vUV) * ${levelStrengths[index]};`
           )
           .join("\n")}
         gl_FragColor = total * bloomStrength + texture2D(tex, vUV);
       }
     `,
-    uniforms: Object.assign(
-      {
-        tex: input
-      },
-      Object.fromEntries(
-        verticalBlurPyramid.map((fbo, index) => [`tex_${index}`, fbo])
+    uniforms: {
+      tex: input,
+      ...Object.fromEntries(
+        vBlurPyramid.map((fbo, index) => [`pyr_${index}`, fbo])
       )
-    ),
+    },
     framebuffer: output
   });
 
-  return {
+  const scale = config.bloomSize;
+
+  return makePass(
     output,
-    resize: (viewportWidth, viewportHeight) => {
-      // The blur pyramids can be lower resolution than the screen.
-      resizePyramid(
-        highPassPyramid,
-        viewportWidth,
-        viewportHeight,
-        config.bloomSize
-      );
-      resizePyramid(
-        horizontalBlurPyramid,
-        viewportWidth,
-        viewportHeight,
-        config.bloomSize
-      );
-      resizePyramid(
-        verticalBlurPyramid,
-        viewportWidth,
-        viewportHeight,
-        config.bloomSize
-      );
-      output.resize(viewportWidth, viewportHeight);
-    },
-    render: () => {
+    () => {
       highPassPyramid.forEach(fbo => highPass({ fbo, tex: input }));
-      horizontalBlurPyramid.forEach((fbo, index) =>
+      hBlurPyramid.forEach((fbo, index) =>
         blur({ fbo, tex: highPassPyramid[index], direction: [1, 0] })
       );
-      verticalBlurPyramid.forEach((fbo, index) =>
-        blur({
-          fbo,
-          tex: horizontalBlurPyramid[index],
-          direction: [0, 1]
-        })
+      vBlurPyramid.forEach((fbo, index) =>
+        blur({ fbo, tex: hBlurPyramid[index], direction: [0, 1] })
       );
       combineBloom();
+    },
+    (w, h) => {
+      // The blur pyramids can be lower resolution than the screen.
+      resizePyramid(highPassPyramid, w, h, scale);
+      resizePyramid(hBlurPyramid, w, h, scale);
+      resizePyramid(vBlurPyramid, w, h, scale);
+      output.resize(w, h);
     }
-  };
+  );
 };

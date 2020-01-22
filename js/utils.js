@@ -99,7 +99,7 @@ const makeFullScreenQuad = (regl, uniforms = {}, context = {}) =>
     count: 3
   });
 
-const makePalette = (regl, data) =>
+const make1DTexture = (regl, data) =>
   regl.texture({
     data,
     width: data.length / 3,
@@ -108,6 +108,24 @@ const makePalette = (regl, data) =>
     mag: "linear",
     min: "linear"
   });
+
+const makePass = (output, render, resize) => {
+  if (render == null) {
+    render = () => {};
+  }
+  if (resize === undefined) {
+    // "default" resize function is on the FBO
+    resize = (w, h) => output.resize(w, h);
+  }
+  if (resize == null) {
+    resize = () => {};
+  }
+  return {
+    output,
+    render,
+    resize
+  };
+};
 
 export {
   makePassTexture,
@@ -118,5 +136,6 @@ export {
   loadImage,
   loadImages,
   makeFullScreenQuad,
-  makePalette
+  make1DTexture,
+  makePass
 };

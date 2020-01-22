@@ -1,4 +1,4 @@
-import { makePassFBO, makeDoubleBuffer } from "./utils.js";
+import { makePassFBO, makeDoubleBuffer, makePass } from "./utils.js";
 
 export default (regl, config, { msdfTex }) => {
   // These two framebuffers are used to compute the raining code.
@@ -292,12 +292,8 @@ export default (regl, config, { msdfTex }) => {
     framebuffer: output
   });
 
-  return {
-    resize: output.resize,
-    output,
-    render: resources => {
-      update();
-      render(resources);
-    }
-  };
+  return makePass(output, resources => {
+    update();
+    render(resources);
+  });
 };

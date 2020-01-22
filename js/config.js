@@ -38,7 +38,7 @@ const versions = {
     rippleScale: 30,
     rippleSpeed: 0.1,
     numColumns: 30,
-    palette: [
+    paletteEntries: [
       { rgb: [0.0, 0.0, 0.0], at: 0.0 },
       { rgb: [0.52, 0.17, 0.05], at: 0.4 },
       { rgb: [0.82, 0.37, 0.12], at: 0.7 },
@@ -69,7 +69,7 @@ const versions = {
     rippleScale: 30,
     rippleSpeed: 0.2,
     numColumns: 60,
-    palette: [
+    paletteEntries: [
       { rgb: [0.0, 0.0, 0.0], at: 0.0 },
       { rgb: [0.32, 0.06, 0.0], at: 0.2 },
       { rgb: [0.82, 0.06, 0.05], at: 0.4 },
@@ -100,7 +100,7 @@ const versions = {
     rippleScale: 30,
     rippleSpeed: 0.2,
     numColumns: 80,
-    palette: [
+    paletteEntries: [
       { rgb: [0 / 255, 0 / 255, 0 / 255], at: 0 / 16 },
       { rgb: [6 / 255, 16 / 255, 8 / 255], at: 1 / 16 },
       { rgb: [11 / 255, 28 / 255, 15 / 255], at: 2 / 16 },
@@ -143,7 +143,7 @@ const versions = {
     rippleScale: 30,
     rippleSpeed: 0.2,
     numColumns: 108,
-    palette: [
+    paletteEntries: [
       { rgb: [0.0, 0.0, 0.0], at: 0.0 },
       { rgb: [0.18, 0.9, 0.35], at: 0.6 },
       { rgb: [0.9, 1.0, 0.9], at: 1.0 }
@@ -155,7 +155,7 @@ const versions = {
 versions.throwback = versions.operator;
 versions["1999"] = versions.classic;
 
-export default (searchString, makePaletteTexture) => {
+export default (searchString, make1DTexture) => {
   const urlParams = new URLSearchParams(searchString);
   const getParam = (keyOrKeys, defaultValue) => {
     if (Array.isArray(keyOrKeys)) {
@@ -215,6 +215,11 @@ export default (searchString, makePaletteTexture) => {
     .split(",")
     .map(parseFloat);
   config.showComputationTexture = config.effect === "none";
+  config.performBloom =
+    config.effect !== "none" &&
+    config.bloomSize > 0 &&
+    config.bloomStrength > 0;
+  console.log(config.effect, config.bloomSize, config.bloomStrength);
 
   switch (config.cycleStyleName) {
     case "cycleFasterWhenDimmed":
@@ -239,7 +244,7 @@ export default (searchString, makePaletteTexture) => {
 
   const PALETTE_SIZE = 2048;
   const paletteColors = Array(PALETTE_SIZE);
-  const sortedEntries = version.palette
+  const sortedEntries = version.paletteEntries
     .slice()
     .sort((e1, e2) => e1.at - e2.at)
     .map(entry => ({
@@ -269,9 +274,7 @@ export default (searchString, makePaletteTexture) => {
     }
   });
 
-  config.paletteColorData = makePaletteTexture(
-    paletteColors.flat().map(i => i * 0xff)
-  );
+  config.palette = make1DTexture(paletteColors.flat().map(i => i * 0xff));
 
   let stripeColors = [0, 0, 0];
 
@@ -292,9 +295,7 @@ export default (searchString, makePaletteTexture) => {
     stripeColors = config.customStripes.slice(0, numFlagColors * 3);
   }
 
-  config.stripeColorData = makePaletteTexture(
-    stripeColors.map(f => Math.floor(f * 0xff))
-  );
+  config.stripes = make1DTexture(stripeColors.map(f => Math.floor(f * 0xff)));
 
   const uniforms = Object.fromEntries(
     Object.entries(config).filter(([key, value]) => {

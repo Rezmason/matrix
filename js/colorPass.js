@@ -1,19 +1,18 @@
-import { makePassFBO } from "./utils.js";
+import { makePassFBO, makePass } from "./utils.js";
 
-// rendered texture's values are mapped to colors in a palette texture.
-// A little noise is introduced, to hide the banding that appears
-// in subtle gradients. The noise is also time-driven, so its grain
-// won't persist across subsequent frames. This is a safe trick
-// in screen space.
-
-const colorizeByPalette = regl =>
+const colorizeByPalette = (regl, uniforms, framebuffer) =>
+  // The rendered texture's values are mapped to colors in a palette texture.
+  // A little noise is introduced, to hide the banding that appears
+  // in subtle gradients. The noise is also time-driven, so its grain
+  // won't persist across subsequent frames. This is a safe trick
+  // in screen space.
   regl({
     frag: `
     precision mediump float;
     #define PI 3.14159265359
 
     uniform sampler2D tex;
-    uniform sampler2D paletteColorData;
+    uniform sampler2D palette;
     uniform float ditherMagnitude;
     uniform float time;
     varying vec2 vUV;
@@ -25,23 +24,26 @@ const colorizeByPalette = regl =>
     }
 
     void main() {
-      gl_FragColor = texture2D( paletteColorData, vec2( texture2D( tex, vUV ).r - rand( gl_FragCoord.xy, time ) * ditherMagnitude, 0.0 ) );
+      float at = texture2D( tex, vUV ).r - rand( gl_FragCoord.xy, time ) * ditherMagnitude;
+      gl_FragColor = texture2D( palette, vec2(at, 0.0));
     }
   `,
 
     uniforms: {
+      ...uniforms,
       ditherMagnitude: 0.05
-    }
+    },
+    framebuffer
   });
 
-const colorizeByStripes = regl =>
+const colorizeByStripes = (regl, uniforms, framebuffer) =>
   regl({
     frag: `
     precision mediump float;
     #define PI 3.14159265359
 
     uniform sampler2D tex;
-    uniform sampler2D stripeColorData;
+    uniform sampler2D stripes;
     uniform float ditherMagnitude;
     varying vec2 vUV;
 
@@ -52,18 +54,20 @@ const colorizeByStripes = regl =>
     }
 
     void main() {
-      float value = texture2D(tex, vUV).r;
-      vec3 value2 = texture2D(stripeColorData, vUV).rgb - rand( gl_FragCoord.xy ) * ditherMagnitude;
-      gl_FragColor = vec4(value2 * value, 1.0);
+      vec3 color = texture2D(stripes, vUV).rgb - rand( gl_FragCoord.xy ) * ditherMagnitude;
+      float brightness = texture2D(tex, vUV).r;
+      gl_FragColor = vec4(color * brightness, 1.0);
     }
   `,
 
     uniforms: {
+      ...uniforms,
       ditherMagnitude: 0.1
-    }
+    },
+    framebuffer
   });
 
-const colorizeByImage = (regl, bgTex) =>
+const colorizeByImage = (regl, uniforms, framebuffer) =>
   regl({
     frag: `
     precision mediump float;
@@ -72,12 +76,13 @@ const colorizeByImage = (regl, bgTex) =>
     varying vec2 vUV;
 
     void main() {
-      gl_FragColor = vec4(texture2D(bgTex, vUV).rgb * (pow(texture2D(tex, vUV).r, 1.5) * 0.995 + 0.005), 1.0);
+      vec3 bgColor = texture2D(bgTex, vUV).rgb;
+      float brightness = pow(texture2D(tex, vUV).r, 1.5);
+      gl_FragColor = vec4(bgColor * brightness, 1.0);
     }
   `,
-    uniforms: {
-      bgTex
-    }
+    uniforms,
+    framebuffer
   });
 
 const colorizersByEffect = {
@@ -89,36 +94,19 @@ const colorizersByEffect = {
 
 export default (regl, config, { bgTex }, input) => {
   if (config.effect === "none") {
-    return {
-      output: input,
-      resize: () => {},
-      render: () => {}
-    };
+    return makePass(input, null, null);
+  }
+
+  if (bgTex == null) {
+    bgTex = 0;
   }
 
   const output = makePassFBO(regl);
 
-  const colorize = regl({
-    uniforms: {
-      tex: regl.prop("tex")
-    },
-    framebuffer: output
-  });
-
-  const colorizer = (config.effect in colorizersByEffect
-    ? colorizersByEffect[config.effect]
-    : colorizeByPalette)(regl, bgTex);
-
-  return {
+  return makePass(
     output,
-    resize: output.resize,
-    render: resources => {
-      colorize(
-        {
-          tex: input
-        },
-        () => colorizer(resources)
-      );
-    }
-  };
+    (config.effect in colorizersByEffect
+      ? colorizersByEffect[config.effect]
+      : colorizeByPalette)(regl, { bgTex, tex: input }, output)
+  );
 };

@@ -42,7 +42,7 @@
       import {
         loadImages,
         makeFullScreenQuad,
-        makePalette
+        make1DTexture
       } from "./js/utils.js";
       import makeConfig from "./js/config.js";
       import makeMatrixRenderer from "./js/renderer.js";
@@ -67,7 +67,7 @@
       });
 
       const [config, uniforms] = makeConfig(window.location.search, data =>
-        makePalette(regl, data)
+        make1DTexture(regl, data)
       );
 
       const resize = () => {
