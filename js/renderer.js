@@ -140,7 +140,7 @@ export default (regl, config) => {
         if (hasThunder) {
           vec2 distVec = (gl_FragCoord.xy / numColumns - vec2(0.5, 1.0)) * vec2(1.0, 2.0);
           float thunder = (blast(sin(SQRT_5 * simTime), 10.0) + blast(sin(SQRT_2 * simTime), 10.0));
-          thunder *= 30.0 * (1.0 - 1.0 * length(distVec));
+          thunder *= 20.0 * (1.0 - 0.8 * length(distVec));
 
           newBrightness *= max(0.0, thunder) * 1.0 + 0.7;
 
