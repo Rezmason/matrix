@@ -16,6 +16,12 @@ export default (regl, config, { msdfTex }) => {
 
   const output = makePassFBO(regl);
 
+  // This shader is the star of the show.
+  // In normal operation, each pixel represents a glyph's:
+  //   R: brightness
+  //   G: progress through the glyph sequence
+  //   B: current glyph index
+  //   A: additional brightness, for effects
   const update = regl({
     frag: `
       precision highp float;
@@ -31,10 +37,10 @@ export default (regl, config, { msdfTex }) => {
       uniform bool hasThunder;
       uniform bool showComputationTexture;
 
-      uniform float brightnessChangeBias;
+      uniform float brightnessMinimum;
       uniform float brightnessMultiplier;
       uniform float brightnessOffset;
-      uniform float cursorEffectThreshold;
+      uniform float brightnessMix;
 
       uniform float time;
       uniform float animationSpeed;
@@ -44,13 +50,15 @@ export default (regl, config, { msdfTex }) => {
 
       uniform float glyphHeightToWidth;
       uniform float glyphSequenceLength;
-      uniform float numFontColumns;
+      uniform float glyphTextureColumns;
       uniform int cycleStyle;
 
       uniform float rippleScale;
       uniform float rippleSpeed;
       uniform float rippleThickness;
       uniform int rippleType;
+
+      uniform float cursorEffectThreshold;
 
       float max2(vec2 v) {
         return max(v.x, v.y);
@@ -66,19 +74,61 @@ export default (regl, config, { msdfTex }) => {
         return fract(vec2(sin(p.x * 591.32 + p.y * 154.077), cos(p.x * 391.32 + p.y * 49.077)));
       }
 
-      highp float blast( const in float x, const in float power ) {
-        return pow(pow(pow(x, power), power), power);
+      float getRainTime(float simTime, vec2 glyphPos) {
+        float columnTimeOffset = rand(vec2(glyphPos.x, 0.0));
+        float columnSpeedOffset = rand(vec2(glyphPos.x + 0.1, 0.0));
+        float columnTime = (columnTimeOffset * 1000.0 + simTime * 0.5 * fallSpeed) * (0.5 + columnSpeedOffset * 0.5) + (sin(simTime * fallSpeed * columnSpeedOffset) * 0.2);
+        return (glyphPos.y * 0.01 + columnTime) / raindropLength;
       }
 
-      float ripple(vec2 uv, float simTime) {
+      float getRainBrightness(float rainTime) {
+        float value = 1.0 - fract((rainTime + 0.3 * sin(SQRT_2 * rainTime) + 0.2 * sin(SQRT_5 * rainTime)));
+        return log(value * 1.25) * 3.0;
+      }
+
+      float getGlyphCycleSpeed(float rainTime, float brightness) {
+        float glyphCycleSpeed = 0.0;
+        if (cycleStyle == 1) {
+          glyphCycleSpeed = fract((rainTime + 0.7 * sin(SQRT_2 * rainTime) + 1.1 * sin(SQRT_5 * rainTime))) * 0.75;
+        } else if (cycleStyle == 0 && brightness > 0.0) {
+          glyphCycleSpeed = pow(1.0 - brightness, 4.0);
+        }
+        return glyphCycleSpeed;
+      }
+
+      float getSymbolIndex(float glyphCycle) {
+        float symbol = floor(glyphSequenceLength * glyphCycle);
+        float symbolX = mod(symbol, glyphTextureColumns);
+        float symbolY = ((glyphTextureColumns - 1.0) - (symbol - symbolX) / glyphTextureColumns);
+        return symbolY * glyphTextureColumns + symbolX;
+      }
+
+      float applySunShower(float rainBrightness, vec2 screenPos) {
+        if (rainBrightness < -4.) {
+          return rainBrightness;
+        }
+        float value = pow(fract(rainBrightness * 0.5), 3.0) * screenPos.y * 1.5;
+        return value;
+      }
+
+      float applyThunder(float rainBrightness, float simTime, vec2 screenPos) {
+        simTime *= 0.5;
+        float thunder = 1.0 - fract((simTime + 0.3 * sin(SQRT_2 * simTime) + 0.2 * sin(SQRT_5 * simTime)));
+        thunder = log(thunder * 1.5) * 4.0;
+        thunder = clamp(thunder, 0., 1.);
+        thunder = thunder * pow(screenPos.y, 2.) * 3.;
+        return rainBrightness + thunder;
+      }
+
+      float applyRippleEffect(float effect, float simTime, vec2 screenPos) {
         if (rippleType == -1) {
-          return 0.;
+          return effect;
         }
 
         float rippleTime = (simTime * 0.5 + 0.2 * sin(simTime)) * rippleSpeed + 1.;
 
         vec2 offset = rand2(vec2(floor(rippleTime), 0.)) - 0.5;
-        vec2 ripplePos = uv + offset;
+        vec2 ripplePos = screenPos * 2.0 - 1.0 + offset;
         float rippleDistance;
         if (rippleType == 0) {
           rippleDistance = max2(abs(ripplePos) * vec2(1.0, glyphHeightToWidth));
@@ -89,100 +139,69 @@ export default (regl, config, { msdfTex }) => {
         float rippleValue = fract(rippleTime) * rippleScale - rippleDistance;
 
         if (rippleValue > 0. && rippleValue < rippleThickness) {
-          return 0.75;
+          return effect + 0.75;
         } else {
-          return 0.;
+          return effect;
         }
+      }
+
+      float applyCursorEffect(float effect, float brightness) {
+        if (brightness >= cursorEffectThreshold) {
+          effect = 1.0;
+        }
+        return effect;
       }
 
       void main()  {
 
-        vec2 uv = gl_FragCoord.xy / numColumns;
-
-        float columnTimeOffset = rand(vec2(gl_FragCoord.x, 0.0));
-        float columnSpeedOffset = rand(vec2(gl_FragCoord.x + 0.1, 0.0));
-
-        vec4 data = texture2D( lastState, uv );
-
-        bool isInitializing = length(data) == 0.;
-
-        if (isInitializing) {
-          data = vec4(
-            rand(uv),
-            showComputationTexture ? 0.5 : rand(uv),
-            0.,
-            0.
-          );
-        }
-
-        float brightness = data.r;
-        float glyphCycle = data.g;
-
+        vec2 glyphPos = gl_FragCoord.xy;
+        vec2 screenPos = glyphPos / numColumns;
         float simTime = time * animationSpeed;
-        float columnTime = (columnTimeOffset * 1000.0 + simTime * 0.5 * fallSpeed) * (0.5 + columnSpeedOffset * 0.5) + (sin(simTime * fallSpeed * columnSpeedOffset) * 0.2);
-        float glyphTime = (gl_FragCoord.y * 0.01 + columnTime) / raindropLength;
 
-        float value = 1.0 - fract((glyphTime + 0.3 * sin(SQRT_2 * glyphTime) + 0.2 * sin(SQRT_5 * glyphTime)));
-
-        float newBrightness = 3.0 * log(value * 1.25);
-
-        if (hasSun) {
-          newBrightness = pow(fract(newBrightness * 0.5), 3.0) * uv.y * 2.0;
+        // Read the current values of the glyph
+        vec4 data = texture2D( lastState, screenPos );
+        bool isInitializing = length(data) == 0.;
+        float oldRainBrightness = data.r;
+        float oldGlyphCycle = data.g;
+        if (isInitializing) {
+          oldGlyphCycle = showComputationTexture ? 0.5 : rand(screenPos);
         }
 
-        if (hasThunder) {
-          vec2 distVec = (gl_FragCoord.xy / numColumns - vec2(0.5, 1.0)) * vec2(1.0, 2.0);
-          float thunder = (blast(sin(SQRT_5 * simTime), 10.0) + blast(sin(SQRT_2 * simTime), 10.0));
-          thunder *= 20.0 * (1.0 - 0.8 * length(distVec));
+        float rainTime = getRainTime(simTime, glyphPos);
+        float rainBrightness = getRainBrightness(rainTime);
 
-          newBrightness *= max(0.0, thunder) * 1.0 + 0.7;
+        if (hasSun) rainBrightness = applySunShower(rainBrightness, screenPos);
+        if (hasThunder) rainBrightness = applyThunder(rainBrightness, simTime, screenPos);
 
-          if (newBrightness > brightness) {
-            brightness = newBrightness;
-          } else {
-            brightness = mix(brightness, newBrightness, brightnessChangeBias * 0.1);
-          }
-        } else if (isInitializing) {
-          brightness = newBrightness;
-        } else {
-          brightness = mix(brightness, newBrightness, brightnessChangeBias);
-        }
-
-        float glyphCycleSpeed = 0.0;
-        if (cycleStyle == 1) {
-          glyphCycleSpeed = fract((glyphTime + 0.7 * sin(SQRT_2 * glyphTime) + 1.1 * sin(SQRT_5 * glyphTime))) * 0.75;
-        } else if (cycleStyle == 0) {
-          if (brightness > 0.0) glyphCycleSpeed = pow(1.0 - brightness, 4.0);
-        }
-
-        glyphCycle = fract(glyphCycle + 0.005 * animationSpeed * cycleSpeed * glyphCycleSpeed);
-        float symbol = floor(glyphSequenceLength * glyphCycle);
-        float symbolX = mod(symbol, numFontColumns);
-        float symbolY = ((numFontColumns - 1.0) - (symbol - symbolX) / numFontColumns);
+        float glyphCycleSpeed = getGlyphCycleSpeed(rainTime, rainBrightness);
+        float glyphCycle = fract(oldGlyphCycle + 0.005 * animationSpeed * cycleSpeed * glyphCycleSpeed);
 
         float effect = 0.;
+        effect = applyRippleEffect(effect, simTime, screenPos);
+        effect = applyCursorEffect(effect, rainBrightness);
 
-        effect += ripple(gl_FragCoord.xy / numColumns * 2.0 - 1.0, simTime);
-
-        if (brightness >= cursorEffectThreshold) {
-          effect = 1.0;
+        if (rainBrightness > brightnessMinimum) {
+          rainBrightness = rainBrightness * brightnessMultiplier + brightnessOffset;
         }
 
-        if (brightness > -1.) {
-          brightness = brightness * brightnessMultiplier + brightnessOffset;
+        if (!isInitializing) {
+          rainBrightness = mix(oldRainBrightness, rainBrightness, brightnessMix);
         }
-
-        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-        gl_FragColor.r = brightness;
-        gl_FragColor.g = glyphCycle;
 
         if (showComputationTexture) {
-          // Better use of the blue channel, for show and tell
-          gl_FragColor.b = min(1.0, glyphCycleSpeed);
-          gl_FragColor.a = 1.0;
+          gl_FragColor = vec4(
+            rainBrightness,
+            glyphCycle,
+            min(1.0, glyphCycleSpeed), // Better use of the blue channel, for show and tell
+            1.0
+          );
         } else {
-          gl_FragColor.b = symbolY * numFontColumns + symbolX;
-          gl_FragColor.a = effect;
+          gl_FragColor = vec4(
+            rainBrightness,
+            glyphCycle,
+            getSymbolIndex(glyphCycle),
+            effect
+          );
         }
       }
     `,
@@ -203,6 +222,7 @@ export default (regl, config, { msdfTex }) => {
       varying vec2 vUV;
       void main() {
         vUV = aPosition / 2.0 + 0.5;
+        // Scale the geometry to cover the longest dimension of the viewport
         vec2 size = width > height ? vec2(width / height, 1.) : vec2(1., height / width);
         gl_Position = vec4( size * aPosition, 0.0, 1.0 );
       }
@@ -218,7 +238,7 @@ export default (regl, config, { msdfTex }) => {
       uniform sampler2D msdfTex;
       uniform sampler2D lastState;
       uniform float numColumns;
-      uniform float numFontColumns;
+      uniform float glyphTextureColumns;
       uniform vec2 slantVec;
       uniform float slantScale;
       uniform float glyphHeightToWidth;
@@ -238,13 +258,16 @@ export default (regl, config, { msdfTex }) => {
         vec2 uv = vUV;
 
         if (isPolar) {
+          // Curves the UV space to make letters appear to radiate from up above
           uv -= 0.5;
           uv *= 0.5;
           uv.y -= 0.5;
           float radius = length(uv);
           float angle = atan(uv.y, uv.x) / (2. * PI) + 0.5;
-          uv = vec2(angle * 4. - 0.5, 1.25 - radius * 1.5);
+          uv = vec2(angle * 4. - 0.5, 1.5 - pow(radius, 0.5) * 1.5);
         } else {
+          // Applies the slant, scaling the UV space
+          // to guarantee the viewport is still covered
           uv = vec2(
           (uv.x - 0.5) * slantVec.x + (uv.y - 0.5) * slantVec.y,
           (uv.y - 0.5) * slantVec.x - (uv.x - 0.5) * slantVec.y
@@ -262,19 +285,20 @@ export default (regl, config, { msdfTex }) => {
 
         // Unpack the values from the font texture
         float brightness = glyph.r;
-
         float effect = glyph.a;
         brightness = max(effect, brightness);
-
         float symbolIndex = glyph.b;
-        vec2 symbolUV = vec2(mod(symbolIndex, numFontColumns), floor(symbolIndex / numFontColumns));
+
+        // resolve UV to MSDF texture coord
+        vec2 symbolUV = vec2(mod(symbolIndex, glyphTextureColumns), floor(symbolIndex / glyphTextureColumns));
         vec2 glyphUV = fract(uv * numColumns);
         glyphUV -= 0.5;
         glyphUV *= clamp(1.0 - glyphEdgeCrop, 0.0, 1.0);
         glyphUV += 0.5;
-        vec3 dist = texture2D(msdfTex, (glyphUV + symbolUV) / numFontColumns).rgb;
+        vec2 msdfUV = (glyphUV + symbolUV) / glyphTextureColumns;
 
-        // The rest is straight up MSDF
+        // MSDF
+        vec3 dist = texture2D(msdfTex, msdfUV).rgb;
         float sigDist = median3(dist) - 0.5;
         float alpha = clamp(sigDist/fwidth(sigDist) + 0.5, 0.0, 1.0);
 

@@ -2,32 +2,39 @@ const fonts = {
   coptic: {
     glyphTexURL: "coptic_msdf.png",
     glyphSequenceLength: 32,
-    numFontColumns: 8
+    glyphTextureColumns: 8
   },
   gothic: {
     glyphTexURL: "gothic_msdf.png",
     glyphSequenceLength: 27,
-    numFontColumns: 8
+    glyphTextureColumns: 8
   },
   matrixcode: {
     glyphTexURL: "matrixcode_msdf.png",
     glyphSequenceLength: 57,
-    numFontColumns: 8
+    glyphTextureColumns: 8
   }
+};
+
+const defaults = {
+  // TODO
 };
 
 const versions = {
   paradise: {
+    ...defaults,
     ...fonts.coptic,
     bloomRadius: 1.15,
     bloomStrength: 1.75,
     highPassThreshold: 0,
-    cycleSpeed: 0.05,
+    cycleSpeed: 0.1,
     cycleStyleName: "cycleFasterWhenDimmed",
     cursorEffectThreshold: 1,
     brightnessOffset: 0.0,
     brightnessMultiplier: 1.0,
-    fallSpeed: 0.05,
+    brightnessMix: 0.05,
+    brightnessMinimum: 0,
+    fallSpeed: 0.08,
     glyphEdgeCrop: 0.0,
     glyphHeightToWidth: 1,
     hasSun: true,
@@ -45,10 +52,11 @@ const versions = {
       { rgb: [1.0, 0.74, 0.29], at: 0.9 },
       { rgb: [1.0, 0.9, 0.8], at: 1.0 }
     ],
-    raindropLength: 0.5,
+    raindropLength: 0.4,
     slant: 0
   },
   nightmare: {
+    ...defaults,
     ...fonts.gothic,
     bloomRadius: 0.8,
     bloomStrength: 1,
@@ -58,6 +66,8 @@ const versions = {
     cursorEffectThreshold: 1,
     brightnessOffset: 0.0,
     brightnessMultiplier: 1.0,
+    brightnessMix: 0.75,
+    brightnessMinimum: 0,
     fallSpeed: 2.0,
     glyphEdgeCrop: 0.0,
     glyphHeightToWidth: 1,
@@ -80,6 +90,7 @@ const versions = {
     slant: 360 / 16
   },
   classic: {
+    ...defaults,
     ...fonts.matrixcode,
     bloomRadius: 0.5,
     bloomStrength: 1,
@@ -89,6 +100,8 @@ const versions = {
     cursorEffectThreshold: 1,
     brightnessOffset: 0.0,
     brightnessMultiplier: 1.0,
+    brightnessMix: 1.0,
+    brightnessMinimum: 0,
     fallSpeed: 1,
     glyphEdgeCrop: 0.0,
     glyphHeightToWidth: 1,
@@ -123,15 +136,18 @@ const versions = {
     slant: 0
   },
   operator: {
+    ...defaults,
     ...fonts.matrixcode,
     bloomRadius: 0.3,
     bloomStrength: 0.75,
     highPassThreshold: 0.0,
     cycleSpeed: 0.05,
     cycleStyleName: "cycleRandomly",
-    cursorEffectThreshold: 0.466,
+    cursorEffectThreshold: 0.64,
     brightnessOffset: 0.25,
     brightnessMultiplier: 0.0,
+    brightnessMix: 1.0,
+    brightnessMinimum: -1.0,
     fallSpeed: 0.65,
     glyphEdgeCrop: 0.15,
     glyphHeightToWidth: 1.35,
@@ -200,10 +216,6 @@ export default (searchString, make1DTexture) => {
     Math.min(1, parseFloat(getParam("bloomSize", 0.5)))
   );
   config.effect = getParam("effect", "plain");
-  config.brightnessChangeBias =
-    config.animationSpeed * config.fallSpeed == 0
-      ? 1
-      : Math.min(1, Math.abs(config.animationSpeed * config.fallSpeed));
   config.bgURL = getParam(
     "url",
     "https://upload.wikimedia.org/wikipedia/commons/0/0a/Flammarion_Colored.jpg"
@@ -219,7 +231,6 @@ export default (searchString, make1DTexture) => {
     config.effect !== "none" &&
     config.bloomSize > 0 &&
     config.bloomStrength > 0;
-  console.log(config.effect, config.bloomSize, config.bloomStrength);
 
   switch (config.cycleStyleName) {
     case "cycleFasterWhenDimmed":

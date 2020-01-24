@@ -1,5 +1,7 @@
 TODO:
 
+Clean up config.js
+
 Reach out to someone about producing sounds
   Raindrop sound
     https://youtu.be/bPhu01wpf0k?t=34
