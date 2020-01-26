@@ -171,6 +171,8 @@ const versions = {
 versions.throwback = versions.operator;
 versions["1999"] = versions.classic;
 
+// Start here
+
 export default (searchString, make1DTexture) => {
   const urlParams = new URLSearchParams(searchString);
   const getParam = (keyOrKeys, defaultValue) => {
@@ -185,8 +187,7 @@ export default (searchString, make1DTexture) => {
   };
 
   const versionName = getParam("version", "classic");
-  const version =
-    versions[versionName] == null ? versions.classic : versions[versionName];
+  const version = versions[versionName] == null ? versions.classic : versions[versionName];
 
   const config = { ...version };
 
@@ -194,43 +195,19 @@ export default (searchString, make1DTexture) => {
   config.fallSpeed *= parseFloat(getParam("fallSpeed", 1));
   config.cycleSpeed *= parseFloat(getParam("cycleSpeed", 1));
   config.numColumns = parseInt(getParam("width", config.numColumns));
-  config.raindropLength = parseFloat(
-    getParam(["raindropLength", "dropLength"], config.raindropLength)
-  );
+  config.raindropLength = parseFloat(getParam(["raindropLength", "dropLength"], config.raindropLength));
   config.glyphSequenceLength = config.glyphSequenceLength;
-  config.slant =
-    (parseFloat(getParam(["slant", "angle"], config.slant)) * Math.PI) / 180;
+  config.slant = (parseFloat(getParam(["slant", "angle"], config.slant)) * Math.PI) / 180;
   config.slantVec = [Math.cos(config.slant), Math.sin(config.slant)];
-  config.slantScale =
-    1 / (Math.abs(Math.sin(2 * config.slant)) * (Math.sqrt(2) - 1) + 1);
+  config.slantScale = 1 / (Math.abs(Math.sin(2 * config.slant)) * (Math.sqrt(2) - 1) + 1);
   config.glyphEdgeCrop = parseFloat(getParam("encroach", config.glyphEdgeCrop));
-  config.glyphHeightToWidth = parseFloat(
-    getParam("stretch", config.glyphHeightToWidth)
-  );
-  config.cursorEffectThreshold = getParam(
-    "cursorEffectThreshold",
-    config.cursorEffectThreshold
-  );
-  config.bloomSize = Math.max(
-    0.01,
-    Math.min(1, parseFloat(getParam("bloomSize", 0.5)))
-  );
+  config.glyphHeightToWidth = parseFloat(getParam("stretch", config.glyphHeightToWidth));
+  config.cursorEffectThreshold = getParam("cursorEffectThreshold", config.cursorEffectThreshold);
+  config.bloomSize = Math.max(0.01, Math.min(1, parseFloat(getParam("bloomSize", 0.5))));
   config.effect = getParam("effect", "plain");
-  config.bgURL = getParam(
-    "url",
-    "https://upload.wikimedia.org/wikipedia/commons/0/0a/Flammarion_Colored.jpg"
-  );
-  config.customStripes = getParam(
-    "colors",
-    "0.4,0.15,0.1,0.4,0.15,0.1,0.8,0.8,0.6,0.8,0.8,0.6,1.0,0.7,0.8,1.0,0.7,0.8,"
-  )
-    .split(",")
-    .map(parseFloat);
+  config.bgURL = getParam("url", "https://upload.wikimedia.org/wikipedia/commons/0/0a/Flammarion_Colored.jpg");
+  config.customStripes = getParam("colors", "0.4,0.15,0.1,0.4,0.15,0.1,0.8,0.8,0.6,0.8,0.8,0.6,1.0,0.7,0.8,1.0,0.7,0.8,").split(",").map(parseFloat);
   config.showComputationTexture = config.effect === "none";
-  config.performBloom =
-    config.effect !== "none" &&
-    config.bloomSize > 0 &&
-    config.bloomStrength > 0;
 
   switch (config.cycleStyleName) {
     case "cycleFasterWhenDimmed":
@@ -291,7 +268,7 @@ export default (searchString, make1DTexture) => {
 
   if (config.effect === "pride") {
     config.effect = "stripes";
-    config.customStripes = [
+    config.stripeColors = [
       [1, 0, 0],
       [1, 0.5, 0],
       [1, 1, 0],
@@ -302,8 +279,9 @@ export default (searchString, make1DTexture) => {
   }
 
   if (config.effect === "customStripes" || config.effect === "stripes") {
-    const numFlagColors = Math.floor(config.customStripes.length / 3);
-    stripeColors = config.customStripes.slice(0, numFlagColors * 3);
+    config.effect = "stripes";
+    const numStripeColors = Math.floor(config.stripeColors.length / 3);
+    stripeColors = config.stripeColors.slice(0, numStripeColors * 3);
   }
 
   config.stripes = make1DTexture(stripeColors.map(f => Math.floor(f * 0xff)));

@@ -10,11 +10,7 @@ const levelStrengths = Array(pyramidHeight)
   )
   .reverse();
 
-export default (regl, config, input) => {
-  if (!config.performBloom) {
-    return makePass(input, null, null);
-  }
-
+export default (regl, { bloomSize }, input) => {
   const highPassPyramid = makePyramid(regl, pyramidHeight);
   const hBlurPyramid = makePyramid(regl, pyramidHeight);
   const vBlurPyramid = makePyramid(regl, pyramidHeight);
@@ -102,7 +98,7 @@ export default (regl, config, input) => {
     framebuffer: output
   });
 
-  const scale = config.bloomSize;
+  const scale = bloomSize;
 
   return makePass(
     output,

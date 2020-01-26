@@ -20,90 +20,22 @@
     </style>
   </head>
   <body>
-    <script src="lib/regl.min.js"></script>
-    <script type="module">
-      /*
+    <!--
+      This is an implementation of the green code seen in The Matrix film and video game franchise.
+      This project demonstrates five concepts:
+          1. Drawing to floating point frame buffer objects, or 'FBO's,
+             for performing computation and post-processing
+          2. GPU-side computation, with a fragment shader
+             updating two alternating FBOs
+          3. Rendering crisp "vector" graphics, with a multiple-channel
+             signed distance field (or 'MSDF')
+          4. Creating a blur/bloom effect from a texture pyramid
+          5. Color mapping with noise, to hide banding
 
-        This is an implementation of the green code seen in The Matrix film and video game franchise.
-        This project demonstrates five concepts:
-            1. Drawing to floating point frame buffer objects, or 'FBO's,
-               for performing computation and post-processing
-            2. GPU-side computation, with a fragment shader
-               updating two alternating FBOs
-            3. Rendering crisp "vector" graphics, with a multiple-channel
-               signed distance field (or 'MSDF')
-            4. Creating a blur/bloom effect from a texture pyramid
-            5. Color mapping with noise, to hide banding
-
-        For more information, please visit: https://github.com/Rezmason/matrix
-
-      */
-
-      import {
-        loadImages,
-        makeFullScreenQuad,
-        make1DTexture
-      } from "./js/utils.js";
-      import makeConfig from "./js/config.js";
-      import makeMatrixRenderer from "./js/renderer.js";
-      import makeBloomPass from "./js/bloomPass.js";
-      import makeColorPass from "./js/colorPass.js";
-
-      const canvas = document.createElement("canvas");
-      document.body.appendChild(canvas);
-      document.addEventListener("touchmove", e => e.preventDefault(), {
-        passive: false
-      });
-
-      const regl = createREGL({
-        canvas,
-        extensions: ["OES_texture_half_float", "OES_texture_half_float_linear"],
-        // These extensions are also needed, but Safari misreports that they are missing
-        optionalExtensions: [
-          "EXT_color_buffer_half_float",
-          "WEBGL_color_buffer_float",
-          "OES_standard_derivatives"
-        ]
-      });
-
-      const [config, uniforms] = makeConfig(window.location.search, data =>
-        make1DTexture(regl, data)
-      );
-
-      const resize = () => {
-        canvas.width = canvas.clientWidth;
-        canvas.height = canvas.clientHeight;
-      };
-      window.onresize = resize;
-      resize();
-
-      document.body.onload = async () => {
-        const images = await loadImages(regl, {
-          msdfTex: config.glyphTexURL,
-          bgTex: config.effect === "image" ? config.bgURL : null
-        });
-
-        // All this takes place in a full screen quad.
-        const fullScreenQuad = makeFullScreenQuad(regl, uniforms);
-        const renderer = makeMatrixRenderer(regl, config, images);
-        const bloomPass = makeBloomPass(regl, config, renderer.output);
-        const colorPass = makeColorPass(regl, config, images, bloomPass.output);
-        const drawToScreen = regl({
-          uniforms: {
-            tex: colorPass.output
-          }
-        });
-
-        const passes = [renderer, bloomPass, colorPass];
-
-        const loop = regl.frame(({ viewportWidth, viewportHeight }) => {
-          passes.forEach(pass => pass.resize(viewportWidth, viewportHeight));
-          fullScreenQuad(() => {
-            passes.forEach(pass => pass.render());
-            drawToScreen();
-          });
-        });
-      };
-    </script>
+      For more information, please visit: https://github.com/Rezmason/matrix
+     -->
+    <!-- <script src="lib/regl.min.js"></script> -->
+    <script src="lib/regl.js"></script>
+    <script type="module" src="js/main.js"></script>
   </body>
 </html>

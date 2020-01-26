@@ -1,6 +1,8 @@
 TODO:
 
 Clean up config.js
+  Too many responsibilities
+    Pass-specific properties should be made into uniforms in the passes
 
 Reach out to someone about producing sounds
   Raindrop sound

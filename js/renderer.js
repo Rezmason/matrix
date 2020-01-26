@@ -1,6 +1,6 @@
-import { makePassFBO, makeDoubleBuffer, makePass } from "./utils.js";
+import { loadImage, makePassFBO, makeDoubleBuffer, makePass } from "./utils.js";
 
-export default (regl, config, { msdfTex }) => {
+export default (regl, config) => {
   // These two framebuffers are used to compute the raining code.
   // they take turns being the source and destination of the "compute" shader.
   // The half float data type is crucial! It lets us store almost any real number,
@@ -213,6 +213,8 @@ export default (regl, config, { msdfTex }) => {
     framebuffer: doubleBuffer.front
   });
 
+  const msdfLoader = loadImage(regl, config.glyphTexURL);
+
   // We render the code into an FBO using MSDFs: https://github.com/Chlumsky/msdfgen
   const render = regl({
     vert: `
@@ -235,7 +237,7 @@ export default (regl, config, { msdfTex }) => {
       #endif
       precision lowp float;
 
-      uniform sampler2D msdfTex;
+      uniform sampler2D glyphTex;
       uniform sampler2D lastState;
       uniform float numColumns;
       uniform float glyphTextureColumns;
@@ -298,7 +300,7 @@ export default (regl, config, { msdfTex }) => {
         vec2 msdfUV = (glyphUV + symbolUV) / glyphTextureColumns;
 
         // MSDF
-        vec3 dist = texture2D(msdfTex, msdfUV).rgb;
+        vec3 dist = texture2D(glyphTex, msdfUV).rgb;
         float sigDist = median3(dist) - 0.5;
         float alpha = clamp(sigDist/fwidth(sigDist) + 0.5, 0.0, 1.0);
 
@@ -307,7 +309,7 @@ export default (regl, config, { msdfTex }) => {
     `,
 
     uniforms: {
-      msdfTex,
+      glyphTex: msdfLoader.texture,
       height: regl.context("viewportWidth"),
       width: regl.context("viewportHeight"),
       lastState: doubleBuffer.front
@@ -316,8 +318,13 @@ export default (regl, config, { msdfTex }) => {
     framebuffer: output
   });
 
-  return makePass(output, resources => {
-    update();
-    render(resources);
-  });
+  return makePass(
+    output,
+    resources => {
+      update();
+      render(resources);
+    },
+    null,
+    msdfLoader.ready
+  );
 };

@@ -43,11 +43,11 @@ const resizePyramid = (pyramid, vw, vh, scale) =>
 const loadImages = async (regl, manifest) => {
   const keys = Object.keys(manifest);
   const urls = Object.values(manifest);
-  const images = await Promise.all(urls.map(url => loadImage(regl, url)));
+  const images = await Promise.all(urls.map(url => loadImageOld(regl, url)));
   return Object.fromEntries(images.map((image, index) => [keys[index], image]));
 };
 
-const loadImage = async (regl, url) => {
+const loadImageOld = async (regl, url) => {
   if (url == null) {
     return null;
   }
@@ -61,6 +61,34 @@ const loadImage = async (regl, url) => {
     min: "linear",
     flipY: true
   });
+};
+
+const loadImage = (regl, url) => {
+  let texture = regl.texture([[0]]);
+  let loaded = false;
+  return {
+    texture: () => {
+      if (!loaded) {
+        console.warn(`texture still loading: ${url}`);
+      }
+      return texture;
+    },
+    ready: (async () => {
+      if (url != null) {
+        const data = new Image();
+        data.crossOrigin = "anonymous";
+        data.src = url;
+        await data.decode();
+        loaded = true;
+        texture = regl.texture({
+          data,
+          mag: "linear",
+          min: "linear",
+          flipY: true
+        });
+      }
+    })()
+  };
 };
 
 const makeFullScreenQuad = (regl, uniforms = {}, context = {}) =>
@@ -109,23 +137,34 @@ const make1DTexture = (regl, data) =>
     min: "linear"
   });
 
-const makePass = (output, render, resize) => {
+const makePass = (output, render, resize, ready) => {
   if (render == null) {
     render = () => {};
   }
-  if (resize === undefined) {
-    // "default" resize function is on the FBO
+  if (resize == null) {
     resize = (w, h) => output.resize(w, h);
   }
-  if (resize == null) {
-    resize = () => {};
+  if (ready == null) {
+    ready = Promise.resolve();
   }
   return {
     output,
     render,
-    resize
+    resize,
+    ready
   };
 };
+
+const makePipeline = (steps, getInput, ...params) =>
+  steps
+    .filter(f => f != null)
+    .reduce(
+      (pipeline, f, i) => [
+        ...pipeline,
+        f(...params, i == 0 ? null : getInput(pipeline[i - 1]))
+      ],
+      []
+    );
 
 export {
   makePassTexture,
@@ -137,5 +176,6 @@ export {
   loadImages,
   makeFullScreenQuad,
   make1DTexture,
-  makePass
+  makePass,
+  makePipeline
 };
