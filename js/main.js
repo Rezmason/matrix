@@ -1,4 +1,4 @@
-import { makeFullScreenQuad, make1DTexture, makePipeline } from "./utils.js";
+import { makeFullScreenQuad, makePipeline } from "./utils.js";
 import makeConfig from "./config.js";
 import makeMatrixRenderer from "./renderer.js";
 import makeBloomPass from "./bloomPass.js";
@@ -26,13 +26,13 @@ const regl = createREGL({
 const effects = {
   none: null,
   plain: makePalettePass,
+  customStripes: makeStripePass,
   stripes: makeStripePass,
+  pride: makeStripePass,
   image: makeImagePass
 };
 
-const [config, uniforms] = makeConfig(window.location.search, data =>
-  make1DTexture(regl, data)
-);
+const config = makeConfig(window.location.search);
 const effect = config.effect in effects ? config.effect : "plain";
 
 const resize = () => {
@@ -44,7 +44,7 @@ resize();
 
 document.body.onload = async () => {
   // All this takes place in a full screen quad.
-  const fullScreenQuad = makeFullScreenQuad(regl, uniforms);
+  const fullScreenQuad = makeFullScreenQuad(regl);
   const pipeline = makePipeline(
     [
       makeMatrixRenderer,
@@ -61,7 +61,8 @@ document.body.onload = async () => {
     }
   });
   await Promise.all(pipeline.map(({ ready }) => ready));
-  regl.frame(({ viewportWidth, viewportHeight }) => {
+  const tick = regl.frame(({ viewportWidth, viewportHeight }) => {
+    // tick.cancel();
     pipeline.forEach(({ resize }) => resize(viewportWidth, viewportHeight));
     fullScreenQuad(() => {
       pipeline.forEach(({ render }) => render());

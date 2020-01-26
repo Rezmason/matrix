@@ -1,4 +1,4 @@
-import { makePassFBO, makePass } from "./utils.js";
+import { make1DTexture, makePassFBO, makePass } from "./utils.js";
 
 // The rendered texture's values are mapped to colors in a palette texture.
 // A little noise is introduced, to hide the banding that appears
@@ -6,8 +6,43 @@ import { makePassFBO, makePass } from "./utils.js";
 // won't persist across subsequent frames. This is a safe trick
 // in screen space.
 
-export default (regl, {}, input) => {
+export default (regl, config, input) => {
   const output = makePassFBO(regl);
+
+  const PALETTE_SIZE = 2048;
+  const paletteColors = Array(PALETTE_SIZE);
+  const sortedEntries = config.paletteEntries
+    .slice()
+    .sort((e1, e2) => e1.at - e2.at)
+    .map(entry => ({
+      rgb: entry.rgb,
+      arrayIndex: Math.floor(
+        Math.max(Math.min(1, entry.at), 0) * (PALETTE_SIZE - 1)
+      )
+    }));
+  sortedEntries.unshift({ rgb: sortedEntries[0].rgb, arrayIndex: 0 });
+  sortedEntries.push({
+    rgb: sortedEntries[sortedEntries.length - 1].rgb,
+    arrayIndex: PALETTE_SIZE - 1
+  });
+  sortedEntries.forEach((entry, index) => {
+    paletteColors[entry.arrayIndex] = entry.rgb.slice();
+    if (index + 1 < sortedEntries.length) {
+      const nextEntry = sortedEntries[index + 1];
+      const diff = nextEntry.arrayIndex - entry.arrayIndex;
+      for (let i = 0; i < diff; i++) {
+        const ratio = i / diff;
+        paletteColors[entry.arrayIndex + i] = [
+          entry.rgb[0] * (1 - ratio) + nextEntry.rgb[0] * ratio,
+          entry.rgb[1] * (1 - ratio) + nextEntry.rgb[1] * ratio,
+          entry.rgb[2] * (1 - ratio) + nextEntry.rgb[2] * ratio
+        ];
+      }
+    }
+  });
+
+  const palette = make1DTexture(regl, paletteColors.flat().map(i => i * 0xff));
+
   return makePass(
     output,
     regl({
@@ -35,6 +70,7 @@ export default (regl, {}, input) => {
 
       uniforms: {
         tex: input,
+        palette,
         ditherMagnitude: 0.05
       },
       framebuffer: output

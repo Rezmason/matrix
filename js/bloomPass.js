@@ -1,4 +1,10 @@
-import { makePassFBO, makePyramid, resizePyramid, makePass } from "./utils.js";
+import {
+  extractEntries,
+  makePassFBO,
+  makePyramid,
+  resizePyramid,
+  makePass
+} from "./utils.js";
 
 // The bloom pass is basically an added high-pass blur.
 
@@ -10,7 +16,14 @@ const levelStrengths = Array(pyramidHeight)
   )
   .reverse();
 
-export default (regl, { bloomSize }, input) => {
+export default (regl, config, input) => {
+  const uniforms = extractEntries(config, [
+    "bloomRadius",
+    "bloomSize",
+    "bloomStrength",
+    "highPassThreshold"
+  ]);
+
   const highPassPyramid = makePyramid(regl, pyramidHeight);
   const hBlurPyramid = makePyramid(regl, pyramidHeight);
   const vBlurPyramid = makePyramid(regl, pyramidHeight);
@@ -34,6 +47,7 @@ export default (regl, { bloomSize }, input) => {
       }
     `,
     uniforms: {
+      ...uniforms,
       tex: regl.prop("tex")
     },
     framebuffer: regl.prop("fbo")
@@ -45,10 +59,10 @@ export default (regl, { bloomSize }, input) => {
   const blur = regl({
     frag: `
       precision mediump float;
-      varying vec2 vUV;
+      uniform float width, height;
       uniform sampler2D tex;
       uniform vec2 direction;
-      uniform float width, height;
+      varying vec2 vUV;
       void main() {
         vec2 size = width > height ? vec2(width / height, 1.) : vec2(1., height / width);
         gl_FragColor =
@@ -60,6 +74,7 @@ export default (regl, { bloomSize }, input) => {
       }
     `,
     uniforms: {
+      ...uniforms,
       tex: regl.prop("tex"),
       direction: regl.prop("direction"),
       height: regl.context("viewportWidth"),
@@ -90,6 +105,7 @@ export default (regl, { bloomSize }, input) => {
       }
     `,
     uniforms: {
+      ...uniforms,
       tex: input,
       ...Object.fromEntries(
         vBlurPyramid.map((fbo, index) => [`pyr_${index}`, fbo])
@@ -97,8 +113,6 @@ export default (regl, { bloomSize }, input) => {
     },
     framebuffer: output
   });
-
-  const scale = bloomSize;
 
   return makePass(
     output,
@@ -114,9 +128,9 @@ export default (regl, { bloomSize }, input) => {
     },
     (w, h) => {
       // The blur pyramids can be lower resolution than the screen.
-      resizePyramid(highPassPyramid, w, h, scale);
-      resizePyramid(hBlurPyramid, w, h, scale);
-      resizePyramid(vBlurPyramid, w, h, scale);
+      resizePyramid(highPassPyramid, w, h, config.bloomSize);
+      resizePyramid(hBlurPyramid, w, h, config.bloomSize);
+      resizePyramid(vBlurPyramid, w, h, config.bloomSize);
       output.resize(w, h);
     }
   );

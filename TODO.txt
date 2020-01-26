@@ -1,34 +1,11 @@
 TODO:
 
-Clean up config.js
-  Too many responsibilities
-    Pass-specific properties should be made into uniforms in the passes
+Deja vu effect: flashing rows
+  Make them flash all the time
+  Then use a thunder-like pattern to show and hide the flash
 
-Reach out to someone about producing sounds
+Sounds
   Raindrop sound
-    https://youtu.be/bPhu01wpf0k?t=34
-    https://youtu.be/Yt2-h13XK7Y?t=33
   Deja vu sound
-    https://youtu.be/XfEuxRDYiyc?t=17
-  Square sound
-    https://youtu.be/ngnlBZNuVb8?t=204
-    https://youtu.be/-al0i3zSyj0?t=68
-    https://youtu.be/d8My5jIaXoY?t=191
-  Neo flying, apparently
-    https://youtu.be/gZzTVJ-NLYQ?t=230
+  ripple sound
   And some kind of ambient sound that they play over
-
-Much later:
-  Deluxe compute variables
-    Flashing row effect
-    Neo flying
-      Staticky julia set looking silhouette
-  More patterns?
-    Symbol duplication is common
-
-
-
-
-Also interesting:
-  The Matrix code for the Zion Control construct is sparser, slower, bluer, and annotated
-    https://www.youtube.com/watch?v=Jt5z3OEjDzU

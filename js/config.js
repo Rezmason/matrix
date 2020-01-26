@@ -17,8 +17,10 @@ const fonts = {
 };
 
 const defaults = {
+  animationSpeed: 1,
   bloomRadius: 0.5,
   bloomStrength: 1,
+  bloomSize: 0.5,
   highPassThreshold: 0.3,
   cycleSpeed: 1,
   cycleStyleName: "cycleFasterWhenDimmed",
@@ -107,7 +109,7 @@ const versions = {
       { rgb: [1.0, 1.0, 0.9], at: 1.0 }
     ],
     raindropLength: 0.6,
-    slant: 360 / 16
+    slant: (22.5 * Math.PI) / 180
   },
   paradise: {
     ...defaults,
@@ -136,146 +138,56 @@ const versions = {
 versions.throwback = versions.operator;
 versions["1999"] = versions.classic;
 
+const range = (f, min = -Infinity, max = Infinity) =>
+  Math.max(min, Math.min(max, f));
+const nullNaN = f => (isNaN(f) ? null : f);
+
+const paramMapping = {
+  version: { key: "version", parser: s => s },
+  effect: { key: "effect", parser: s => s },
+  width: { key: "numColumns", parser: s => nullNaN(parseInt(s)) },
+  animationSpeed: {
+    key: "animationSpeed",
+    parser: s => nullNaN(parseFloat(s))
+  },
+  cycleSpeed: { key: "cycleSpeed", parser: s => nullNaN(parseFloat(s)) },
+  fallSpeed: { key: "fallSpeed", parser: s => nullNaN(parseFloat(s)) },
+  raindropLength: {
+    key: "raindropLength",
+    parser: s => nullNaN(parseFloat(s))
+  },
+  slant: {
+    key: "slant",
+    parser: s => nullNaN((parseFloat(s) * Math.PI) / 180)
+  },
+  bloomSize: {
+    key: "bloomSize",
+    parser: s => nullNaN(range(parseFloat(s), 0.01, 1))
+  },
+  url: { key: "bgURL", parser: s => s },
+  colors: { key: "stripeColors", parser: s => s }
+};
+paramMapping.dropLength = paramMapping.raindropLength;
+paramMapping.angle = paramMapping.slant;
+
 export default (searchString, make1DTexture) => {
-  const urlParams = new URLSearchParams(searchString);
-  const getParam = (keyOrKeys, defaultValue) => {
-    if (Array.isArray(keyOrKeys)) {
-      const keys = keyOrKeys;
-      const key = keys.find(key => urlParams.has(key));
-      return key != null ? urlParams.get(key) : defaultValue;
-    } else {
-      const key = keyOrKeys;
-      return urlParams.has(key) ? urlParams.get(key) : defaultValue;
-    }
-  };
+  const urlParams = Object.fromEntries(
+    Array.from(new URLSearchParams(searchString).entries())
+      .filter(([key]) => key in paramMapping)
+      .map(([key, value]) => [
+        paramMapping[key].key,
+        paramMapping[key].parser(value)
+      ])
+      .filter(([_, value]) => value != null)
+  );
 
-  const versionName = getParam("version", "classic");
   const version =
-    versions[versionName] == null ? versions.classic : versions[versionName];
+    urlParams.version in versions
+      ? versions[urlParams.version]
+      : versions.classic;
 
-  const config = { ...version };
-
-  config.animationSpeed = parseFloat(getParam("animationSpeed", 1));
-  config.fallSpeed *= parseFloat(getParam("fallSpeed", 1));
-  config.cycleSpeed *= parseFloat(getParam("cycleSpeed", 1));
-  config.numColumns = parseInt(getParam("width", config.numColumns));
-  config.raindropLength = parseFloat(
-    getParam(["raindropLength", "dropLength"], config.raindropLength)
-  );
-  config.glyphSequenceLength = config.glyphSequenceLength;
-  config.slant =
-    (parseFloat(getParam(["slant", "angle"], config.slant)) * Math.PI) / 180;
-  config.slantVec = [Math.cos(config.slant), Math.sin(config.slant)];
-  config.slantScale =
-    1 / (Math.abs(Math.sin(2 * config.slant)) * (Math.sqrt(2) - 1) + 1);
-  config.glyphEdgeCrop = parseFloat(getParam("encroach", config.glyphEdgeCrop));
-  config.glyphHeightToWidth = parseFloat(
-    getParam("stretch", config.glyphHeightToWidth)
-  );
-  config.cursorEffectThreshold = getParam(
-    "cursorEffectThreshold",
-    config.cursorEffectThreshold
-  );
-  config.bloomSize = Math.max(
-    0.01,
-    Math.min(1, parseFloat(getParam("bloomSize", 0.5)))
-  );
-  config.effect = getParam("effect", "plain");
-  config.bgURL = getParam(
-    "url",
-    "https://upload.wikimedia.org/wikipedia/commons/0/0a/Flammarion_Colored.jpg"
-  );
-  config.customStripes = getParam(
-    "colors",
-    "0.4,0.15,0.1,0.4,0.15,0.1,0.8,0.8,0.6,0.8,0.8,0.6,1.0,0.7,0.8,1.0,0.7,0.8,"
-  )
-    .split(",")
-    .map(parseFloat);
-  config.showComputationTexture = config.effect === "none";
-
-  switch (config.cycleStyleName) {
-    case "cycleFasterWhenDimmed":
-      config.cycleStyle = 0;
-      break;
-    case "cycleRandomly":
-    default:
-      config.cycleStyle = 1;
-      break;
-  }
-
-  switch (config.rippleTypeName) {
-    case "box":
-      config.rippleType = 0;
-      break;
-    case "circle":
-      config.rippleType = 1;
-      break;
-    default:
-      config.rippleType = -1;
-  }
-
-  const PALETTE_SIZE = 2048;
-  const paletteColors = Array(PALETTE_SIZE);
-  const sortedEntries = version.paletteEntries
-    .slice()
-    .sort((e1, e2) => e1.at - e2.at)
-    .map(entry => ({
-      rgb: entry.rgb,
-      arrayIndex: Math.floor(
-        Math.max(Math.min(1, entry.at), 0) * (PALETTE_SIZE - 1)
-      )
-    }));
-  sortedEntries.unshift({ rgb: sortedEntries[0].rgb, arrayIndex: 0 });
-  sortedEntries.push({
-    rgb: sortedEntries[sortedEntries.length - 1].rgb,
-    arrayIndex: PALETTE_SIZE - 1
-  });
-  sortedEntries.forEach((entry, index) => {
-    paletteColors[entry.arrayIndex] = entry.rgb.slice();
-    if (index + 1 < sortedEntries.length) {
-      const nextEntry = sortedEntries[index + 1];
-      const diff = nextEntry.arrayIndex - entry.arrayIndex;
-      for (let i = 0; i < diff; i++) {
-        const ratio = i / diff;
-        paletteColors[entry.arrayIndex + i] = [
-          entry.rgb[0] * (1 - ratio) + nextEntry.rgb[0] * ratio,
-          entry.rgb[1] * (1 - ratio) + nextEntry.rgb[1] * ratio,
-          entry.rgb[2] * (1 - ratio) + nextEntry.rgb[2] * ratio
-        ];
-      }
-    }
-  });
-
-  config.palette = make1DTexture(paletteColors.flat().map(i => i * 0xff));
-
-  let stripeColors = [0, 0, 0];
-
-  if (config.effect === "pride") {
-    config.effect = "stripes";
-    config.stripeColors = [
-      [1, 0, 0],
-      [1, 0.5, 0],
-      [1, 1, 0],
-      [0, 1, 0],
-      [0, 0, 1],
-      [0.8, 0, 1]
-    ].flat();
-  }
-
-  if (config.effect === "customStripes" || config.effect === "stripes") {
-    config.effect = "stripes";
-    const numStripeColors = Math.floor(config.stripeColors.length / 3);
-    stripeColors = config.stripeColors.slice(0, numStripeColors * 3);
-  }
-
-  config.stripes = make1DTexture(stripeColors.map(f => Math.floor(f * 0xff)));
-
-  const uniforms = Object.fromEntries(
-    Object.entries(config).filter(([key, value]) => {
-      const type = typeof (Array.isArray(value) ? value[0] : value);
-      return type !== "string" && type !== "object";
-    })
-  );
-
-  return [config, uniforms];
+  return {
+    ...version,
+    ...urlParams
+  };
 };

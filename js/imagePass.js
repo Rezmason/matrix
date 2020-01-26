@@ -1,7 +1,11 @@
 import { loadImage, makePassFBO, makePass } from "./utils.js";
 
-export default (regl, { bgURL }, input) => {
+const defaultBGURL =
+  "https://upload.wikimedia.org/wikipedia/commons/0/0a/Flammarion_Colored.jpg";
+
+export default (regl, config, input) => {
   const output = makePassFBO(regl);
+  const bgURL = "bgURL" in config ? config.bgURL : defaultBGURL;
   const bgLoader = loadImage(regl, bgURL);
   return makePass(
     output,

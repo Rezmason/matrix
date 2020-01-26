@@ -1,4 +1,20 @@
-import { loadImage, makePassFBO, makeDoubleBuffer, makePass } from "./utils.js";
+import {
+  extractEntries,
+  loadImage,
+  makePassFBO,
+  makeDoubleBuffer,
+  makePass
+} from "./utils.js";
+
+const rippleTypes = {
+  box: 0,
+  circle: 1
+};
+
+const cycleStyles = {
+  cycleFasterWhenDimmed: 0,
+  cycleRandomly: 1
+};
 
 export default (regl, config) => {
   // These two framebuffers are used to compute the raining code.
@@ -16,6 +32,47 @@ export default (regl, config) => {
 
   const output = makePassFBO(regl);
 
+  const uniforms = extractEntries(config, [
+    // rain general
+    "glyphHeightToWidth",
+    "glyphTextureColumns",
+    "numColumns",
+    // rain update
+    "animationSpeed",
+    "brightnessMinimum",
+    "brightnessMix",
+    "brightnessMultiplier",
+    "brightnessOffset",
+    "cursorEffectThreshold",
+    "cycleSpeed",
+    "fallSpeed",
+    "glyphSequenceLength",
+    "hasSun",
+    "hasThunder",
+    "raindropLength",
+    "rippleScale",
+    "rippleSpeed",
+    "rippleThickness",
+    // rain render
+    "glyphEdgeCrop",
+    "isPolar"
+  ]);
+
+  uniforms.rippleType =
+    config.rippleTypeName in rippleTypes
+      ? rippleTypes[config.rippleTypeName]
+      : -1;
+  uniforms.cycleStyle =
+    config.cycleStyleName in cycleStyles
+      ? cycleStyles[config.cycleStyleName]
+      : 0;
+  uniforms.slantVec = [Math.cos(config.slant), Math.sin(config.slant)];
+  uniforms.slantScale =
+    1 / (Math.abs(Math.sin(2 * config.slant)) * (Math.sqrt(2) - 1) + 1);
+  uniforms.showComputationTexture = config.effect === "none";
+
+  const msdfLoader = loadImage(regl, config.glyphTexURL);
+
   // This shader is the star of the show.
   // In normal operation, each pixel represents a glyph's:
   //   R: brightness
@@ -30,34 +87,19 @@ export default (regl, config) => {
       #define SQRT_2 1.4142135623730951
       #define SQRT_5 2.23606797749979
 
+      uniform float time;
       uniform float numColumns;
       uniform sampler2D lastState;
-
       uniform bool hasSun;
       uniform bool hasThunder;
       uniform bool showComputationTexture;
-
-      uniform float brightnessMinimum;
-      uniform float brightnessMultiplier;
-      uniform float brightnessOffset;
-      uniform float brightnessMix;
-
-      uniform float time;
-      uniform float animationSpeed;
-      uniform float cycleSpeed;
-      uniform float fallSpeed;
+      uniform float brightnessMinimum, brightnessMultiplier, brightnessOffset, brightnessMix;
+      uniform float animationSpeed, fallSpeed, cycleSpeed;
       uniform float raindropLength;
-
-      uniform float glyphHeightToWidth;
-      uniform float glyphSequenceLength;
-      uniform float glyphTextureColumns;
+      uniform float glyphHeightToWidth, glyphSequenceLength, glyphTextureColumns;
       uniform int cycleStyle;
-
-      uniform float rippleScale;
-      uniform float rippleSpeed;
-      uniform float rippleThickness;
+      uniform float rippleScale, rippleSpeed, rippleThickness;
       uniform int rippleType;
-
       uniform float cursorEffectThreshold;
 
       float max2(vec2 v) {
@@ -88,10 +130,10 @@ export default (regl, config) => {
 
       float getGlyphCycleSpeed(float rainTime, float brightness) {
         float glyphCycleSpeed = 0.0;
-        if (cycleStyle == 1) {
-          glyphCycleSpeed = fract((rainTime + 0.7 * sin(SQRT_2 * rainTime) + 1.1 * sin(SQRT_5 * rainTime))) * 0.75;
-        } else if (cycleStyle == 0 && brightness > 0.0) {
+        if (cycleStyle == 0 && brightness > 0.0) {
           glyphCycleSpeed = pow(1.0 - brightness, 4.0);
+        } else if (cycleStyle == 1) {
+          glyphCycleSpeed = fract((rainTime + 0.7 * sin(SQRT_2 * rainTime) + 1.1 * sin(SQRT_5 * rainTime))) * 0.75;
         }
         return glyphCycleSpeed;
       }
@@ -207,20 +249,18 @@ export default (regl, config) => {
     `,
 
     uniforms: {
+      ...uniforms,
       lastState: doubleBuffer.back
     },
 
     framebuffer: doubleBuffer.front
   });
 
-  const msdfLoader = loadImage(regl, config.glyphTexURL);
-
   // We render the code into an FBO using MSDFs: https://github.com/Chlumsky/msdfgen
   const render = regl({
     vert: `
       attribute vec2 aPosition;
-      uniform float width;
-      uniform float height;
+      uniform float width, height;
       varying vec2 vUV;
       void main() {
         vUV = aPosition / 2.0 + 0.5;
@@ -237,15 +277,11 @@ export default (regl, config) => {
       #endif
       precision lowp float;
 
-      uniform sampler2D glyphTex;
-      uniform sampler2D lastState;
       uniform float numColumns;
-      uniform float glyphTextureColumns;
+      uniform sampler2D glyphTex, lastState;
+      uniform float glyphHeightToWidth, glyphTextureColumns, glyphEdgeCrop;
       uniform vec2 slantVec;
       uniform float slantScale;
-      uniform float glyphHeightToWidth;
-      uniform float glyphEdgeCrop;
-
       uniform bool isPolar;
       uniform bool showComputationTexture;
 
@@ -309,6 +345,7 @@ export default (regl, config) => {
     `,
 
     uniforms: {
+      ...uniforms,
       glyphTex: msdfLoader.texture,
       height: regl.context("viewportWidth"),
       width: regl.context("viewportHeight"),
