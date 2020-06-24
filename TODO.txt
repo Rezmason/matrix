@@ -1,5 +1,8 @@
 TODO:
 
+Maybe apply a further additive blend on top of the color-mapped bloom
+  That could help add whatever's missing visually to the raindrops
+
 Deja vu effect: flashing rows
   Make them flash all the time
   Then use a thunder-like pattern to show and hide the flash
