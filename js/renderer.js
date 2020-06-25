@@ -356,7 +356,9 @@ export default (regl, config) => {
   });
 
   return makePass(
-    output,
+    {
+      primary: output
+    },
     resources => {
       update();
       render(resources);

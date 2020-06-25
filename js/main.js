@@ -51,13 +51,13 @@ document.body.onload = async () => {
       effect === "none" ? null : makeBloomPass,
       effects[effect]
     ],
-    p => p.output,
+    p => p.outputs,
     regl,
     config
   );
   const drawToScreen = regl({
     uniforms: {
-      tex: pipeline[pipeline.length - 1].output
+      tex: pipeline[pipeline.length - 1].outputs.primary
     }
   });
   await Promise.all(pipeline.map(({ ready }) => ready));

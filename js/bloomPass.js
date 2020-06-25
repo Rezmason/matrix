@@ -16,10 +16,8 @@ const levelStrengths = Array(pyramidHeight)
   )
   .reverse();
 
-export default (regl, config, input) => {
+export default (regl, config, inputs) => {
   const uniforms = extractEntries(config, [
-    "bloomRadius",
-    "bloomSize",
     "bloomStrength",
     "highPassThreshold"
   ]);
@@ -84,14 +82,13 @@ export default (regl, config, input) => {
   });
 
   // The pyramid of textures gets flattened onto the source texture.
-  const combineBloom = regl({
+  const flattenPyramid = regl({
     frag: `
       precision mediump float;
       varying vec2 vUV;
       ${vBlurPyramid
         .map((_, index) => `uniform sampler2D pyr_${index};`)
         .join("\n")}
-      uniform sampler2D tex;
       uniform float bloomStrength;
       void main() {
         vec4 total = vec4(0.);
@@ -101,12 +98,11 @@ export default (regl, config, input) => {
               `total += texture2D(pyr_${index}, vUV) * ${levelStrengths[index]};`
           )
           .join("\n")}
-        gl_FragColor = total * bloomStrength + texture2D(tex, vUV);
+        gl_FragColor = total * bloomStrength;
       }
     `,
     uniforms: {
       ...uniforms,
-      tex: input,
       ...Object.fromEntries(
         vBlurPyramid.map((fbo, index) => [`pyr_${index}`, fbo])
       )
@@ -115,16 +111,19 @@ export default (regl, config, input) => {
   });
 
   return makePass(
-    output,
+    {
+      primary: inputs.primary,
+      bloom: output
+    },
     () => {
-      highPassPyramid.forEach(fbo => highPass({ fbo, tex: input }));
+      highPassPyramid.forEach(fbo => highPass({ fbo, tex: inputs.primary }));
       hBlurPyramid.forEach((fbo, index) =>
         blur({ fbo, tex: highPassPyramid[index], direction: [1, 0] })
       );
       vBlurPyramid.forEach((fbo, index) =>
         blur({ fbo, tex: hBlurPyramid[index], direction: [0, 1] })
       );
-      combineBloom();
+      flattenPyramid();
     },
     (w, h) => {
       // The blur pyramids can be lower resolution than the screen.

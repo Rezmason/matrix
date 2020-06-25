@@ -40,10 +40,10 @@ const defaults = {
   rippleSpeed: 0.2,
   numColumns: 80,
   paletteEntries: [
-    { rgb: [0.00, 0.00, 0.00], at: 0.00 },
+    { rgb: [0.0, 0.0, 0.0], at: 0.0 },
     { rgb: [0.09, 0.33, 0.04], at: 0.25 },
-    { rgb: [0.39, 0.98, 0.38], at: 0.70 },
-    { rgb: [0.57, 0.97, 0.61], at: 1.00 },
+    { rgb: [0.39, 0.98, 0.38], at: 0.7 },
+    { rgb: [0.57, 0.97, 0.61], at: 1.0 }
   ],
   raindropLength: 1,
   slant: 0
@@ -57,7 +57,6 @@ const versions = {
   operator: {
     ...defaults,
     ...fonts.matrixcode,
-    bloomRadius: 0.3,
     bloomStrength: 0.75,
     highPassThreshold: 0.0,
     cycleSpeed: 0.05,
@@ -81,7 +80,6 @@ const versions = {
   nightmare: {
     ...defaults,
     ...fonts.gothic,
-    bloomRadius: 0.8,
     highPassThreshold: 0.7,
     brightnessMix: 0.75,
     fallSpeed: 2.0,
@@ -100,7 +98,6 @@ const versions = {
   paradise: {
     ...defaults,
     ...fonts.coptic,
-    bloomRadius: 1.15,
     bloomStrength: 1.75,
     highPassThreshold: 0,
     cycleSpeed: 0.1,

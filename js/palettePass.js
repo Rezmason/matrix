@@ -6,7 +6,7 @@ import { make1DTexture, makePassFBO, makePass } from "./utils.js";
 // won't persist across subsequent frames. This is a safe trick
 // in screen space.
 
-export default (regl, config, input) => {
+export default (regl, config, inputs) => {
   const output = makePassFBO(regl);
 
   const PALETTE_SIZE = 2048;
@@ -41,16 +41,22 @@ export default (regl, config, input) => {
     }
   });
 
-  const palette = make1DTexture(regl, paletteColors.flat().map(i => i * 0xff));
+  const palette = make1DTexture(
+    regl,
+    paletteColors.flat().map(i => i * 0xff)
+  );
 
   return makePass(
-    output,
+    {
+      primary: output
+    },
     regl({
       frag: `
       precision mediump float;
       #define PI 3.14159265359
 
       uniform sampler2D tex;
+      uniform sampler2D bloomTex;
       uniform sampler2D palette;
       uniform float ditherMagnitude;
       uniform float time;
@@ -63,13 +69,15 @@ export default (regl, config, input) => {
       }
 
       void main() {
-        float at = texture2D( tex, vUV ).r - rand( gl_FragCoord.xy, time ) * ditherMagnitude;
+        float brightness = texture2D( tex, vUV ).r + texture2D( bloomTex, vUV ).r;
+        float at = brightness - rand( gl_FragCoord.xy, time ) * ditherMagnitude;
         gl_FragColor = texture2D( palette, vec2(at, 0.0));
       }
     `,
 
       uniforms: {
-        tex: input,
+        tex: inputs.primary,
+        bloomTex: inputs.bloom,
         palette,
         ditherMagnitude: 0.05
       },

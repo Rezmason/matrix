@@ -18,7 +18,7 @@ const prideStripeColors = [
   [0.8, 0, 1]
 ].flat();
 
-export default (regl, config, input) => {
+export default (regl, config, inputs) => {
   const output = makePassFBO(regl);
 
   const stripeColors =
@@ -34,13 +34,16 @@ export default (regl, config, input) => {
   );
 
   return makePass(
-    output,
+    {
+      primary: output
+    },
     regl({
       frag: `
       precision mediump float;
       #define PI 3.14159265359
 
       uniform sampler2D tex;
+      uniform sampler2D bloomTex;
       uniform sampler2D stripes;
       uniform float ditherMagnitude;
       uniform float time;
@@ -54,13 +57,15 @@ export default (regl, config, input) => {
 
       void main() {
         vec3 color = texture2D(stripes, vUV).rgb;
-        float brightness = texture2D(tex, vUV).r - rand( gl_FragCoord.xy, time ) * ditherMagnitude;
-        gl_FragColor = vec4(color * brightness, 1.0);
+        float brightness = min(1., texture2D(tex, vUV).r * 2.) + texture2D(bloomTex, vUV).r;
+        float at = brightness - rand( gl_FragCoord.xy, time ) * ditherMagnitude;
+        gl_FragColor = vec4(color * at, 1.0);
       }
     `,
 
       uniforms: {
-        tex: input,
+        tex: inputs.primary,
+        bloomTex: inputs.bloom,
         stripes,
         ditherMagnitude: 0.05
       },

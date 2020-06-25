@@ -1,7 +1,9 @@
 TODO:
 
-Maybe apply a further additive blend on top of the color-mapped bloom
-  That could help add whatever's missing visually to the raindrops
+Experiment with varying the colors in the palette pass
+  Maybe a separate palette for the non-bloom
+  Maybe dim and widen the bloom
+  Just make sure the changes to non-default configurations are acceptable
 
 Deja vu effect: flashing rows
   Make them flash all the time
