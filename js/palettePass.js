@@ -1,17 +1,9 @@
 import { make1DTexture, makePassFBO, makePass } from "./utils.js";
 
-// The rendered texture's values are mapped to colors in a palette texture.
-// A little noise is introduced, to hide the banding that appears
-// in subtle gradients. The noise is also time-driven, so its grain
-// won't persist across subsequent frames. This is a safe trick
-// in screen space.
-
-export default (regl, config, inputs) => {
-  const output = makePassFBO(regl);
-
+const makePalette = (regl, entries) => {
   const PALETTE_SIZE = 2048;
   const paletteColors = Array(PALETTE_SIZE);
-  const sortedEntries = config.paletteEntries
+  const sortedEntries = entries
     .slice()
     .sort((e1, e2) => e1.at - e2.at)
     .map(entry => ({
@@ -41,10 +33,21 @@ export default (regl, config, inputs) => {
     }
   });
 
-  const palette = make1DTexture(
+  return make1DTexture(
     regl,
     paletteColors.flat().map(i => i * 0xff)
   );
+};
+
+// The rendered texture's values are mapped to colors in a palette texture.
+// A little noise is introduced, to hide the banding that appears
+// in subtle gradients. The noise is also time-driven, so its grain
+// won't persist across subsequent frames. This is a safe trick
+// in screen space.
+
+export default (regl, config, inputs) => {
+  const output = makePassFBO(regl);
+  const palette = makePalette(regl, config.paletteEntries);
 
   return makePass(
     {

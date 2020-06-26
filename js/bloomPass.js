@@ -69,6 +69,16 @@ export default (regl, config, inputs) => {
             texture2D(tex, vUV + direction / max(width, height) * size) +
             texture2D(tex, vUV - direction / max(width, height) * size)
           ) * 0.279;
+        // gl_FragColor =
+        //   texture2D(tex, vUV) * 0.38774 +
+        //   (
+        //     texture2D(tex, vUV + direction / max(width, height) * size * 0.5) +
+        //     texture2D(tex, vUV - direction / max(width, height) * size * 0.5)
+        //   ) * 0.24477 +
+        //   (
+        //     texture2D(tex, vUV + direction / max(width, height) * size) +
+        //     texture2D(tex, vUV - direction / max(width, height) * size)
+        //   ) * 0.06136;
       }
     `,
     uniforms: {
