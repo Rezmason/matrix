@@ -33,11 +33,12 @@ const effects = {
 };
 
 const config = makeConfig(window.location.search);
+const resolution = config.resolution;
 const effect = config.effect in effects ? config.effect : "plain";
 
 const resize = () => {
-  canvas.width = canvas.clientWidth;
-  canvas.height = canvas.clientHeight;
+  canvas.width = Math.ceil(canvas.clientWidth * resolution);
+  canvas.height = Math.ceil(canvas.clientHeight * resolution);
 };
 window.onresize = resize;
 resize();

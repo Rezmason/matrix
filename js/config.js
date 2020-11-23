@@ -46,7 +46,8 @@ const defaults = {
     { rgb: [0.57, 0.97, 0.61], at: 1.0 }
   ],
   raindropLength: 1,
-  slant: 0
+  slant: 0,
+  resolution: 1
 };
 
 const versions = {
@@ -129,6 +130,7 @@ const paramMapping = {
   version: { key: "version", parser: s => s },
   effect: { key: "effect", parser: s => s },
   width: { key: "numColumns", parser: s => nullNaN(parseInt(s)) },
+  resolution: { key: "resolution", parser: s => nullNaN(parseFloat(s)) },
   animationSpeed: {
     key: "animationSpeed",
     parser: s => nullNaN(parseFloat(s))

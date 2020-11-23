@@ -71,6 +71,7 @@ Now you know link fu. Here's a list of customization options:
 - **width** - the number of columns (and rows) to draw. Default is 80.
 - **slant** - which angle is up, in degrees. Default is 0.
 - **bloomSize** - The glow quality, from 0 to 1. Default is 0.5. Lowering this value may help the digital rain run smoother on your device.
+- **resolution** - The image size, relative to the window size. Default is 1. Lowering this value may improve your performance, especially on high pixel density displays.
 - **raindropLength** - the vertical scale of "raindrops" in the columns. Can be any number, even negative! Default is 1.0.
 - **animationSpeed** - the overall speed of the animation. Can be any number, even negative! Default is 1.0.
 - **fallSpeed** - the speed of the rain. Can be any number, even negative! Default is 1.0.
