@@ -46,6 +46,15 @@ While there have been a lot of attempts at #1 and #3, they're all missing import
 - **Include the following statement in the README.md:** Sure, you can enjoy movies, including *The Matrix*, without reading too deeply into them, but if you're going to really think about a film, make it this one. And here's the thing: **The Matrix is a story about transitioning, directed by two siblings who transitioned**. So there! There's plenty more themes in it and its sequels than that, and plenty of room for interpretation, but no room for the misogynistic ideas that led to that gross subreddit we all know about. Wake up from your prejudices, boys. Here's a chance to open our minds, not shut them.
 
 ---
+### side note: other people's Matrix effects
+
+The number of implementations out there of this effect is a testament to the size of the film's impact on popular culture. For decades, I've enjoyed searching for and comparing them from time to time. That's probably how you arrived here— it's _fun_ to see what kinds of solutions different people come up with to a problem, when the process is purely recreational and its success is subjective. I myself tried and failed to make the effect many times over.
+
+Some of the [earliest](https://github.com/ppetr/xlockmore/blob/master/modes/matrix.c), [roughest](https://github.com/Zygo/xscreensaver/blob/d1f484cfa47f4a0862140421480bb536ad66ede9/hacks/xmatrix.c) versions were made after the film hit theaters in March, but before it was released on home media in October— people were recreating the effect purely from memory. Others probably used the official screensaver as a reference, which was made by the time-strappped developers of [the (excellent, defunct) official site](https://web.archive.org/web/*/http://whatisthematrix.com) from the images and multimedia tools they had available.
+
+The fourth film in the franchise apparently comes out December 22, 2021. I'm anticipating new effects, and a flurry of new attempts at recreating them!
+
+---
 ### customization
 
 You can customize the digital rain quite a bit by stapling "URL variables" to its URL— by putting a '?' at the end of the link above, and then chaining together words, like this:
