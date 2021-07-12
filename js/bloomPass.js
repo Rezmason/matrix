@@ -22,10 +22,10 @@ export default (regl, config, inputs) => {
     "highPassThreshold"
   ]);
 
-  const highPassPyramid = makePyramid(regl, pyramidHeight);
-  const hBlurPyramid = makePyramid(regl, pyramidHeight);
-  const vBlurPyramid = makePyramid(regl, pyramidHeight);
-  const output = makePassFBO(regl);
+  const highPassPyramid = makePyramid(regl, pyramidHeight, config.useHalfFloat);
+  const hBlurPyramid = makePyramid(regl, pyramidHeight, config.useHalfFloat);
+  const vBlurPyramid = makePyramid(regl, pyramidHeight, config.useHalfFloat);
+  const output = makePassFBO(regl, config.useHalfFloat);
 
   // The high pass restricts the blur to bright things in our input texture.
   const highPass = regl({
@@ -126,13 +126,15 @@ export default (regl, config, inputs) => {
       bloom: output
     },
     () => {
-      highPassPyramid.forEach(fbo => highPass({ fbo, tex: inputs.primary }));
-      hBlurPyramid.forEach((fbo, index) =>
-        blur({ fbo, tex: highPassPyramid[index], direction: [1, 0] })
-      );
-      vBlurPyramid.forEach((fbo, index) =>
-        blur({ fbo, tex: hBlurPyramid[index], direction: [0, 1] })
-      );
+      for (let i = 0; i < pyramidHeight; i++) {
+        const highPassFBO = highPassPyramid[i];
+        const hBlurFBO = hBlurPyramid[i];
+        const vBlurFBO = vBlurPyramid[i];
+        highPass({ fbo: highPassFBO, tex: inputs.primary });
+        blur({ fbo: hBlurFBO, tex: highPassFBO, direction: [1, 0] });
+        blur({ fbo: vBlurFBO, tex: hBlurFBO, direction: [0, 1] });
+      }
+
       flattenPyramid();
     },
     (w, h) => {

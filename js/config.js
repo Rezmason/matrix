@@ -19,7 +19,7 @@ const fonts = {
 const defaults = {
   animationSpeed: 1,
   bloomStrength: 1,
-  bloomSize: 0.5,
+  bloomSize: 0.6,
   highPassThreshold: 0.3,
   cycleSpeed: 1,
   cycleStyleName: "cycleFasterWhenDimmed",
@@ -47,7 +47,8 @@ const defaults = {
   ],
   raindropLength: 1,
   slant: 0,
-  resolution: 1
+  resolution: 1,
+  useHalfFloat: false,
 };
 
 const versions = {

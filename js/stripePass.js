@@ -19,7 +19,7 @@ const prideStripeColors = [
 ].flat();
 
 export default (regl, config, inputs) => {
-  const output = makePassFBO(regl);
+  const output = makePassFBO(regl, config.useHalfFloat);
 
   const stripeColors =
     "stripeColors" in config

@@ -46,7 +46,7 @@ const makePalette = (regl, entries) => {
 // in screen space.
 
 export default (regl, config, inputs) => {
-  const output = makePassFBO(regl);
+  const output = makePassFBO(regl, config.useHalfFloat);
   const palette = makePalette(regl, config.paletteEntries);
 
   return makePass(

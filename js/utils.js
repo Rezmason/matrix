@@ -3,24 +3,24 @@ const extractEntries = (src, keys) =>
     Array.from(Object.entries(src)).filter(([key]) => keys.includes(key))
   );
 
-const makePassTexture = regl =>
+const makePassTexture = (regl, halfFloat) =>
   regl.texture({
     width: 1,
     height: 1,
-    type: "half float",
+    type: halfFloat ? "half float" : "uint8",
     wrap: "clamp",
     min: "linear",
     mag: "linear"
   });
 
-const makePassFBO = regl => regl.framebuffer({ color: makePassTexture(regl) });
+const makePassFBO = (regl, halfFloat) => regl.framebuffer({ color: makePassTexture(regl, halfFloat) });
 
 // A pyramid is just an array of FBOs, where each FBO is half the width
 // and half the height of the FBO below it.
-const makePyramid = (regl, height) =>
+const makePyramid = (regl, height, halfFloat) =>
   Array(height)
     .fill()
-    .map(_ => makePassFBO(regl));
+    .map(_ => makePassFBO(regl, halfFloat));
 
 const makeDoubleBuffer = (regl, props) => {
   const state = Array(2)

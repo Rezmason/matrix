@@ -4,7 +4,7 @@ const defaultBGURL =
   "https://upload.wikimedia.org/wikipedia/commons/0/0a/Flammarion_Colored.jpg";
 
 export default (regl, config, inputs) => {
-  const output = makePassFBO(regl);
+  const output = makePassFBO(regl, config.useHalfFloat);
   const bgURL = "bgURL" in config ? config.bgURL : defaultBGURL;
   const bgLoader = loadImage(regl, bgURL);
   return makePass(

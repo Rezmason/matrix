@@ -43,6 +43,8 @@ const resize = () => {
 window.onresize = resize;
 resize();
 
+const dimensions = { width: 1, height: 1 };
+
 document.body.onload = async () => {
   // All this takes place in a full screen quad.
   const fullScreenQuad = makeFullScreenQuad(regl);
@@ -64,9 +66,20 @@ document.body.onload = async () => {
   await Promise.all(pipeline.map(({ ready }) => ready));
   const tick = regl.frame(({ viewportWidth, viewportHeight }) => {
     // tick.cancel();
-    pipeline.forEach(({ resize }) => resize(viewportWidth, viewportHeight));
+    if (
+      dimensions.width !== viewportWidth ||
+      dimensions.height !== viewportHeight
+    ) {
+      dimensions.width = viewportWidth;
+      dimensions.height = viewportHeight;
+      for (const pass of pipeline) {
+        pass.resize(viewportWidth, viewportHeight);
+      }
+    }
     fullScreenQuad(() => {
-      pipeline.forEach(({ render }) => render());
+      for (const pass of pipeline) {
+        pass.render();
+      }
       drawToScreen();
     });
   });

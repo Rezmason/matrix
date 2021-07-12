@@ -30,7 +30,7 @@ export default (regl, config) => {
     type: "half float"
   });
 
-  const output = makePassFBO(regl);
+  const output = makePassFBO(regl, config.useHalfFloat);
 
   const uniforms = extractEntries(config, [
     // rain general
