@@ -120,6 +120,7 @@ const makeFullScreenQuad = (regl, uniforms = {}, context = {}) =>
     attributes: {
       aPosition: [-4, -4, 4, -4, 0, 4]
     },
+    count: 3,
 
     uniforms: {
       ...uniforms,
@@ -129,7 +130,7 @@ const makeFullScreenQuad = (regl, uniforms = {}, context = {}) =>
     context,
 
     depth: { enable: false },
-    count: 3
+
   });
 
 const make1DTexture = (regl, data) =>

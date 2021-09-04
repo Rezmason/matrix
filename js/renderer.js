@@ -16,6 +16,8 @@ const cycleStyles = {
   cycleRandomly: 1
 };
 
+const numVerticesPerGlyph = 2 * 3;
+
 export default (regl, config) => {
   // These two framebuffers are used to compute the raining code.
   // they take turns being the source and destination of the "compute" shader.
@@ -29,6 +31,8 @@ export default (regl, config) => {
     wrapT: "clamp",
     type: "half float"
   });
+
+  const numColumns = config.numColumns;
 
   const output = makePassFBO(regl, config.useHalfFloat);
 
@@ -96,7 +100,7 @@ export default (regl, config) => {
       uniform float brightnessMinimum, brightnessMultiplier, brightnessOffset, brightnessMix;
       uniform float animationSpeed, fallSpeed, cycleSpeed;
       uniform float raindropLength;
-      uniform float glyphHeightToWidth, glyphSequenceLength, glyphTextureColumns;
+      uniform float glyphHeightToWidth;
       uniform int cycleStyle;
       uniform float rippleScale, rippleSpeed, rippleThickness;
       uniform int rippleType;
@@ -136,13 +140,6 @@ export default (regl, config) => {
           glyphCycleSpeed = fract((rainTime + 0.7 * sin(SQRT_2 * rainTime) + 1.1 * sin(SQRT_5 * rainTime))) * 0.75;
         }
         return glyphCycleSpeed;
-      }
-
-      float getSymbolIndex(float glyphCycle) {
-        float symbol = floor(glyphSequenceLength * glyphCycle);
-        float symbolX = mod(symbol, glyphTextureColumns);
-        float symbolY = ((glyphTextureColumns - 1.0) - (symbol - symbolX) / glyphTextureColumns);
-        return symbolY * glyphTextureColumns + symbolX;
       }
 
       float applySunShower(float rainBrightness, vec2 screenPos) {
@@ -241,7 +238,7 @@ export default (regl, config) => {
           gl_FragColor = vec4(
             rainBrightness,
             glyphCycle,
-            getSymbolIndex(glyphCycle),
+            glyphCycle,
             effect
           );
         }
@@ -256,17 +253,45 @@ export default (regl, config) => {
     framebuffer: doubleBuffer.front
   });
 
+
+  const numGlyphs = numColumns * numColumns;
+
+  const glyphPositions = Array(numGlyphs).fill(null);
+  for (let y = 0; y < numColumns; y++) {
+    for (let x = 0; x < numColumns; x++) {
+      glyphPositions[y * numColumns + x] = Array(numVerticesPerGlyph).fill([x, y]);
+    }
+  }
+
+  const cornersTemplate = [[0, 0], [0, 1], [1, 1], [0, 0], [1, 1], [1, 0]];
+  const glyphCorners = Array(numGlyphs).fill(cornersTemplate);
+
+  const depthMesh = {};
+  Object.assign(depthMesh, {
+    attributes: {
+      aPosition: glyphPositions,
+      aCorner: glyphCorners
+    },
+    count: numGlyphs * numVerticesPerGlyph,
+  });
+
   // We render the code into an FBO using MSDFs: https://github.com/Chlumsky/msdfgen
   const render = regl({
     vert: `
-      attribute vec2 aPosition;
+      precision lowp float;
+      attribute vec2 aPosition, aCorner;
       uniform float width, height;
+      uniform float numColumns;
+      uniform sampler2D lastState;
       varying vec2 vUV;
+      varying vec4 vGlyph;
       void main() {
-        vUV = aPosition / 2.0 + 0.5;
+        vUV = (aPosition + aCorner) / numColumns;
+        vec2 position = (vUV - 0.5) * 2.0;
+        vGlyph = texture2D(lastState, vUV + (0.5 - aCorner) / numColumns);
         // Scale the geometry to cover the longest dimension of the viewport
         vec2 size = width > height ? vec2(width / height, 1.) : vec2(1., height / width);
-        gl_Position = vec4( size * aPosition, 0.0, 1.0 );
+        gl_Position = vec4( size * position, 0.0, 1.0 );
       }
     `,
 
@@ -278,17 +303,25 @@ export default (regl, config) => {
       precision lowp float;
 
       uniform float numColumns;
-      uniform sampler2D glyphTex, lastState;
-      uniform float glyphHeightToWidth, glyphTextureColumns, glyphEdgeCrop;
+      uniform sampler2D glyphTex;
+      uniform float glyphHeightToWidth, glyphSequenceLength, glyphTextureColumns, glyphEdgeCrop;
       uniform vec2 slantVec;
       uniform float slantScale;
       uniform bool isPolar;
       uniform bool showComputationTexture;
 
       varying vec2 vUV;
+      varying vec4 vGlyph;
 
       float median3(vec3 i) {
         return max(min(i.r, i.g), min(max(i.r, i.g), i.b));
+      }
+
+      float getSymbolIndex(float glyphCycle) {
+        float symbol = floor(glyphSequenceLength * glyphCycle);
+        float symbolX = mod(symbol, glyphTextureColumns);
+        float symbolY = ((glyphTextureColumns - 1.0) - (symbol - symbolX) / glyphTextureColumns);
+        return symbolY * glyphTextureColumns + symbolX;
       }
 
       void main() {
@@ -314,18 +347,16 @@ export default (regl, config) => {
 
         uv.y /= glyphHeightToWidth;
 
-        vec4 glyph = texture2D(lastState, uv);
-
         if (showComputationTexture) {
-          gl_FragColor = glyph;
+          gl_FragColor = vGlyph;
           return;
         }
 
         // Unpack the values from the font texture
-        float brightness = glyph.r;
-        float effect = glyph.a;
+        float brightness = vGlyph.r;
+        float effect = vGlyph.a;
         brightness = max(effect, brightness);
-        float symbolIndex = glyph.b;
+        float symbolIndex = getSymbolIndex(vGlyph.g);
 
         // resolve UV to MSDF texture coord
         vec2 symbolUV = vec2(mod(symbolIndex, glyphTextureColumns), floor(symbolIndex / glyphTextureColumns));
@@ -351,6 +382,8 @@ export default (regl, config) => {
       width: regl.context("viewportHeight"),
       lastState: doubleBuffer.front
     },
+
+    ...depthMesh,
 
     framebuffer: output
   });
