@@ -277,6 +277,15 @@ export default (regl, config) => {
 
   // We render the code into an FBO using MSDFs: https://github.com/Chlumsky/msdfgen
   const render = regl({
+    blend: {
+      enable: true,
+      func: {
+        srcRGB: "src alpha",
+        srcAlpha: 1,
+        dstRGB: "dst alpha",
+        dstAlpha: 1
+      }
+    },
     vert: `
       precision lowp float;
       attribute vec2 aPosition, aCorner;
@@ -394,6 +403,11 @@ export default (regl, config) => {
     },
     resources => {
       update();
+      regl.clear({
+        depth: 1,
+        color: [0, 0, 0, 1],
+        framebuffer: output
+      });
       render(resources);
     },
     null,
