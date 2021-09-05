@@ -17,6 +17,18 @@ const levelStrengths = Array(pyramidHeight)
   .reverse();
 
 export default (regl, config, inputs) => {
+
+  const enabled = config.bloomSize > 0 && config.bloomStrength > 0;
+
+  if (!enabled) {
+    return makePass(
+      {
+        primary: inputs.primary,
+        bloom: makePassFBO(regl)
+      }
+    );
+  }
+
   const uniforms = extractEntries(config, [
     "bloomStrength",
     "highPassThreshold"

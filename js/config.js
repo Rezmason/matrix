@@ -19,7 +19,7 @@ const fonts = {
 const defaults = {
   animationSpeed: 1,
   bloomStrength: 1,
-  bloomSize: 0.6,
+  bloomSize: 1,
   highPassThreshold: 0.3,
   cycleSpeed: 1,
   cycleStyleName: "cycleFasterWhenDimmed",
@@ -148,7 +148,7 @@ const paramMapping = {
   },
   bloomSize: {
     key: "bloomSize",
-    parser: s => nullNaN(range(parseFloat(s), 0.01, 1))
+    parser: s => nullNaN(range(parseFloat(s), 0, 1))
   },
   url: { key: "bgURL", parser: s => s },
   colors: { key: "stripeColors", parser: s => s }
