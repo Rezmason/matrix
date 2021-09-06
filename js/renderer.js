@@ -18,10 +18,11 @@ const cycleStyles = {
 
 const numVerticesPerGlyph = 2 * 3;
 
-const camera = glMatrix.mat4.create();
-const transform = glMatrix.mat4.create();
-
 export default (regl, config) => {
+
+  const density = config.density;
+  const [numRows, numColumns] = [config.numColumns, config.numColumns * density];
+
   // These two framebuffers are used to compute the raining code.
   // they take turns being the source and destination of the "compute" shader.
   // The half float data type is crucial! It lets us store almost any real number,
@@ -30,12 +31,12 @@ export default (regl, config) => {
   // This double buffer is smaller than the screen, because its pixels correspond
   // with glyphs in the final image, and the glyphs are much larger than a pixel.
   const doubleBuffer = makeDoubleBuffer(regl, {
-    radius: config.numColumns,
+    width: numColumns,
+    height: numRows,
     wrapT: "clamp",
     type: "half float"
   });
 
-  const numColumns = config.numColumns;
 
   const output = makePassFBO(regl, config.useHalfFloat);
 
@@ -43,7 +44,7 @@ export default (regl, config) => {
     // rain general
     "glyphHeightToWidth",
     "glyphTextureColumns",
-    "numColumns",
+    "density",
     // rain update
     "animationSpeed",
     "brightnessMinimum",
@@ -60,10 +61,15 @@ export default (regl, config) => {
     "rippleScale",
     "rippleSpeed",
     "rippleThickness",
+    // rain vertex
+    "forwardSpeed",
     // rain render
     "glyphEdgeCrop",
-    "isPolar"
+    "isPolar",
   ]);
+
+  uniforms.numRows = numRows;
+  uniforms.numColumns = numColumns;
 
   uniforms.rippleType =
     config.rippleTypeName in rippleTypes
@@ -95,7 +101,7 @@ export default (regl, config) => {
       #define SQRT_5 2.23606797749979
 
       uniform float time;
-      uniform float numColumns;
+      uniform float numColumns, numRows;
       uniform sampler2D lastState;
       uniform bool hasSun;
       uniform bool hasThunder;
@@ -197,7 +203,7 @@ export default (regl, config) => {
       void main()  {
 
         vec2 glyphPos = gl_FragCoord.xy;
-        vec2 screenPos = glyphPos / numColumns;
+        vec2 screenPos = glyphPos / vec2(numColumns, numRows);
         float simTime = time * animationSpeed;
 
         // Read the current values of the glyph
@@ -258,9 +264,9 @@ export default (regl, config) => {
     framebuffer: doubleBuffer.front
   });
 
-  const numGlyphs = numColumns * numColumns;
+  const numGlyphs = numRows * numColumns;
 
-  const glyphPositions = Array(numColumns).fill().map((_, y) =>
+  const glyphPositions = Array(numRows).fill().map((_, y) =>
     Array(numColumns).fill().map((_, x) =>
       Array(numVerticesPerGlyph).fill([x, y])
     )
@@ -291,8 +297,9 @@ export default (regl, config) => {
       precision lowp float;
       attribute vec2 aPosition, aCorner;
       uniform float width, height;
-      uniform float numColumns;
+      uniform float numColumns, numRows, density;
       uniform sampler2D lastState;
+      uniform float forwardSpeed;
       varying vec2 vUV;
       varying vec4 vGlyph;
       uniform mat4 camera;
@@ -300,11 +307,13 @@ export default (regl, config) => {
       uniform float time;
       uniform bool showComputationTexture;
       void main() {
-        vUV = (aPosition + aCorner) / numColumns;
-        vec2 position = (vUV - 0.5) * 2.0;
-        vGlyph = texture2D(lastState, vUV + (0.5 - aCorner) / numColumns);
+        vUV = (aPosition + aCorner) / vec2(numColumns, numRows);
+        vec2 position = (aPosition + aCorner * vec2(density, 1.)) / vec2(numColumns, numRows);
+        position = (position - 0.5) * 2.0;
+        vGlyph = texture2D(lastState, vUV + (0.5 - aCorner) / vec2(numColumns, numRows));
 
-        float glyphDepth = showComputationTexture ? 0. : vGlyph.b;
+        float glyphDepth = showComputationTexture ? 0. : fract(vGlyph.b + time * forwardSpeed);
+        vGlyph.b = glyphDepth;
         vec4 pos = camera * transform * vec4(position, glyphDepth, 1.0);
 
         // Scale the geometry to cover the longest dimension of the viewport
@@ -322,7 +331,7 @@ export default (regl, config) => {
       #endif
       precision lowp float;
 
-      uniform float numColumns;
+      uniform float numColumns, numRows;
       uniform sampler2D glyphTex;
       uniform float glyphHeightToWidth, glyphSequenceLength, glyphTextureColumns, glyphEdgeCrop;
       uniform vec2 slantVec;
@@ -377,10 +386,12 @@ export default (regl, config) => {
         float effect = vGlyph.a;
         brightness = max(effect, brightness);
         float symbolIndex = getSymbolIndex(vGlyph.g);
+        float glyphDepth = vGlyph.b;
+        float depthFade = min(1.0, glyphDepth * 1.25);
 
         // resolve UV to MSDF texture coord
         vec2 symbolUV = vec2(mod(symbolIndex, glyphTextureColumns), floor(symbolIndex / glyphTextureColumns));
-        vec2 glyphUV = fract(uv * numColumns);
+        vec2 glyphUV = fract(uv * vec2(numColumns, numRows));
         glyphUV -= 0.5;
         glyphUV *= clamp(1.0 - glyphEdgeCrop, 0.0, 1.0);
         glyphUV += 0.5;
@@ -391,7 +402,7 @@ export default (regl, config) => {
         float sigDist = median3(dist) - 0.5;
         float alpha = clamp(sigDist/fwidth(sigDist) + 0.5, 0.0, 1.0);
 
-        gl_FragColor = vec4(vec3(brightness * alpha), 1.0);
+        gl_FragColor = vec4(vec3(brightness * alpha * depthFade), 1.0);
       }
     `,
 
@@ -410,8 +421,13 @@ export default (regl, config) => {
     framebuffer: output
   });
 
-  const translation = glMatrix.vec3.set(glMatrix.vec3.create(), 0, 0, -1);
-  const scale = glMatrix.vec3.set(glMatrix.vec3.create(), 3, 3, 1);
+  const {mat4, vec3} = glMatrix;
+  const camera = mat4.create();
+  const translation = vec3.set(vec3.create(), 0, 0.5 / numRows, -1);
+  const scale = vec3.set(vec3.create(), 1, 1, 1);
+  const transform = mat4.create();
+  mat4.translate(transform, transform, translation);
+  mat4.scale(transform, transform, scale);
 
   return makePass(
     {
@@ -420,11 +436,6 @@ export default (regl, config) => {
     () => {
 
       const time = Date.now();
-
-      glMatrix.mat4.identity(transform);
-      glMatrix.mat4.translate(transform, transform, translation);
-      glMatrix.mat4.scale(transform, transform, scale);
-      glMatrix.mat4.rotateY(transform, transform, Math.PI * 2 * Math.sin(time * 0.001) * 0.05);
 
       update();
       regl.clear({
@@ -437,7 +448,7 @@ export default (regl, config) => {
     (w, h) => {
       output.resize(w, h);
       const aspectRatio = w / h;
-      glMatrix.mat4.perspective(camera, (Math.PI / 180) * 150, aspectRatio, 0.0001, 1000);
+      glMatrix.mat4.perspective(camera, (Math.PI / 180) * 90, aspectRatio, 0.0001, 1000);
     },
     msdfLoader.ready
   );

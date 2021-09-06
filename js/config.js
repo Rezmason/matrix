@@ -18,6 +18,7 @@ const fonts = {
 
 const defaults = {
   animationSpeed: 1,
+  forwardSpeed: 0.25,
   bloomStrength: 1,
   bloomSize: 1,
   highPassThreshold: 0.3,
@@ -39,6 +40,7 @@ const defaults = {
   rippleScale: 30,
   rippleSpeed: 0.2,
   numColumns: 80,
+  density: 1,
   paletteEntries: [
     { rgb: [0.0, 0.0, 0.0], at: 0.0 },
     { rgb: [0.09, 0.33, 0.04], at: 0.25 },
@@ -131,9 +133,15 @@ const paramMapping = {
   version: { key: "version", parser: s => s },
   effect: { key: "effect", parser: s => s },
   width: { key: "numColumns", parser: s => nullNaN(parseInt(s)) },
+  numColumns: { key: "numColumns", parser: s => nullNaN(parseInt(s)) },
+  density: { key: "density", parser: s => nullNaN(range(parseFloat(s), 0)) },
   resolution: { key: "resolution", parser: s => nullNaN(parseFloat(s)) },
   animationSpeed: {
     key: "animationSpeed",
+    parser: s => nullNaN(parseFloat(s))
+  },
+  forwardSpeed: {
+    key: "forwardSpeed",
     parser: s => nullNaN(parseFloat(s))
   },
   cycleSpeed: { key: "cycleSpeed", parser: s => nullNaN(parseFloat(s)) },
