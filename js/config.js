@@ -17,11 +17,12 @@ const fonts = {
 };
 
 const defaults = {
+  threedee: false,
   animationSpeed: 1,
   forwardSpeed: 0.25,
   bloomStrength: 1,
-  bloomSize: 1,
-  highPassThreshold: 0.3,
+  bloomSize: 0.6,
+  highPassThreshold: 0.1,
   cycleSpeed: 1,
   cycleStyleName: "cycleFasterWhenDimmed",
   cursorEffectThreshold: 1,
@@ -159,7 +160,8 @@ const paramMapping = {
     parser: s => nullNaN(range(parseFloat(s), 0, 1))
   },
   url: { key: "bgURL", parser: s => s },
-  colors: { key: "stripeColors", parser: s => s }
+  colors: { key: "stripeColors", parser: s => s },
+  threedee: { key: "threedee", parser: s => s.toLowerCase().includes("true") }
 };
 paramMapping.dropLength = paramMapping.raindropLength;
 paramMapping.angle = paramMapping.slant;

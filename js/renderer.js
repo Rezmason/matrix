@@ -16,12 +16,17 @@ const cycleStyles = {
   cycleRandomly: 1
 };
 
-const numVerticesPerGlyph = 2 * 3;
+const numVerticesPerQuad = 2 * 3;
+
 
 export default (regl, config) => {
 
-  const density = config.density;
+  const threedee = config.threedee;
+  const density = threedee && config.effect !== "none" ? config.density : 1;
   const [numRows, numColumns] = [config.numColumns, config.numColumns * density];
+  const [numQuadRows, numQuadColumns] = threedee ? [numRows, numColumns] : [1, 1];
+  const numQuads = numQuadRows * numQuadColumns;
+  const quadSize = [1 / numQuadColumns, 1 / numQuadRows];
 
   // These two framebuffers are used to compute the raining code.
   // they take turns being the source and destination of the "compute" shader.
@@ -40,36 +45,41 @@ export default (regl, config) => {
 
   const output = makePassFBO(regl, config.useHalfFloat);
 
-  const uniforms = extractEntries(config, [
-    // rain general
-    "glyphHeightToWidth",
-    "glyphTextureColumns",
-    "density",
-    // rain update
-    "animationSpeed",
-    "brightnessMinimum",
-    "brightnessMix",
-    "brightnessMultiplier",
-    "brightnessOffset",
-    "cursorEffectThreshold",
-    "cycleSpeed",
-    "fallSpeed",
-    "glyphSequenceLength",
-    "hasSun",
-    "hasThunder",
-    "raindropLength",
-    "rippleScale",
-    "rippleSpeed",
-    "rippleThickness",
-    // rain vertex
-    "forwardSpeed",
-    // rain render
-    "glyphEdgeCrop",
-    "isPolar",
-  ]);
-
-  uniforms.numRows = numRows;
-  uniforms.numColumns = numColumns;
+  const uniforms = {
+    ...extractEntries(config, [
+      // rain general
+      "glyphHeightToWidth",
+      "glyphTextureColumns",
+      // rain update
+      "animationSpeed",
+      "brightnessMinimum",
+      "brightnessMix",
+      "brightnessMultiplier",
+      "brightnessOffset",
+      "cursorEffectThreshold",
+      "cycleSpeed",
+      "fallSpeed",
+      "glyphSequenceLength",
+      "hasSun",
+      "hasThunder",
+      "raindropLength",
+      "rippleScale",
+      "rippleSpeed",
+      "rippleThickness",
+      // rain vertex
+      "forwardSpeed",
+      // rain render
+      "glyphEdgeCrop",
+      "isPolar",
+    ]),
+    density,
+    numRows,
+    numColumns,
+    numQuadRows,
+    numQuadColumns,
+    quadSize,
+    threedee
+  };
 
   uniforms.rippleType =
     config.rippleTypeName in rippleTypes
@@ -264,23 +274,13 @@ export default (regl, config) => {
     framebuffer: doubleBuffer.front
   });
 
-  const numGlyphs = numRows * numColumns;
-
-  const glyphPositions = Array(numRows).fill().map((_, y) =>
-    Array(numColumns).fill().map((_, x) =>
-      Array(numVerticesPerGlyph).fill([x, y])
+  const quadPositions = Array(numQuadRows).fill().map((_, y) =>
+    Array(numQuadColumns).fill().map((_, x) =>
+      Array(numVerticesPerQuad).fill([x, y])
     )
   );
-  const glyphCorners = Array(numGlyphs).fill([[0, 0], [0, 1], [1, 1], [0, 0], [1, 1], [1, 0]]);
 
-  const depthMesh = {};
-  Object.assign(depthMesh, {
-    attributes: {
-      aPosition: glyphPositions,
-      aCorner: glyphCorners
-    },
-    count: numGlyphs * numVerticesPerGlyph,
-  });
+  const quadCorners = Array(numQuads).fill([[0, 0], [0, 1], [1, 1], [0, 0], [1, 1], [1, 0]]);
 
   // We render the code into an FBO using MSDFs: https://github.com/Chlumsky/msdfgen
   const render = regl({
@@ -297,28 +297,40 @@ export default (regl, config) => {
       precision lowp float;
       attribute vec2 aPosition, aCorner;
       uniform float width, height;
-      uniform float numColumns, numRows, density;
+      uniform float density;
+      uniform vec2 quadSize;
       uniform sampler2D lastState;
       uniform float forwardSpeed;
-      varying vec2 vUV;
-      varying vec4 vGlyph;
+      uniform float glyphHeightToWidth;
       uniform mat4 camera;
       uniform mat4 transform;
       uniform float time;
+      uniform bool threedee;
       uniform bool showComputationTexture;
+      varying vec2 vUV;
+      varying vec4 vGlyph;
       void main() {
-        vUV = (aPosition + aCorner) / vec2(numColumns, numRows);
-        vec2 position = (aPosition + aCorner * vec2(density, 1.)) / vec2(numColumns, numRows);
+
+        vUV = (aPosition + aCorner) * quadSize;
+        vec2 position = (aPosition + aCorner * vec2(density, 1.)) * quadSize;
         position = (position - 0.5) * 2.0;
-        vGlyph = texture2D(lastState, vUV + (0.5 - aCorner) / vec2(numColumns, numRows));
+        vGlyph = texture2D(lastState, vUV + (0.5 - aCorner) * quadSize);
 
-        float glyphDepth = showComputationTexture ? 0. : fract(vGlyph.b + time * forwardSpeed);
-        vGlyph.b = glyphDepth;
-        vec4 pos = camera * transform * vec4(position, glyphDepth, 1.0);
+        float quadDepth = 0.0;
+        if (threedee && !showComputationTexture) {
+          quadDepth = fract(vGlyph.b + time * forwardSpeed);
+          vGlyph.b = quadDepth;
+        }
+        vec4 pos = vec4(position, quadDepth, 1.0);
 
-        // Scale the geometry to cover the longest dimension of the viewport
-        // vec2 size = width > height ? vec2(width / height, 1.) : vec2(1., height / width);
-        // pos.xy *= size;
+        if (threedee) {
+          pos.x /= glyphHeightToWidth;
+          pos = camera * transform * pos;
+        } else {
+          // Scale the geometry to cover the longest dimension of the viewport
+          vec2 size = width > height ? vec2(width / height, 1.) : vec2(1., height / width);
+          pos.xy *= size;
+        }
 
         gl_Position = pos;
       }
@@ -331,6 +343,7 @@ export default (regl, config) => {
       #endif
       precision lowp float;
 
+      uniform sampler2D lastState;
       uniform float numColumns, numRows;
       uniform sampler2D glyphTex;
       uniform float glyphHeightToWidth, glyphSequenceLength, glyphTextureColumns, glyphEdgeCrop;
@@ -338,6 +351,7 @@ export default (regl, config) => {
       uniform float slantScale;
       uniform bool isPolar;
       uniform bool showComputationTexture;
+      uniform bool threedee;
 
       varying vec2 vUV;
       varying vec4 vGlyph;
@@ -357,37 +371,43 @@ export default (regl, config) => {
 
         vec2 uv = vUV;
 
-        if (isPolar) {
-          // Curves the UV space to make letters appear to radiate from up above
-          uv -= 0.5;
-          uv *= 0.5;
-          uv.y -= 0.5;
-          float radius = length(uv);
-          float angle = atan(uv.y, uv.x) / (2. * PI) + 0.5;
-          uv = vec2(angle * 4. - 0.5, 1.5 - pow(radius, 0.5) * 1.5);
-        } else {
-          // Applies the slant, scaling the UV space
-          // to guarantee the viewport is still covered
-          uv = vec2(
-          (uv.x - 0.5) * slantVec.x + (uv.y - 0.5) * slantVec.y,
-          (uv.y - 0.5) * slantVec.x - (uv.x - 0.5) * slantVec.y
-          ) * slantScale + 0.5;
+        if (!threedee) {
+          if (isPolar) {
+            // Curves the UV space to make letters appear to radiate from up above
+            uv -= 0.5;
+            uv *= 0.5;
+            uv.y -= 0.5;
+            float radius = length(uv);
+            float angle = atan(uv.y, uv.x) / (2. * PI) + 0.5;
+            uv = vec2(angle * 4. - 0.5, 1.5 - pow(radius, 0.5) * 1.5);
+          } else {
+            // Applies the slant, scaling the UV space
+            // to guarantee the viewport is still covered
+            uv = vec2(
+            (uv.x - 0.5) * slantVec.x + (uv.y - 0.5) * slantVec.y,
+            (uv.y - 0.5) * slantVec.x - (uv.x - 0.5) * slantVec.y
+            ) * slantScale + 0.5;
+          }
+          uv.y /= glyphHeightToWidth;
         }
 
-        uv.y /= glyphHeightToWidth;
+        vec4 glyph = threedee ? vGlyph : texture2D(lastState, uv);
 
         if (showComputationTexture) {
-          gl_FragColor = vGlyph;
+          gl_FragColor = glyph;
           return;
         }
 
         // Unpack the values from the font texture
-        float brightness = vGlyph.r;
-        float effect = vGlyph.a;
+        float brightness = glyph.r;
+        float symbolIndex = getSymbolIndex(glyph.g);
+        float quadDepth = glyph.b;
+        float effect = glyph.a;
+
         brightness = max(effect, brightness);
-        float symbolIndex = getSymbolIndex(vGlyph.g);
-        float glyphDepth = vGlyph.b;
-        float depthFade = min(1.0, glyphDepth * 1.25);
+        if (threedee) {
+          brightness = min(1.0, brightness * quadDepth * 1.25);
+        }
 
         // resolve UV to MSDF texture coord
         vec2 symbolUV = vec2(mod(symbolIndex, glyphTextureColumns), floor(symbolIndex / glyphTextureColumns));
@@ -402,7 +422,7 @@ export default (regl, config) => {
         float sigDist = median3(dist) - 0.5;
         float alpha = clamp(sigDist/fwidth(sigDist) + 0.5, 0.0, 1.0);
 
-        gl_FragColor = vec4(vec3(brightness * alpha * depthFade), 1.0);
+        gl_FragColor = vec4(vec3(brightness * alpha), 1.0);
       }
     `,
 
@@ -416,7 +436,11 @@ export default (regl, config) => {
       lastState: doubleBuffer.front
     },
 
-    ...depthMesh,
+    attributes: {
+      aPosition: quadPositions,
+      aCorner: quadCorners
+    },
+    count: numQuads * numVerticesPerQuad,
 
     framebuffer: output
   });
