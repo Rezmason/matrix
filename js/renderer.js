@@ -18,6 +18,9 @@ const cycleStyles = {
 
 const numVerticesPerGlyph = 2 * 3;
 
+const camera = glMatrix.mat4.create();
+const transform = glMatrix.mat4.create();
+
 export default (regl, config) => {
   // These two framebuffers are used to compute the raining code.
   // they take turns being the source and destination of the "compute" shader.
@@ -219,6 +222,8 @@ export default (regl, config) => {
         effect = applyRippleEffect(effect, simTime, screenPos);
         effect = applyCursorEffect(effect, rainBrightness);
 
+        float glyphDepth = rand(vec2(glyphPos.x, 0.0));
+
         if (rainBrightness > brightnessMinimum) {
           rainBrightness = rainBrightness * brightnessMultiplier + brightnessOffset;
         }
@@ -238,7 +243,7 @@ export default (regl, config) => {
           gl_FragColor = vec4(
             rainBrightness,
             glyphCycle,
-            glyphCycle,
+            glyphDepth,
             effect
           );
         }
@@ -253,18 +258,14 @@ export default (regl, config) => {
     framebuffer: doubleBuffer.front
   });
 
-
   const numGlyphs = numColumns * numColumns;
 
-  const glyphPositions = Array(numGlyphs).fill(null);
-  for (let y = 0; y < numColumns; y++) {
-    for (let x = 0; x < numColumns; x++) {
-      glyphPositions[y * numColumns + x] = Array(numVerticesPerGlyph).fill([x, y]);
-    }
-  }
-
-  const cornersTemplate = [[0, 0], [0, 1], [1, 1], [0, 0], [1, 1], [1, 0]];
-  const glyphCorners = Array(numGlyphs).fill(cornersTemplate);
+  const glyphPositions = Array(numColumns).fill().map((_, y) =>
+    Array(numColumns).fill().map((_, x) =>
+      Array(numVerticesPerGlyph).fill([x, y])
+    )
+  );
+  const glyphCorners = Array(numGlyphs).fill([[0, 0], [0, 1], [1, 1], [0, 0], [1, 1], [1, 0]]);
 
   const depthMesh = {};
   Object.assign(depthMesh, {
@@ -294,13 +295,23 @@ export default (regl, config) => {
       uniform sampler2D lastState;
       varying vec2 vUV;
       varying vec4 vGlyph;
+      uniform mat4 camera;
+      uniform mat4 transform;
+      uniform float time;
+      uniform bool showComputationTexture;
       void main() {
         vUV = (aPosition + aCorner) / numColumns;
         vec2 position = (vUV - 0.5) * 2.0;
         vGlyph = texture2D(lastState, vUV + (0.5 - aCorner) / numColumns);
+
+        float glyphDepth = showComputationTexture ? 0. : vGlyph.b;
+        vec4 pos = camera * transform * vec4(position, glyphDepth, 1.0);
+
         // Scale the geometry to cover the longest dimension of the viewport
-        vec2 size = width > height ? vec2(width / height, 1.) : vec2(1., height / width);
-        gl_Position = vec4( size * position, 0.0, 1.0 );
+        // vec2 size = width > height ? vec2(width / height, 1.) : vec2(1., height / width);
+        // pos.xy *= size;
+
+        gl_Position = pos;
       }
     `,
 
@@ -386,6 +397,8 @@ export default (regl, config) => {
 
     uniforms: {
       ...uniforms,
+      camera: regl.prop("camera"),
+      transform: regl.prop("transform"),
       glyphTex: msdfLoader.texture,
       height: regl.context("viewportWidth"),
       width: regl.context("viewportHeight"),
@@ -397,20 +410,35 @@ export default (regl, config) => {
     framebuffer: output
   });
 
+  const translation = glMatrix.vec3.set(glMatrix.vec3.create(), 0, 0, -1);
+  const scale = glMatrix.vec3.set(glMatrix.vec3.create(), 3, 3, 1);
+
   return makePass(
     {
       primary: output
     },
-    resources => {
+    () => {
+
+      const time = Date.now();
+
+      glMatrix.mat4.identity(transform);
+      glMatrix.mat4.translate(transform, transform, translation);
+      glMatrix.mat4.scale(transform, transform, scale);
+      glMatrix.mat4.rotateY(transform, transform, Math.PI * 2 * Math.sin(time * 0.001) * 0.05);
+
       update();
       regl.clear({
         depth: 1,
         color: [0, 0, 0, 1],
         framebuffer: output
       });
-      render(resources);
+      render({camera, transform});
     },
-    null,
+    (w, h) => {
+      output.resize(w, h);
+      const aspectRatio = w / h;
+      glMatrix.mat4.perspective(camera, (Math.PI / 180) * 150, aspectRatio, 0.0001, 1000);
+    },
     msdfLoader.ready
   );
 };
