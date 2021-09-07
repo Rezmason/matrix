@@ -21,10 +21,10 @@ const numVerticesPerQuad = 2 * 3;
 
 export default (regl, config) => {
 
-  const threedee = config.threedee;
-  const density = threedee && config.effect !== "none" ? config.density : 1;
+  const volumetric = config.volumetric;
+  const density = volumetric && config.effect !== "none" ? config.density : 1;
   const [numRows, numColumns] = [config.numColumns, config.numColumns * density];
-  const [numQuadRows, numQuadColumns] = threedee ? [numRows, numColumns] : [1, 1];
+  const [numQuadRows, numQuadColumns] = volumetric ? [numRows, numColumns] : [1, 1];
   const numQuads = numQuadRows * numQuadColumns;
   const quadSize = [1 / numQuadColumns, 1 / numQuadRows];
 
@@ -78,7 +78,7 @@ export default (regl, config) => {
     numQuadRows,
     numQuadColumns,
     quadSize,
-    threedee
+    volumetric
   };
 
   uniforms.rippleType =
@@ -304,8 +304,8 @@ export default (regl, config) => {
       uniform float glyphHeightToWidth;
       uniform mat4 camera;
       uniform mat4 transform;
-      uniform float time;
-      uniform bool threedee;
+      uniform float time, animationSpeed;
+      uniform bool volumetric;
       uniform bool showComputationTexture;
       varying vec2 vUV;
       varying vec4 vGlyph;
@@ -317,13 +317,13 @@ export default (regl, config) => {
         vGlyph = texture2D(lastState, vUV + (0.5 - aCorner) * quadSize);
 
         float quadDepth = 0.0;
-        if (threedee && !showComputationTexture) {
-          quadDepth = fract(vGlyph.b + time * forwardSpeed);
+        if (volumetric && !showComputationTexture) {
+          quadDepth = fract(vGlyph.b + time * animationSpeed * forwardSpeed);
           vGlyph.b = quadDepth;
         }
         vec4 pos = vec4(position, quadDepth, 1.0);
 
-        if (threedee) {
+        if (volumetric) {
           pos.x /= glyphHeightToWidth;
           pos = camera * transform * pos;
         } else {
@@ -351,7 +351,7 @@ export default (regl, config) => {
       uniform float slantScale;
       uniform bool isPolar;
       uniform bool showComputationTexture;
-      uniform bool threedee;
+      uniform bool volumetric;
 
       varying vec2 vUV;
       varying vec4 vGlyph;
@@ -371,7 +371,7 @@ export default (regl, config) => {
 
         vec2 uv = vUV;
 
-        if (!threedee) {
+        if (!volumetric) {
           if (isPolar) {
             // Curves the UV space to make letters appear to radiate from up above
             uv -= 0.5;
@@ -391,7 +391,7 @@ export default (regl, config) => {
           uv.y /= glyphHeightToWidth;
         }
 
-        vec4 glyph = threedee ? vGlyph : texture2D(lastState, uv);
+        vec4 glyph = volumetric ? vGlyph : texture2D(lastState, uv);
 
         if (showComputationTexture) {
           gl_FragColor = glyph;
@@ -405,7 +405,7 @@ export default (regl, config) => {
         float effect = glyph.a;
 
         brightness = max(effect, brightness);
-        if (threedee) {
+        if (volumetric) {
           brightness = min(1.0, brightness * quadDepth * 1.25);
         }
 

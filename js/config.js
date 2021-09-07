@@ -17,7 +17,7 @@ const fonts = {
 };
 
 const defaults = {
-  threedee: false,
+  volumetric: false,
   animationSpeed: 1,
   forwardSpeed: 0.25,
   bloomStrength: 1,
@@ -161,7 +161,7 @@ const paramMapping = {
   },
   url: { key: "bgURL", parser: s => s },
   colors: { key: "stripeColors", parser: s => s },
-  threedee: { key: "threedee", parser: s => s.toLowerCase().includes("true") }
+  volumetric: { key: "volumetric", parser: s => s.toLowerCase().includes("true") }
 };
 paramMapping.dropLength = paramMapping.raindropLength;
 paramMapping.angle = paramMapping.slant;
