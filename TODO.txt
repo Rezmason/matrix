@@ -1,5 +1,19 @@
 TODO:
 
+Resurrection
+  Modified glyph order?
+
+  Post processing
+    Radial hue shift
+      Blue in top center
+      Yellow in bottom corners
+    Blurring towards the edges, like a tilt-shift effect
+      Maybe adjust the bloom pass's sampling based on distance to center
+
+  Upward glyphs?
+
+  New glyphs?
+
 Experiment with varying the colors in the palette pass
   Maybe a separate palette for the non-bloom
   Maybe dim and widen the bloom
