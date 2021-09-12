@@ -17,6 +17,7 @@ const fonts = {
 };
 
 const defaults = {
+  backgroundColor: [0, 0, 0],
   volumetric: false,
   animationSpeed: 1,
   forwardSpeed: 0.25,
@@ -160,11 +161,13 @@ const paramMapping = {
     parser: s => nullNaN(range(parseFloat(s), 0, 1))
   },
   url: { key: "bgURL", parser: s => s },
-  colors: { key: "stripeColors", parser: s => s },
+  stripeColors: { key: "stripeColors", parser: s => s },
+  backgroundColor: { key: "backgroundColor", parser: s => s.split(",").map(parseFloat) },
   volumetric: { key: "volumetric", parser: s => s.toLowerCase().includes("true") }
 };
 paramMapping.dropLength = paramMapping.raindropLength;
 paramMapping.angle = paramMapping.slant;
+paramMapping.colors = paramMapping.stripeColors;
 
 export default (searchString, make1DTexture) => {
   const urlParams = Object.fromEntries(

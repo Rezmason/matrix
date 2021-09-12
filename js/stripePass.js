@@ -1,4 +1,4 @@
-import { make1DTexture, makePassFBO, makePass } from "./utils.js";
+import { extractEntries, make1DTexture, makePassFBO, makePass } from "./utils.js";
 
 const neapolitanStripeColors = [
   [0.4, 0.15, 0.1],
@@ -47,6 +47,7 @@ export default (regl, config, inputs) => {
       uniform sampler2D stripes;
       uniform float ditherMagnitude;
       uniform float time;
+      uniform vec3 backgroundColor;
       varying vec2 vUV;
 
       highp float rand( const in vec2 uv, const in float t ) {
@@ -59,11 +60,14 @@ export default (regl, config, inputs) => {
         vec3 color = texture2D(stripes, vUV).rgb;
         float brightness = min(1., texture2D(tex, vUV).r * 2.) + texture2D(bloomTex, vUV).r;
         float at = brightness - rand( gl_FragCoord.xy, time ) * ditherMagnitude;
-        gl_FragColor = vec4(color * at, 1.0);
+        gl_FragColor = vec4(color * at + backgroundColor, 1.0);
       }
     `,
 
       uniforms: {
+        ...extractEntries(config, [
+          "backgroundColor",
+        ]),
         tex: inputs.primary,
         bloomTex: inputs.bloom,
         stripes,

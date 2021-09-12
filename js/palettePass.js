@@ -1,4 +1,4 @@
-import { make1DTexture, makePassFBO, makePass } from "./utils.js";
+import { extractEntries, make1DTexture, makePassFBO, makePass } from "./utils.js";
 
 const makePalette = (regl, entries) => {
   const PALETTE_SIZE = 2048;
@@ -63,6 +63,7 @@ export default (regl, config, inputs) => {
       uniform sampler2D palette;
       uniform float ditherMagnitude;
       uniform float time;
+      uniform vec3 backgroundColor;
       varying vec2 vUV;
 
       highp float rand( const in vec2 uv, const in float t ) {
@@ -74,11 +75,14 @@ export default (regl, config, inputs) => {
       void main() {
         float brightness = texture2D( tex, vUV ).r + texture2D( bloomTex, vUV ).r;
         float at = brightness - rand( gl_FragCoord.xy, time ) * ditherMagnitude;
-        gl_FragColor = texture2D( palette, vec2(at, 0.0));
+        gl_FragColor = texture2D( palette, vec2(at, 0.0)) + vec4(backgroundColor, 0.0);
       }
     `,
 
       uniforms: {
+        ...extractEntries(config, [
+          "backgroundColor",
+        ]),
         tex: inputs.primary,
         bloomTex: inputs.bloom,
         palette,
