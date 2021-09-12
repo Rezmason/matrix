@@ -18,7 +18,6 @@ const cycleStyles = {
 
 const numVerticesPerQuad = 2 * 3;
 
-
 export default (regl, config) => {
 
   const volumetric = config.volumetric;
@@ -296,15 +295,13 @@ export default (regl, config) => {
     vert: `
       precision lowp float;
       attribute vec2 aPosition, aCorner;
-      uniform float width, height;
+      uniform sampler2D lastState;
       uniform float density;
       uniform vec2 quadSize;
-      uniform sampler2D lastState;
-      uniform float forwardSpeed;
       uniform float glyphHeightToWidth;
-      uniform mat4 camera;
-      uniform mat4 transform;
-      uniform float time, animationSpeed;
+      uniform mat4 camera, transform;
+      uniform vec2 screenSize;
+      uniform float time, animationSpeed, forwardSpeed;
       uniform bool volumetric;
       uniform bool showComputationTexture;
       varying vec2 vUV;
@@ -312,24 +309,21 @@ export default (regl, config) => {
       void main() {
 
         vUV = (aPosition + aCorner) * quadSize;
-        vec2 position = (aPosition + aCorner * vec2(density, 1.)) * quadSize;
-        position = (position - 0.5) * 2.0;
-        vGlyph = texture2D(lastState, vUV + (0.5 - aCorner) * quadSize);
+        vGlyph = texture2D(lastState, aPosition * quadSize);
 
         float quadDepth = 0.0;
         if (volumetric && !showComputationTexture) {
           quadDepth = fract(vGlyph.b + time * animationSpeed * forwardSpeed);
           vGlyph.b = quadDepth;
         }
-        vec4 pos = vec4(position, quadDepth, 1.0);
+        vec2 position = (aPosition + aCorner * vec2(density, 1.)) * quadSize;
+        vec4 pos = vec4((position - 0.5) * 2.0, quadDepth, 1.0);
 
         if (volumetric) {
           pos.x /= glyphHeightToWidth;
           pos = camera * transform * pos;
         } else {
-          // Scale the geometry to cover the longest dimension of the viewport
-          vec2 size = width > height ? vec2(width / height, 1.) : vec2(1., height / width);
-          pos.xy *= size;
+          pos.xy *= screenSize;
         }
 
         gl_Position = pos;
@@ -428,12 +422,13 @@ export default (regl, config) => {
 
     uniforms: {
       ...uniforms,
+
+      lastState: doubleBuffer.front,
+      glyphTex: msdfLoader.texture,
+
       camera: regl.prop("camera"),
       transform: regl.prop("transform"),
-      glyphTex: msdfLoader.texture,
-      height: regl.context("viewportWidth"),
-      width: regl.context("viewportHeight"),
-      lastState: doubleBuffer.front
+      screenSize: regl.prop("screenSize")
     },
 
     attributes: {
@@ -445,6 +440,7 @@ export default (regl, config) => {
     framebuffer: output
   });
 
+  const screenSize = [1, 1];
   const {mat4, vec3} = glMatrix;
   const camera = mat4.create();
   const translation = vec3.set(vec3.create(), 0, 0.5 / numRows, -1);
@@ -458,7 +454,6 @@ export default (regl, config) => {
       primary: output
     },
     () => {
-
       const time = Date.now();
 
       update();
@@ -467,12 +462,13 @@ export default (regl, config) => {
         color: [0, 0, 0, 1],
         framebuffer: output
       });
-      render({camera, transform});
+      render({camera, transform, screenSize});
     },
     (w, h) => {
       output.resize(w, h);
       const aspectRatio = w / h;
       glMatrix.mat4.perspective(camera, (Math.PI / 180) * 90, aspectRatio, 0.0001, 1000);
+      [screenSize[0], screenSize[1]] = aspectRatio > 1 ? [1, aspectRatio] : [1 / aspectRatio, 1];
     },
     msdfLoader.ready
   );
