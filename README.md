@@ -6,6 +6,7 @@
 
 - [Classic Matrix code](https://rezmason.github.io/matrix)
 - [3D mode](https://rezmason.github.io/matrix?volumetric=true)
+- [Matrix Resurrections code (WIP)](https://rezmason.github.io/matrix?version=resurrections)
 - [Operator Matrix code (with ripple effects)](https://rezmason.github.io/matrix?version=operator)
 - [Code of the "Nightmare Matrix"](https://rezmason.github.io/matrix?version=nightmare)
   - [(you know, this stuff).](http://matrix.wikia.com/wiki/Nightmare_Matrix)

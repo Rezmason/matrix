@@ -1,5 +1,14 @@
 import { extractEntries, make1DTexture, makePassFBO, makePass } from "./utils.js";
 
+const colorToRGB = ([hue, saturation, lightness]) => {
+  const a = saturation * Math.min(lightness, 1 - lightness);
+  const f = (n) => {
+    const k = (n + hue * 12) % 12;
+    return lightness - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+  };
+  return [f(0), f(8), f(4)];
+};
+
 const makePalette = (regl, entries) => {
   const PALETTE_SIZE = 2048;
   const paletteColors = Array(PALETTE_SIZE);
@@ -7,7 +16,7 @@ const makePalette = (regl, entries) => {
     .slice()
     .sort((e1, e2) => e1.at - e2.at)
     .map(entry => ({
-      rgb: entry.rgb,
+      rgb: colorToRGB(entry.hsl),
       arrayIndex: Math.floor(
         Math.max(Math.min(1, entry.at), 0) * (PALETTE_SIZE - 1)
       )
@@ -73,7 +82,8 @@ export default (regl, config, inputs) => {
       }
 
       void main() {
-        float brightness = texture2D( tex, vUV ).r + texture2D( bloomTex, vUV ).r;
+        vec4 brightnessRGB = texture2D( tex, vUV ) + texture2D( bloomTex, vUV );
+        float brightness = brightnessRGB.r + brightnessRGB.g + brightnessRGB.b;
         float at = brightness - rand( gl_FragCoord.xy, time ) * ditherMagnitude;
         gl_FragColor = texture2D( palette, vec2(at, 0.0)) + vec4(backgroundColor, 0.0);
       }

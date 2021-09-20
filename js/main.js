@@ -5,6 +5,7 @@ import makeBloomPass from "./bloomPass.js";
 import makePalettePass from "./palettePass.js";
 import makeStripePass from "./stripePass.js";
 import makeImagePass from "./imagePass.js";
+import makeResurrectionPass from "./resurrectionPass.js";
 
 const canvas = document.createElement("canvas");
 document.body.appendChild(canvas);
@@ -29,7 +30,9 @@ const effects = {
   customStripes: makeStripePass,
   stripes: makeStripePass,
   pride: makeStripePass,
-  image: makeImagePass
+  image: makeImagePass,
+  resurrection: makeResurrectionPass,
+  resurrections: makeResurrectionPass
 };
 
 const config = makeConfig(window.location.search);

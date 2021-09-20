@@ -19,6 +19,7 @@ const fonts = {
 const defaults = {
   backgroundColor: [0, 0, 0],
   volumetric: false,
+  resurrectingCodeRatio: 0,
   animationSpeed: 1,
   forwardSpeed: 0.25,
   bloomStrength: 1,
@@ -44,10 +45,10 @@ const defaults = {
   numColumns: 80,
   density: 1,
   paletteEntries: [
-    { rgb: [0.0, 0.0, 0.0], at: 0.0 },
-    { rgb: [0.09, 0.33, 0.04], at: 0.25 },
-    { rgb: [0.39, 0.98, 0.38], at: 0.7 },
-    { rgb: [0.57, 0.97, 0.61], at: 1.0 }
+    { hsl: [0.3, 0.9, 0.0], at: 0.0 },
+    { hsl: [0.3, 0.9, 0.2], at: 0.2 },
+    { hsl: [0.3, 0.9, 0.7], at: 0.7 },
+    { hsl: [0.3, 0.9, 0.8], at: 0.8 }
   ],
   raindropLength: 1,
   slant: 0,
@@ -77,9 +78,9 @@ const versions = {
     rippleTypeName: "box",
     numColumns: 108,
     paletteEntries: [
-      { rgb: [0.0, 0.0, 0.0], at: 0.0 },
-      { rgb: [0.18, 0.9, 0.35], at: 0.6 },
-      { rgb: [0.9, 1.0, 0.9], at: 1.0 }
+      { hsl: [0.4, 0.8, 0.0], at: 0.0 },
+      { hsl: [0.4, 0.8, 0.5], at: 0.5 },
+      { hsl: [0.4, 0.8, 1.0], at: 1.0 }
     ],
     raindropLength: 1.5
   },
@@ -92,11 +93,11 @@ const versions = {
     hasThunder: true,
     numColumns: 60,
     paletteEntries: [
-      { rgb: [0.0, 0.0, 0.0], at: 0.0 },
-      { rgb: [0.32, 0.06, 0.0], at: 0.2 },
-      { rgb: [0.82, 0.06, 0.05], at: 0.4 },
-      { rgb: [1.0, 0.6, 0.3], at: 0.8 },
-      { rgb: [1.0, 1.0, 0.9], at: 1.0 }
+      { hsl: [0.0, 1.0, 0.0], at: 0.0 },
+      { hsl: [0.0, 1.0, 0.2], at: 0.2 },
+      { hsl: [0.0, 1.0, 0.4], at: 0.4 },
+      { hsl: [0.1, 1.0, 0.7], at: 0.7 },
+      { hsl: [0.2, 1.0, 1.0], at: 1.0 }
     ],
     raindropLength: 0.6,
     slant: (22.5 * Math.PI) / 180
@@ -115,13 +116,23 @@ const versions = {
     rippleSpeed: 0.1,
     numColumns: 30,
     paletteEntries: [
-      { rgb: [0.0, 0.0, 0.0], at: 0.0 },
-      { rgb: [0.52, 0.17, 0.05], at: 0.4 },
-      { rgb: [0.82, 0.37, 0.12], at: 0.7 },
-      { rgb: [1.0, 0.74, 0.29], at: 0.9 },
-      { rgb: [1.0, 0.9, 0.8], at: 1.0 }
+      { hsl: [0.0, 0.0, 0.0], at: 0.0 },
+      { hsl: [0.0, 0.8, 0.3], at: 0.3 },
+      { hsl: [0.1, 0.8, 0.5], at: 0.5 },
+      { hsl: [0.1, 1.0, 0.6], at: 0.6 },
+      { hsl: [0.1, 1.0, 0.9], at: 0.9 }
     ],
     raindropLength: 0.4
+  },
+  resurrections: {
+    ...defaults,
+    ...fonts.matrixcode,
+    resurrectingCodeRatio: 0.25,
+    effect:"resurrections",
+    width:100,
+    volumetric:true,
+    density:3,
+    fallSpeed:0.7
   }
 };
 versions.throwback = versions.operator;

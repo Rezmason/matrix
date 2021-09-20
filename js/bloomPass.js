@@ -42,18 +42,16 @@ export default (regl, config, inputs) => {
   // The high pass restricts the blur to bright things in our input texture.
   const highPass = regl({
     frag: `
-      #define lumaMag vec3(0.2126, 0.7152, 0.0722)
       precision mediump float;
       varying vec2 vUV;
       uniform sampler2D tex;
       uniform float highPassThreshold;
       void main() {
-        vec3 lumaColor = texture2D(tex, vUV).rgb * lumaMag;
-        float luma = lumaColor.r + lumaColor.g + lumaColor.b;
-        if (luma < highPassThreshold) {
-          luma = 0.;
-        }
-        gl_FragColor = vec4(vec3(luma), 1.0);
+        vec3 lumaColor = texture2D(tex, vUV).rgb;
+        if (lumaColor.r < highPassThreshold) lumaColor.r = 0.0;
+        if (lumaColor.g < highPassThreshold) lumaColor.g = 0.0;
+        if (lumaColor.b < highPassThreshold) lumaColor.b = 0.0;
+        gl_FragColor = vec4(lumaColor, 1.0);
       }
     `,
     uniforms: {

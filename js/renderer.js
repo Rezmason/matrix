@@ -65,6 +65,7 @@ export default (regl, config) => {
       "rippleScale",
       "rippleSpeed",
       "rippleThickness",
+      "resurrectingCodeRatio",
       // rain vertex
       "forwardSpeed",
       // rain render
@@ -293,6 +294,7 @@ export default (regl, config) => {
       }
     },
     vert: `
+      #define PI 3.14159265359
       precision lowp float;
       attribute vec2 aPosition, aCorner;
       uniform sampler2D lastState;
@@ -304,8 +306,17 @@ export default (regl, config) => {
       uniform float time, animationSpeed, forwardSpeed;
       uniform bool volumetric;
       uniform bool showComputationTexture;
+      uniform float resurrectingCodeRatio;
       varying vec2 vUV;
+      varying vec3 vChannel;
       varying vec4 vGlyph;
+
+      highp float rand( const in vec2 uv ) {
+        const highp float a = 12.9898, b = 78.233, c = 43758.5453;
+        highp float dt = dot( uv.xy, vec2( a,b ) ), sn = mod( dt, PI );
+        return fract(sin(sn) * c);
+      }
+
       void main() {
 
         vUV = (aPosition + aCorner) * quadSize;
@@ -319,8 +330,16 @@ export default (regl, config) => {
         vec2 position = (aPosition + aCorner * vec2(density, 1.)) * quadSize;
         vec4 pos = vec4((position - 0.5) * 2.0, quadDepth, 1.0);
 
+        vChannel = vec3(1.0, 0.0, 0.0);
+
         if (volumetric) {
+          if (rand(vec2(aPosition.x, 0)) < resurrectingCodeRatio) {
+            pos.y = -pos.y;
+            vChannel = vec3(0.0, 1.0, 0.0);
+          }
+
           pos.x /= glyphHeightToWidth;
+
           pos = camera * transform * pos;
         } else {
           pos.xy *= screenSize;
@@ -348,6 +367,7 @@ export default (regl, config) => {
       uniform bool volumetric;
 
       varying vec2 vUV;
+      varying vec3 vChannel;
       varying vec4 vGlyph;
 
       float median3(vec3 i) {
@@ -416,7 +436,7 @@ export default (regl, config) => {
         float sigDist = median3(dist) - 0.5;
         float alpha = clamp(sigDist/fwidth(sigDist) + 0.5, 0.0, 1.0);
 
-        gl_FragColor = vec4(vec3(brightness * alpha), 1.0);
+        gl_FragColor = vec4(vChannel * brightness * alpha, 1.0);
       }
     `,
 
