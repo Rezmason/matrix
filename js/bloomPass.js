@@ -25,7 +25,7 @@ export default (regl, config, inputs) => {
 	const vBlurPyramid = makePyramid(regl, pyramidHeight, config.useHalfFloat);
 	const output = makePassFBO(regl, config.useHalfFloat);
 
-	const highPassFrag = loadText("../shaders/highPass.frag");
+	const highPassFrag = loadText("shaders/highPass.frag");
 
 	// The high pass restricts the blur to bright things in our input texture.
 	const highPass = regl({
@@ -41,7 +41,7 @@ export default (regl, config, inputs) => {
 	// The FBO pyramid's levels represent separate levels of detail;
 	// by blurring them all, this 3x1 blur approximates a more complex gaussian.
 
-	const blurFrag = loadText("../shaders/blur.frag");
+	const blurFrag = loadText("shaders/blur.frag");
 	const blur = regl({
 		frag: regl.prop("frag"),
 		uniforms: {
