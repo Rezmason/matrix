@@ -13,6 +13,11 @@ const cycleStyles = {
 };
 
 const numVerticesPerQuad = 2 * 3;
+const tlVert = [0, 0];
+const trVert = [0, 1];
+const blVert = [1, 0];
+const brVert = [1, 1];
+const quadVertices = [tlVert, trVert, brVert, tlVert, brVert, blVert];
 
 export default (regl, config) => {
 	const volumetric = config.volumetric;
@@ -21,6 +26,7 @@ export default (regl, config) => {
 	const [numQuadRows, numQuadColumns] = volumetric ? [numRows, numColumns] : [1, 1];
 	const numQuads = numQuadRows * numQuadColumns;
 	const quadSize = [1 / numQuadColumns, 1 / numQuadRows];
+
 	const rippleType = config.rippleTypeName in rippleTypes ? rippleTypes[config.rippleTypeName] : -1;
 	const cycleStyle = config.cycleStyleName in cycleStyles ? cycleStyles[config.cycleStyleName] : 0;
 	const slantVec = [Math.cos(config.slant), Math.sin(config.slant)];
@@ -49,9 +55,9 @@ export default (regl, config) => {
 			"rippleSpeed",
 			"rippleThickness",
 			"resurrectingCodeRatio",
-			// rain vertex
+			// rain render vertex
 			"forwardSpeed",
-			// rain render
+			// rain render fragment
 			"glyphEdgeCrop",
 			"isPolar",
 		]),
@@ -62,6 +68,7 @@ export default (regl, config) => {
 		numQuadColumns,
 		quadSize,
 		volumetric,
+
 		rippleType,
 		cycleStyle,
 		slantVec,
@@ -106,15 +113,6 @@ export default (regl, config) => {
 				.map((_, x) => Array(numVerticesPerQuad).fill([x, y]))
 		);
 
-	const quadCorners = Array(numQuads).fill([
-		[0, 0],
-		[0, 1],
-		[1, 1],
-		[0, 0],
-		[1, 1],
-		[1, 0],
-	]);
-
 	// We render the code into an FBO using MSDFs: https://github.com/Chlumsky/msdfgen
 	const renderVert = loadText("../shaders/render.vert");
 	const renderFrag = loadText("../shaders/render.frag");
@@ -122,10 +120,8 @@ export default (regl, config) => {
 		blend: {
 			enable: true,
 			func: {
-				srcRGB: "src alpha",
-				srcAlpha: 1,
-				dstRGB: "dst alpha",
-				dstAlpha: 1,
+				src: "one",
+				dst: "one",
 			},
 		},
 		vert: regl.prop("vert"),
@@ -144,7 +140,7 @@ export default (regl, config) => {
 
 		attributes: {
 			aPosition: quadPositions,
-			aCorner: quadCorners,
+			aCorner: Array(numQuads).fill(quadVertices),
 		},
 		count: numQuads * numVerticesPerQuad,
 
@@ -165,8 +161,6 @@ export default (regl, config) => {
 			primary: output,
 		},
 		() => {
-			const time = Date.now();
-
 			update({ frag: updateFrag.text() });
 			regl.clear({
 				depth: 1,
