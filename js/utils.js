@@ -177,6 +177,8 @@ const makePass = (outputs, render, resize, ready) => {
   }
   if (ready == null) {
     ready = Promise.resolve();
+  } else if (ready instanceof Array) {
+    ready = Promise.all(ready);
   }
   return {
     outputs,

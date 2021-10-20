@@ -75,13 +75,13 @@ document.body.onload = async () => {
     ) {
       dimensions.width = viewportWidth;
       dimensions.height = viewportHeight;
-      for (const pass of pipeline) {
-        pass.resize(viewportWidth, viewportHeight);
+      for (const step of pipeline) {
+        step.resize(viewportWidth, viewportHeight);
       }
     }
     fullScreenQuad(() => {
-      for (const pass of pipeline) {
-        pass.render();
+      for (const step of pipeline) {
+        step.render();
       }
       drawToScreen();
     });

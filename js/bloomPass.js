@@ -1,4 +1,5 @@
 import {
+  loadText,
   extractEntries,
   makePassFBO,
   makePyramid,
@@ -39,21 +40,11 @@ export default (regl, config, inputs) => {
   const vBlurPyramid = makePyramid(regl, pyramidHeight, config.useHalfFloat);
   const output = makePassFBO(regl, config.useHalfFloat);
 
+  const highPassFrag = loadText("../shaders/highPass.frag");
+
   // The high pass restricts the blur to bright things in our input texture.
   const highPass = regl({
-    frag: `
-      precision mediump float;
-      varying vec2 vUV;
-      uniform sampler2D tex;
-      uniform float highPassThreshold;
-      void main() {
-        vec3 lumaColor = texture2D(tex, vUV).rgb;
-        if (lumaColor.r < highPassThreshold) lumaColor.r = 0.0;
-        if (lumaColor.g < highPassThreshold) lumaColor.g = 0.0;
-        if (lumaColor.b < highPassThreshold) lumaColor.b = 0.0;
-        gl_FragColor = vec4(lumaColor, 1.0);
-      }
-    `,
+    frag: regl.prop("frag"),
     uniforms: {
       ...uniforms,
       tex: regl.prop("tex")
@@ -64,33 +55,10 @@ export default (regl, config, inputs) => {
   // A 2D gaussian blur is just a 1D blur done horizontally, then done vertically.
   // The FBO pyramid's levels represent separate levels of detail;
   // by blurring them all, this 3x1 blur approximates a more complex gaussian.
+
+  const blurFrag = loadText("../shaders/blur.frag");
   const blur = regl({
-    frag: `
-      precision mediump float;
-      uniform float width, height;
-      uniform sampler2D tex;
-      uniform vec2 direction;
-      varying vec2 vUV;
-      void main() {
-        vec2 size = width > height ? vec2(width / height, 1.) : vec2(1., height / width);
-        gl_FragColor =
-          texture2D(tex, vUV) * 0.442 +
-          (
-            texture2D(tex, vUV + direction / max(width, height) * size) +
-            texture2D(tex, vUV - direction / max(width, height) * size)
-          ) * 0.279;
-        // gl_FragColor =
-        //   texture2D(tex, vUV) * 0.38774 +
-        //   (
-        //     texture2D(tex, vUV + direction / max(width, height) * size * 0.5) +
-        //     texture2D(tex, vUV - direction / max(width, height) * size * 0.5)
-        //   ) * 0.24477 +
-        //   (
-        //     texture2D(tex, vUV + direction / max(width, height) * size) +
-        //     texture2D(tex, vUV - direction / max(width, height) * size)
-        //   ) * 0.06136;
-      }
-    `,
+    frag: regl.prop("frag"),
     uniforms: {
       ...uniforms,
       tex: regl.prop("tex"),
@@ -140,9 +108,9 @@ export default (regl, config, inputs) => {
         const highPassFBO = highPassPyramid[i];
         const hBlurFBO = hBlurPyramid[i];
         const vBlurFBO = vBlurPyramid[i];
-        highPass({ fbo: highPassFBO, tex: inputs.primary });
-        blur({ fbo: hBlurFBO, tex: highPassFBO, direction: [1, 0] });
-        blur({ fbo: vBlurFBO, tex: hBlurFBO, direction: [0, 1] });
+        highPass({ fbo: highPassFBO, frag: highPassFrag.text(), tex: inputs.primary });
+        blur({ fbo: hBlurFBO, frag: blurFrag.text(), tex: highPassFBO, direction: [1, 0] });
+        blur({ fbo: vBlurFBO, frag: blurFrag.text(), tex: hBlurFBO, direction: [0, 1] });
       }
 
       flattenPyramid();
@@ -153,6 +121,7 @@ export default (regl, config, inputs) => {
       resizePyramid(hBlurPyramid, w, h, config.bloomSize);
       resizePyramid(vBlurPyramid, w, h, config.bloomSize);
       output.resize(w, h);
-    }
+    },
+    [highPassFrag.laoded, blurFrag.loaded]
   );
 };
