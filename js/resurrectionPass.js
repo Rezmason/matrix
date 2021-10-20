@@ -59,7 +59,7 @@ export default (regl, config, inputs) => {
 
         float hue = 0.35 + (length(vUV - vec2(0.5, 1.0)) * -0.4 + 0.2);
         vec3 rgb = hslToRgb(hue, 0.8, max(0., brightness.r)) * vec3(0.8, 1.0, 0.7);
-        vec3 resurrectionRGB = hslToRgb(0.13, 1.0, max(0., brightness.g) * 0.5);
+        vec3 resurrectionRGB = hslToRgb(0.13, 1.0, max(0., brightness.g) * 0.9);
         gl_FragColor = vec4(rgb + resurrectionRGB + backgroundColor, 1.0);
       }
     `,

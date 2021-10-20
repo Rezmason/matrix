@@ -131,8 +131,9 @@ const versions = {
     effect:"resurrections",
     width:100,
     volumetric:true,
-    density:3,
-    fallSpeed:0.7
+    density:1.5,
+    fallSpeed:1.2,
+    raindropLength:1.25
   }
 };
 versions.throwback = versions.operator;
