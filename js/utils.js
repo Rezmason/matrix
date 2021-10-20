@@ -78,7 +78,7 @@ const loadImage = (regl, url) => {
       }
       return texture;
     },
-    ready: (async () => {
+    loaded: (async () => {
       if (url != null) {
         const data = new Image();
         data.crossOrigin = "anonymous";

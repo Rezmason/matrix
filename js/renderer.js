@@ -94,7 +94,7 @@ export default (regl, config) => {
     1 / (Math.abs(Math.sin(2 * config.slant)) * (Math.sqrt(2) - 1) + 1);
   uniforms.showComputationTexture = config.effect === "none";
 
-  const msdfLoader = loadImage(regl, config.glyphTexURL);
+  const msdf = loadImage(regl, config.glyphTexURL);
 
   // This shader is the star of the show.
   // In normal operation, each pixel represents a glyph's:
@@ -455,7 +455,7 @@ export default (regl, config) => {
       ...uniforms,
 
       lastState: doubleBuffer.front,
-      glyphTex: msdfLoader.texture,
+      glyphTex: msdf.texture,
 
       camera: regl.prop("camera"),
       transform: regl.prop("transform"),
@@ -501,6 +501,6 @@ export default (regl, config) => {
       glMatrix.mat4.perspective(camera, (Math.PI / 180) * 90, aspectRatio, 0.0001, 1000);
       [screenSize[0], screenSize[1]] = aspectRatio > 1 ? [1, aspectRatio] : [1 / aspectRatio, 1];
     },
-    msdfLoader.ready
+    msdf.loaded
   );
 };
