@@ -21,6 +21,8 @@ export default (regl, config, inputs) => {
 		{
 			primary: output,
 		},
-		() => render({ frag: resurrectionPassFrag.text() })
+		() => render({ frag: resurrectionPassFrag.text() }),
+		null,
+		resurrectionPassFrag.loaded
 	);
 };
