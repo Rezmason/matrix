@@ -45,29 +45,6 @@ const resizePyramid = (pyramid, vw, vh, scale) =>
     )
   );
 
-const loadImages = async (regl, manifest) => {
-  const keys = Object.keys(manifest);
-  const urls = Object.values(manifest);
-  const images = await Promise.all(urls.map(url => loadImageOld(regl, url)));
-  return Object.fromEntries(images.map((image, index) => [keys[index], image]));
-};
-
-const loadImageOld = async (regl, url) => {
-  if (url == null) {
-    return null;
-  }
-  const image = new Image();
-  image.crossOrigin = "anonymous";
-  image.src = url;
-  await image.decode();
-  return regl.texture({
-    data: image,
-    mag: "linear",
-    min: "linear",
-    flipY: true
-  });
-};
-
 const loadImage = (regl, url) => {
   let texture = regl.texture([[0]]);
   let loaded = false;
@@ -91,6 +68,53 @@ const loadImage = (regl, url) => {
           min: "linear",
           flipY: true
         });
+      }
+    })()
+  };
+};
+
+const loadShader = (regl, url) => {
+  let texture = regl.texture([[0]]);
+  let loaded = false;
+  return {
+    texture: () => {
+      if (!loaded) {
+        console.warn(`texture still loading: ${url}`);
+      }
+      return texture;
+    },
+    loaded: (async () => {
+      if (url != null) {
+        const data = new Image();
+        data.crossOrigin = "anonymous";
+        data.src = url;
+        await data.decode();
+        loaded = true;
+        texture = regl.texture({
+          data,
+          mag: "linear",
+          min: "linear",
+          flipY: true
+        });
+      }
+    })()
+  };
+};
+
+const loadText = (url) => {
+  let text = "";
+  let loaded = false;
+  return {
+    text: () => {
+      if (!loaded) {
+        console.warn(`text still loading: ${url}`);
+      }
+      return text;
+    },
+    loaded: (async () => {
+      if (url != null) {
+        text = await (await fetch(url)).text();
+        loaded = true;
       }
     })()
   };
@@ -181,7 +205,7 @@ export {
   makePyramid,
   resizePyramid,
   loadImage,
-  loadImages,
+  loadText,
   makeFullScreenQuad,
   make1DTexture,
   makePass,
