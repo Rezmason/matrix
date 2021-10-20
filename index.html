@@ -1,42 +1,39 @@
 <html>
-  <head>
-    <title>Matrix digital rain</title>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
-    />
-    <style>
-      body {
-        background: black;
-        overflow: hidden;
-        margin: 0;
-      }
+	<head>
+		<title>Matrix digital rain</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+		<style>
+			body {
+				background: black;
+				overflow: hidden;
+				margin: 0;
+			}
 
-      canvas {
-        width: 100vw;
-        height: 100vh;
-      }
-    </style>
-  </head>
-  <body>
-    <!--
-      This is an implementation of the green code seen in The Matrix film and video game franchise.
-      This project demonstrates five concepts:
-          1. Drawing to floating point frame buffer objects, or 'FBO's,
-             for performing computation and post-processing
-          2. GPU-side computation, with a fragment shader
-             updating two alternating FBOs
-          3. Rendering crisp "vector" graphics, with a multiple-channel
-             signed distance field (or 'MSDF')
-          4. Creating a blur/bloom effect from a texture pyramid
-          5. Color mapping with noise, to hide banding
+			canvas {
+				width: 100vw;
+				height: 100vh;
+			}
+		</style>
+	</head>
+	<body>
+		<!--
+			This is an implementation of the green code seen in The Matrix film and video game franchise.
+			This project demonstrates five concepts:
+					1. Drawing to floating point frame buffer objects, or 'FBO's,
+						 for performing computation and post-processing
+					2. GPU-side computation, with a fragment shader
+						 updating two alternating FBOs
+					3. Rendering crisp "vector" graphics, with a multiple-channel
+						 signed distance field (or 'MSDF')
+					4. Creating a blur/bloom effect from a texture pyramid
+					5. Color mapping with noise, to hide banding
 
-      For more information, please visit: https://github.com/Rezmason/matrix
-     -->
-    <!-- <script src="lib/regl.min.js"></script> -->
-    <script src="lib/regl.js"></script>
-    <script src="lib/gl-matrix.js"></script>
-    <script type="module" src="js/main.js"></script>
-  </body>
+			For more information, please visit: https://github.com/Rezmason/matrix
+		 -->
+		<!-- <script src="lib/regl.min.js"></script> -->
+		<script src="lib/regl.js"></script>
+		<script src="lib/gl-matrix.js"></script>
+		<script type="module" src="js/main.js"></script>
+	</body>
 </html>
