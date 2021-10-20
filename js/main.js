@@ -26,6 +26,8 @@ const effects = {
 	customStripes: makeStripePass,
 	stripes: makeStripePass,
 	pride: makeStripePass,
+	transPride: makeStripePass,
+	trans: makeStripePass,
 	image: makeImagePass,
 	resurrection: makeResurrectionPass,
 	resurrections: makeResurrectionPass,

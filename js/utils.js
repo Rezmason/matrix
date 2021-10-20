@@ -1,5 +1,3 @@
-const extractEntries = (src, keys) => Object.fromEntries(Array.from(Object.entries(src)).filter(([key]) => keys.includes(key)));
-
 const makePassTexture = (regl, halfFloat) =>
 	regl.texture({
 		width: 1,
@@ -182,7 +180,6 @@ const makePipeline = (steps, getInputs, ...params) =>
 	steps.filter((f) => f != null).reduce((pipeline, f, i) => [...pipeline, f(...params, i == 0 ? null : getInputs(pipeline[i - 1]))], []);
 
 export {
-	extractEntries,
 	makePassTexture,
 	makePassFBO,
 	makeDoubleBuffer,

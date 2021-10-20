@@ -1,12 +1,17 @@
-import { loadText, extractEntries, make1DTexture, makePassFBO, makePass } from "./utils.js";
+import { loadText, make1DTexture, makePassFBO, makePass } from "./utils.js";
 
-const neapolitanStripeColors = [
-	[0.4, 0.15, 0.1],
-	[0.4, 0.15, 0.1],
-	[0.8, 0.8, 0.6],
-	[0.8, 0.8, 0.6],
-	[1.0, 0.7, 0.8],
-	[1.0, 0.7, 0.8],
+const transPrideStripeColors = [
+	[0.3, 1.0, 1.0],
+	[0.3, 1.0, 1.0],
+	[1.0, 0.5, 0.8],
+	[1.0, 0.5, 0.8],
+	[1.0, 1.0, 1.0],
+	[1.0, 1.0, 1.0],
+	[1.0, 1.0, 1.0],
+	[1.0, 0.5, 0.8],
+	[1.0, 0.5, 0.8],
+	[0.3, 1.0, 1.0],
+	[0.3, 1.0, 1.0],
 ].flat();
 
 const prideStripeColors = [
@@ -21,8 +26,9 @@ const prideStripeColors = [
 export default (regl, config, inputs) => {
 	const output = makePassFBO(regl, config.useHalfFloat);
 
+	const { backgroundColor } = config;
 	const stripeColors =
-		"stripeColors" in config ? config.stripeColors.split(",").map(parseFloat) : config.effect === "pride" ? prideStripeColors : neapolitanStripeColors;
+		"stripeColors" in config ? config.stripeColors.split(",").map(parseFloat) : config.effect === "pride" ? prideStripeColors : transPrideStripeColors;
 	const numStripeColors = Math.floor(stripeColors.length / 3);
 	const stripes = make1DTexture(
 		regl,
@@ -35,7 +41,7 @@ export default (regl, config, inputs) => {
 		frag: regl.prop("frag"),
 
 		uniforms: {
-			...extractEntries(config, ["backgroundColor"]),
+			backgroundColor,
 			tex: inputs.primary,
 			bloomTex: inputs.bloom,
 			stripes,

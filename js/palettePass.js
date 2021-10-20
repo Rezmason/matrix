@@ -1,4 +1,4 @@
-import { loadText, extractEntries, make1DTexture, makePassFBO, makePass } from "./utils.js";
+import { loadText, make1DTexture, makePassFBO, makePass } from "./utils.js";
 
 const colorToRGB = ([hue, saturation, lightness]) => {
 	const a = saturation * Math.min(lightness, 1 - lightness);
@@ -55,6 +55,7 @@ const makePalette = (regl, entries) => {
 export default (regl, config, inputs) => {
 	const output = makePassFBO(regl, config.useHalfFloat);
 	const palette = makePalette(regl, config.paletteEntries);
+	const { backgroundColor } = config;
 
 	const palettePassFrag = loadText("../shaders/palettePass.frag");
 
@@ -62,7 +63,7 @@ export default (regl, config, inputs) => {
 		frag: regl.prop("frag"),
 
 		uniforms: {
-			...extractEntries(config, ["backgroundColor"]),
+			backgroundColor,
 			tex: inputs.primary,
 			bloomTex: inputs.bloom,
 			palette,

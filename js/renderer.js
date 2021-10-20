@@ -1,4 +1,6 @@
-import { extractEntries, loadImage, loadText, makePassFBO, makeDoubleBuffer, makePass } from "./utils.js";
+import { loadImage, loadText, makePassFBO, makeDoubleBuffer, makePass } from "./utils.js";
+
+const extractEntries = (src, keys) => Object.fromEntries(Array.from(Object.entries(src)).filter(([key]) => keys.includes(key)));
 
 const rippleTypes = {
 	box: 0,
@@ -19,22 +21,11 @@ export default (regl, config) => {
 	const [numQuadRows, numQuadColumns] = volumetric ? [numRows, numColumns] : [1, 1];
 	const numQuads = numQuadRows * numQuadColumns;
 	const quadSize = [1 / numQuadColumns, 1 / numQuadRows];
-
-	// These two framebuffers are used to compute the raining code.
-	// they take turns being the source and destination of the "compute" shader.
-	// The half float data type is crucial! It lets us store almost any real number,
-	// whereas the default type limits us to integers between 0 and 255.
-
-	// This double buffer is smaller than the screen, because its pixels correspond
-	// with glyphs in the final image, and the glyphs are much larger than a pixel.
-	const doubleBuffer = makeDoubleBuffer(regl, {
-		width: numColumns,
-		height: numRows,
-		wrapT: "clamp",
-		type: "half float",
-	});
-
-	const output = makePassFBO(regl, config.useHalfFloat);
+	const rippleType = config.rippleTypeName in rippleTypes ? rippleTypes[config.rippleTypeName] : -1;
+	const cycleStyle = config.cycleStyleName in cycleStyles ? cycleStyles[config.cycleStyleName] : 0;
+	const slantVec = [Math.cos(config.slant), Math.sin(config.slant)];
+	const slantScale = 1 / (Math.abs(Math.sin(2 * config.slant)) * (Math.sqrt(2) - 1) + 1);
+	const showComputationTexture = config.effect === "none";
 
 	const uniforms = {
 		...extractEntries(config, [
@@ -71,15 +62,30 @@ export default (regl, config) => {
 		numQuadColumns,
 		quadSize,
 		volumetric,
+		rippleType,
+		cycleStyle,
+		slantVec,
+		slantScale,
+		showComputationTexture,
 	};
 
-	uniforms.rippleType = config.rippleTypeName in rippleTypes ? rippleTypes[config.rippleTypeName] : -1;
-	uniforms.cycleStyle = config.cycleStyleName in cycleStyles ? cycleStyles[config.cycleStyleName] : 0;
-	uniforms.slantVec = [Math.cos(config.slant), Math.sin(config.slant)];
-	uniforms.slantScale = 1 / (Math.abs(Math.sin(2 * config.slant)) * (Math.sqrt(2) - 1) + 1);
-	uniforms.showComputationTexture = config.effect === "none";
-
 	const msdf = loadImage(regl, config.glyphTexURL);
+
+	// These two framebuffers are used to compute the raining code.
+	// they take turns being the source and destination of the "compute" shader.
+	// The half float data type is crucial! It lets us store almost any real number,
+	// whereas the default type limits us to integers between 0 and 255.
+
+	// This double buffer is smaller than the screen, because its pixels correspond
+	// with glyphs in the final image, and the glyphs are much larger than a pixel.
+	const doubleBuffer = makeDoubleBuffer(regl, {
+		width: numColumns,
+		height: numRows,
+		wrapT: "clamp",
+		type: "half float",
+	});
+
+	const output = makePassFBO(regl, config.useHalfFloat);
 
 	const updateFrag = loadText("../shaders/update.frag");
 	const update = regl({

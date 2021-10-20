@@ -1,4 +1,4 @@
-import { loadText, extractEntries, makePassFBO, makePyramid, resizePyramid, makePass } from "./utils.js";
+import { loadText, makePassFBO, makePyramid, resizePyramid, makePass } from "./utils.js";
 
 // The bloom pass is basically an added high-pass blur.
 
@@ -18,7 +18,7 @@ export default (regl, config, inputs) => {
 		});
 	}
 
-	const uniforms = extractEntries(config, ["bloomStrength", "highPassThreshold"]);
+	const { bloomStrength, highPassThreshold } = config;
 
 	const highPassPyramid = makePyramid(regl, pyramidHeight, config.useHalfFloat);
 	const hBlurPyramid = makePyramid(regl, pyramidHeight, config.useHalfFloat);
@@ -31,7 +31,7 @@ export default (regl, config, inputs) => {
 	const highPass = regl({
 		frag: regl.prop("frag"),
 		uniforms: {
-			...uniforms,
+			highPassThreshold,
 			tex: regl.prop("tex"),
 		},
 		framebuffer: regl.prop("fbo"),
@@ -45,7 +45,6 @@ export default (regl, config, inputs) => {
 	const blur = regl({
 		frag: regl.prop("frag"),
 		uniforms: {
-			...uniforms,
 			tex: regl.prop("tex"),
 			direction: regl.prop("direction"),
 			height: regl.context("viewportWidth"),
@@ -68,7 +67,7 @@ export default (regl, config, inputs) => {
 			}
 		`,
 		uniforms: {
-			...uniforms,
+			bloomStrength,
 			...Object.fromEntries(vBlurPyramid.map((fbo, index) => [`pyr_${index}`, fbo])),
 		},
 		framebuffer: output,
