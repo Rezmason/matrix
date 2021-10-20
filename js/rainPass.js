@@ -35,10 +35,10 @@ export default (regl, config) => {
 
 	const uniforms = {
 		...extractEntries(config, [
-			// rain general
+			// general
 			"glyphHeightToWidth",
 			"glyphTextureColumns",
-			// rain update
+			// compute
 			"animationSpeed",
 			"brightnessMinimum",
 			"brightnessMix",
@@ -55,9 +55,9 @@ export default (regl, config) => {
 			"rippleSpeed",
 			"rippleThickness",
 			"resurrectingCodeRatio",
-			// rain render vertex
+			// render vertex
 			"forwardSpeed",
-			// rain render fragment
+			// render fragment
 			"glyphEdgeCrop",
 			"isPolar",
 		]),
@@ -94,7 +94,7 @@ export default (regl, config) => {
 
 	const output = makePassFBO(regl, config.useHalfFloat);
 
-	const updateFrag = loadText("../shaders/update.frag");
+	const updateFrag = loadText("../shaders/compute.frag");
 	const update = regl({
 		frag: regl.prop("frag"),
 		uniforms: {
@@ -114,8 +114,8 @@ export default (regl, config) => {
 		);
 
 	// We render the code into an FBO using MSDFs: https://github.com/Chlumsky/msdfgen
-	const renderVert = loadText("../shaders/render.vert");
-	const renderFrag = loadText("../shaders/render.frag");
+	const renderVert = loadText("../shaders/rain.vert");
+	const renderFrag = loadText("../shaders/rain.frag");
 	const render = regl({
 		blend: {
 			enable: true,

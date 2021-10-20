@@ -1,6 +1,6 @@
 import { makeFullScreenQuad, makePipeline } from "./utils.js";
 import makeConfig from "./config.js";
-import makeMatrixRenderer from "./renderer.js";
+import makeRain from "./rainPass.js";
 import makeBloomPass from "./bloomPass.js";
 import makePalettePass from "./palettePass.js";
 import makeStripePass from "./stripePass.js";
@@ -49,12 +49,11 @@ const dimensions = { width: 1, height: 1 };
 document.body.onload = async () => {
 	// All this takes place in a full screen quad.
 	const fullScreenQuad = makeFullScreenQuad(regl);
-	const pipeline = makePipeline([makeMatrixRenderer, effect === "none" ? null : makeBloomPass, effects[effect]], (p) => p.outputs, regl, config);
-	const drawToScreen = regl({
-		uniforms: {
-			tex: pipeline[pipeline.length - 1].outputs.primary,
-		},
-	});
+
+	const bloomPass = effect === "none" ? null : makeBloomPass;
+	const pipeline = makePipeline([makeRain, bloomPass, effects[effect]], (p) => p.outputs, regl, config);
+	const uniforms = { tex: pipeline[pipeline.length - 1].outputs.primary };
+	const drawToScreen = regl({ uniforms });
 	await Promise.all(pipeline.map(({ ready }) => ready));
 	const tick = regl.frame(({ viewportWidth, viewportHeight }) => {
 		// tick.cancel();
