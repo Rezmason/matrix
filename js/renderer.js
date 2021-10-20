@@ -107,6 +107,7 @@ export default (regl, config) => {
       precision highp float;
 
       #define PI 3.14159265359
+      #define RADS_TO_HZ 0.15915494309
       #define SQRT_2 1.4142135623730951
       #define SQRT_5 2.23606797749979
 
@@ -142,12 +143,14 @@ export default (regl, config) => {
       float getRainTime(float simTime, vec2 glyphPos) {
         float columnTimeOffset = rand(vec2(glyphPos.x, 0.0));
         float columnSpeedOffset = rand(vec2(glyphPos.x + 0.1, 0.0));
-        float columnTime = (columnTimeOffset * 1000.0 + simTime * 0.5 * fallSpeed) * (0.5 + columnSpeedOffset * 0.5) + (sin(simTime * fallSpeed * columnSpeedOffset) * 0.2);
+        // columnSpeedOffset = 0.0; // loop
+        float columnTime = (columnTimeOffset * 1000.0 + simTime * 0.5 * fallSpeed) * (0.5 + columnSpeedOffset * 0.5) + (sin(RADS_TO_HZ * simTime * fallSpeed * columnSpeedOffset) * 0.2);
         return (glyphPos.y * 0.01 + columnTime) / raindropLength;
       }
 
       float getRainBrightness(float rainTime) {
-        float value = 1.0 - fract((rainTime + 0.3 * sin(SQRT_2 * rainTime) + 0.2 * sin(SQRT_5 * rainTime)));
+        float value = 1.0 - fract((rainTime + 0.3 * sin(RADS_TO_HZ * SQRT_2 * rainTime) + 0.2 * sin(RADS_TO_HZ * SQRT_5 * rainTime)));
+        // value = 1.0 - fract(rainTime); // loop
         return log(value * 1.25) * 3.0;
       }
 
@@ -156,7 +159,8 @@ export default (regl, config) => {
         if (cycleStyle == 0 && brightness > 0.0) {
           glyphCycleSpeed = pow(1.0 - brightness, 4.0);
         } else if (cycleStyle == 1) {
-          glyphCycleSpeed = fract((rainTime + 0.7 * sin(SQRT_2 * rainTime) + 1.1 * sin(SQRT_5 * rainTime))) * 0.75;
+          glyphCycleSpeed = fract((rainTime + 0.7 * sin(RADS_TO_HZ * SQRT_2 * rainTime) + 1.1 * sin(RADS_TO_HZ * SQRT_5 * rainTime))) * 0.75;
+          // glyphCycleSpeed = fract(rainTime) * 0.75; // loop
         }
         return glyphCycleSpeed;
       }
@@ -171,7 +175,8 @@ export default (regl, config) => {
 
       float applyThunder(float rainBrightness, float simTime, vec2 screenPos) {
         simTime *= 0.5;
-        float thunder = 1.0 - fract((simTime + 0.3 * sin(SQRT_2 * simTime) + 0.2 * sin(SQRT_5 * simTime)));
+        float thunder = 1.0 - fract((simTime + 0.3 * sin(RADS_TO_HZ * SQRT_2 * simTime) + 0.2 * sin(RADS_TO_HZ * SQRT_5 * simTime)));
+        // thunder = 1.0 - fract(simTime + 0.3); // loop
         thunder = log(thunder * 1.5) * 4.0;
         thunder = clamp(thunder, 0., 1.);
         thunder = thunder * pow(screenPos.y, 2.) * 3.;
@@ -183,9 +188,11 @@ export default (regl, config) => {
           return effect;
         }
 
-        float rippleTime = (simTime * 0.5 + 0.2 * sin(simTime)) * rippleSpeed + 1.;
+        float rippleTime = (simTime * 0.5 + 0.2 * sin(RADS_TO_HZ * simTime)) * rippleSpeed + 1.;
+        // rippleTime = (simTime * 0.5) * rippleSpeed + 1.; // loop
 
         vec2 offset = rand2(vec2(floor(rippleTime), 0.)) - 0.5;
+        // offset = vec2(0.); // loop
         vec2 ripplePos = screenPos * 2.0 - 1.0 + offset;
         float rippleDistance;
         if (rippleType == 0) {
@@ -223,6 +230,10 @@ export default (regl, config) => {
         float oldGlyphCycle = data.g;
         if (isInitializing) {
           oldGlyphCycle = showComputationTexture ? 0.5 : rand(screenPos);
+        }
+
+        if (oldRainBrightness <= 0.0) {
+          // oldGlyphCycle = showComputationTexture ? 0.5 : rand(screenPos); // loop
         }
 
         float rainTime = getRainTime(simTime, glyphPos);
