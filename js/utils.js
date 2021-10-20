@@ -115,23 +115,23 @@ const loadText = (url) => {
 const makeFullScreenQuad = (regl, uniforms = {}, context = {}) =>
 	regl({
 		vert: `
-    precision mediump float;
-    attribute vec2 aPosition;
-    varying vec2 vUV;
-    void main() {
-      vUV = 0.5 * (aPosition + 1.0);
-      gl_Position = vec4(aPosition, 0, 1);
-    }
-  `,
+		precision mediump float;
+		attribute vec2 aPosition;
+		varying vec2 vUV;
+		void main() {
+			vUV = 0.5 * (aPosition + 1.0);
+			gl_Position = vec4(aPosition, 0, 1);
+		}
+	`,
 
 		frag: `
-    precision mediump float;
-    varying vec2 vUV;
-    uniform sampler2D tex;
-    void main() {
-      gl_FragColor = texture2D(tex, vUV);
-    }
-  `,
+		precision mediump float;
+		varying vec2 vUV;
+		uniform sampler2D tex;
+		void main() {
+			gl_FragColor = texture2D(tex, vUV);
+		}
+	`,
 
 		attributes: {
 			aPosition: [-4, -4, 4, -4, 0, 4],
