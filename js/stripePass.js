@@ -1,5 +1,10 @@
 import { loadText, make1DTexture, makePassFBO, makePass } from "./utils.js";
 
+// Multiplies the rendered rain and bloom by a 1D gradient texture
+// generated from the passed-in color sequence
+
+// This shader introduces noise into the renders, to avoid banding
+
 const transPrideStripeColors = [
 	[0.3, 1.0, 1.0],
 	[0.3, 1.0, 1.0],
@@ -27,6 +32,8 @@ export default (regl, config, inputs) => {
 	const output = makePassFBO(regl, config.useHalfFloat);
 
 	const { backgroundColor } = config;
+
+	// Expand and convert stripe colors into 1D texture data
 	const stripeColors =
 		"stripeColors" in config ? config.stripeColors.split(",").map(parseFloat) : config.effect === "pride" ? prideStripeColors : transPrideStripeColors;
 	const numStripeColors = Math.floor(stripeColors.length / 3);

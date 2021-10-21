@@ -20,63 +20,31 @@ const brVert = [1, 1];
 const quadVertices = [tlVert, trVert, brVert, tlVert, brVert, blVert];
 
 export default (regl, config) => {
+	// The volumetric mode multiplies the number of columns
+	// to reach the desired density, and then overlaps them
 	const volumetric = config.volumetric;
 	const density = volumetric && config.effect !== "none" ? config.density : 1;
 	const [numRows, numColumns] = [config.numColumns, config.numColumns * density];
+
+	// The volumetric mode requires us to create a grid of quads,
+	// rather than a single quad for our geometry
 	const [numQuadRows, numQuadColumns] = volumetric ? [numRows, numColumns] : [1, 1];
 	const numQuads = numQuadRows * numQuadColumns;
 	const quadSize = [1 / numQuadColumns, 1 / numQuadRows];
 
+	// Various effect-related values
 	const rippleType = config.rippleTypeName in rippleTypes ? rippleTypes[config.rippleTypeName] : -1;
 	const cycleStyle = config.cycleStyleName in cycleStyles ? cycleStyles[config.cycleStyleName] : 0;
 	const slantVec = [Math.cos(config.slant), Math.sin(config.slant)];
 	const slantScale = 1 / (Math.abs(Math.sin(2 * config.slant)) * (Math.sqrt(2) - 1) + 1);
 	const showComputationTexture = config.effect === "none";
 
-	const uniforms = {
-		...extractEntries(config, [
-			// general
-			"glyphHeightToWidth",
-			"glyphTextureColumns",
-			// compute
-			"animationSpeed",
-			"brightnessMinimum",
-			"brightnessMix",
-			"brightnessMultiplier",
-			"brightnessOffset",
-			"cursorEffectThreshold",
-			"cycleSpeed",
-			"fallSpeed",
-			"glyphSequenceLength",
-			"hasSun",
-			"hasThunder",
-			"raindropLength",
-			"rippleScale",
-			"rippleSpeed",
-			"rippleThickness",
-			"resurrectingCodeRatio",
-			// render vertex
-			"forwardSpeed",
-			// render fragment
-			"glyphEdgeCrop",
-			"isPolar",
-		]),
-		density,
-		numRows,
+	const commonUniforms = {
+		...extractEntries(config, ["animationSpeed", "glyphHeightToWidth", "glyphSequenceLength", "glyphTextureColumns", "resurrectingCodeRatio"]),
 		numColumns,
-		numQuadRows,
-		numQuadColumns,
-		quadSize,
-		volumetric,
-
-		rippleType,
-		cycleStyle,
-		slantVec,
-		slantScale,
+		numRows,
 		showComputationTexture,
 	};
-
-	const msdf = loadImage(regl, config.glyphTexURL);
 
 	// These two framebuffers are used to compute the raining code.
 	// they take turns being the source and destination of the "compute" shader.
@@ -91,14 +59,31 @@ export default (regl, config) => {
 		wrapT: "clamp",
 		type: "half float",
 	});
-
-	const output = makePassFBO(regl, config.useHalfFloat);
-
-	const updateFrag = loadText("shaders/compute.frag");
-	const update = regl({
+	const computeFrag = loadText("shaders/compute.frag");
+	const computeUniforms = {
+		...commonUniforms,
+		...extractEntries(config, [
+			"brightnessMinimum",
+			"brightnessMix",
+			"brightnessMultiplier",
+			"brightnessOffset",
+			"cursorEffectThreshold",
+			"cycleSpeed",
+			"fallSpeed",
+			"hasSun",
+			"hasThunder",
+			"raindropLength",
+			"rippleScale",
+			"rippleSpeed",
+			"rippleThickness",
+		]),
+		cycleStyle,
+		rippleType,
+	};
+	const compute = regl({
 		frag: regl.prop("frag"),
 		uniforms: {
-			...uniforms,
+			...computeUniforms,
 			lastState: doubleBuffer.back,
 		},
 
@@ -114,8 +99,27 @@ export default (regl, config) => {
 		);
 
 	// We render the code into an FBO using MSDFs: https://github.com/Chlumsky/msdfgen
+	const msdf = loadImage(regl, config.glyphTexURL);
 	const renderVert = loadText("shaders/rain.vert");
 	const renderFrag = loadText("shaders/rain.frag");
+	const output = makePassFBO(regl, config.useHalfFloat);
+	const renderUniforms = {
+		...commonUniforms,
+		...extractEntries(config, [
+			// vertex
+			"forwardSpeed",
+			// fragment
+			"glyphEdgeCrop",
+			"isPolar",
+		]),
+		density,
+		numQuadColumns,
+		numQuadRows,
+		quadSize,
+		slantScale,
+		slantVec,
+		volumetric,
+	};
 	const render = regl({
 		blend: {
 			enable: true,
@@ -128,7 +132,7 @@ export default (regl, config) => {
 		frag: regl.prop("frag"),
 
 		uniforms: {
-			...uniforms,
+			...renderUniforms,
 
 			lastState: doubleBuffer.front,
 			glyphTex: msdf.texture,
@@ -147,6 +151,7 @@ export default (regl, config) => {
 		framebuffer: output,
 	});
 
+	// Camera and transform math for the volumetric mode
 	const screenSize = [1, 1];
 	const { mat4, vec3 } = glMatrix;
 	const camera = mat4.create();
@@ -161,7 +166,7 @@ export default (regl, config) => {
 			primary: output,
 		},
 		() => {
-			update({ frag: updateFrag.text() });
+			compute({ frag: computeFrag.text() });
 			regl.clear({
 				depth: 1,
 				color: [0, 0, 0, 1],
@@ -175,6 +180,6 @@ export default (regl, config) => {
 			glMatrix.mat4.perspective(camera, (Math.PI / 180) * 90, aspectRatio, 0.0001, 1000);
 			[screenSize[0], screenSize[1]] = aspectRatio > 1 ? [1, aspectRatio] : [1 / aspectRatio, 1];
 		},
-		[msdf.loaded, updateFrag.loaded, renderVert.loaded, renderFrag.loaded]
+		[msdf.loaded, computeFrag.loaded, renderVert.loaded, renderFrag.loaded]
 	);
 };

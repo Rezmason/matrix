@@ -17,7 +17,13 @@ highp float rand( const in vec2 uv, const in float t ) {
 
 void main() {
 	vec4 brightnessRGB = texture2D( tex, vUV ) + texture2D( bloomTex, vUV );
+
+	// Combine the texture and bloom
 	float brightness = brightnessRGB.r + brightnessRGB.g + brightnessRGB.b;
-	float at = brightness - rand( gl_FragCoord.xy, time ) * ditherMagnitude;
-	gl_FragColor = texture2D( palette, vec2(at, 0.0)) + vec4(backgroundColor, 0.0);
+
+	// Dither: subtract a random value from the brightness
+	brightness = brightness - rand( gl_FragCoord.xy, time ) * ditherMagnitude;
+
+	// Map the brightness to a position in the palette texture
+	gl_FragColor = texture2D( palette, vec2(brightness, 0.0)) + vec4(backgroundColor, 0.0);
 }

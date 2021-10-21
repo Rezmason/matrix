@@ -1,6 +1,7 @@
 import { loadText, makePassFBO, makePyramid, resizePyramid, makePass } from "./utils.js";
 
 // The bloom pass is basically an added high-pass blur.
+// The blur approximation is the sum of a pyramid of downscaled textures.
 
 const pyramidHeight = 5;
 const levelStrengths = Array(pyramidHeight)
@@ -9,8 +10,10 @@ const levelStrengths = Array(pyramidHeight)
 	.reverse();
 
 export default (regl, config, inputs) => {
-	const enabled = config.bloomSize > 0 && config.bloomStrength > 0;
+	const { bloomStrength, bloomSize, highPassThreshold } = config;
+	const enabled = bloomSize > 0 && bloomStrength > 0;
 
+	// If there's no bloom to apply, return a no-op pass with an empty bloom texture
 	if (!enabled) {
 		return makePass({
 			primary: inputs.primary,
@@ -18,16 +21,14 @@ export default (regl, config, inputs) => {
 		});
 	}
 
-	const { bloomStrength, highPassThreshold } = config;
-
+	// Build three pyramids of FBOs, one for each step in the process
 	const highPassPyramid = makePyramid(regl, pyramidHeight, config.useHalfFloat);
 	const hBlurPyramid = makePyramid(regl, pyramidHeight, config.useHalfFloat);
 	const vBlurPyramid = makePyramid(regl, pyramidHeight, config.useHalfFloat);
 	const output = makePassFBO(regl, config.useHalfFloat);
 
-	const highPassFrag = loadText("shaders/highPass.frag");
-
 	// The high pass restricts the blur to bright things in our input texture.
+	const highPassFrag = loadText("shaders/highPass.frag");
 	const highPass = regl({
 		frag: regl.prop("frag"),
 		uniforms: {
@@ -39,7 +40,8 @@ export default (regl, config, inputs) => {
 
 	// A 2D gaussian blur is just a 1D blur done horizontally, then done vertically.
 	// The FBO pyramid's levels represent separate levels of detail;
-	// by blurring them all, this 3x1 blur approximates a more complex gaussian.
+	// by blurring them all, this basic blur approximates a more complex gaussian:
+	// https://software.intel.com/en-us/articles/compute-shader-hdr-and-bloom
 
 	const blurFrag = loadText("shaders/blur.frag");
 	const blur = regl({
@@ -53,8 +55,8 @@ export default (regl, config, inputs) => {
 		framebuffer: regl.prop("fbo"),
 	});
 
-	// The pyramid of textures gets flattened onto the source texture.
-	const flattenPyramid = regl({
+	// The pyramid of textures gets flattened (summed) into a final blurry "bloom" texture
+	const sumPyramid = regl({
 		frag: `
 			precision mediump float;
 			varying vec2 vUV;
@@ -88,15 +90,15 @@ export default (regl, config, inputs) => {
 				blur({ fbo: vBlurFBO, frag: blurFrag.text(), tex: hBlurFBO, direction: [0, 1] });
 			}
 
-			flattenPyramid();
+			sumPyramid();
 		},
 		(w, h) => {
 			// The blur pyramids can be lower resolution than the screen.
-			resizePyramid(highPassPyramid, w, h, config.bloomSize);
-			resizePyramid(hBlurPyramid, w, h, config.bloomSize);
-			resizePyramid(vBlurPyramid, w, h, config.bloomSize);
+			resizePyramid(highPassPyramid, w, h, bloomSize);
+			resizePyramid(hBlurPyramid, w, h, bloomSize);
+			resizePyramid(vBlurPyramid, w, h, bloomSize);
 			output.resize(w, h);
 		},
-		[highPassFrag.laoded, blurFrag.loaded]
+		[highPassFrag.loaded, blurFrag.loaded]
 	);
 };

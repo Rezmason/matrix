@@ -1,5 +1,10 @@
 import { loadText, make1DTexture, makePassFBO, makePass } from "./utils.js";
 
+// Maps the brightness of the rendered rain and bloom to colors
+// in a 1D gradient palette texture generated from the passed-in color sequence
+
+// This shader introduces noise into the renders, to avoid banding
+
 const colorToRGB = ([hue, saturation, lightness]) => {
 	const a = saturation * Math.min(lightness, 1 - lightness);
 	const f = (n) => {
