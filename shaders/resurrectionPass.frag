@@ -35,10 +35,24 @@ vec3 hslToRgb(float h, float s, float l){
 
 void main() {
 
-	vec3 brightness = mix(texture2D( bloomTex, vUV ).rgb, texture2D( tex, vUV ).rgb, (0.7 - length(vUV - 0.5))) * 1.25 - rand( gl_FragCoord.xy, time ) * ditherMagnitude;
+	// Mix the texture and bloom based on distance from center,
+	// to approximate a lens blur
+	vec3 brightness = mix(
+		texture2D( bloomTex, vUV ).rgb, 
+		texture2D( tex, vUV ).rgb, 
+		(0.7 - length(vUV - 0.5))
+	) * 1.25;
 
+	// Dither: subtract a random value from the brightness
+	brightness = brightness - rand( gl_FragCoord.xy, time ) * ditherMagnitude;
+
+	// Calculate a hue based on distance from center
 	float hue = 0.35 + (length(vUV - vec2(0.5, 1.0)) * -0.4 + 0.2);
+
+	// Convert HSL to RGB
 	vec3 rgb = hslToRgb(hue, 0.8, max(0., brightness.r)) * vec3(0.8, 1.0, 0.7);
+
+	// Calculate a separate RGB for upward-flowing glyphs
 	vec3 resurrectionRGB = hslToRgb(0.13, 1.0, max(0., brightness.g) * 0.9);
 	gl_FragColor = vec4(rgb + resurrectionRGB + backgroundColor, 1.0);
 }

@@ -2,13 +2,12 @@ TODO:
 
 
 Improve forkability
-  Document every variable in config.js
+  Should the OPERATOR and PARADISE specific config values still exist?
+  Rename compute.frag to rain.compute
+  Rename bloom tex to blur tex
+    And rename bloom pass to blur pass
   Document every variable, method, and section of the main function in compute.frag
     Maybe rewrite it? Make the time based stuff easier to read?
-  Document resurrectionPass
-    Label it a WIP
-    List intended characteristics
-  Comment makePalette
 
   Write a document (and include images) that explains the underlying principle of the rain pass
 

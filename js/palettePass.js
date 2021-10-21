@@ -17,6 +17,8 @@ const colorToRGB = ([hue, saturation, lightness]) => {
 const makePalette = (regl, entries) => {
 	const PALETTE_SIZE = 2048;
 	const paletteColors = Array(PALETTE_SIZE);
+
+	// Convert HSL gradient into sorted RGB gradient, capping the ends
 	const sortedEntries = entries
 		.slice()
 		.sort((e1, e2) => e1.at - e2.at)
@@ -29,6 +31,9 @@ const makePalette = (regl, entries) => {
 		rgb: sortedEntries[sortedEntries.length - 1].rgb,
 		arrayIndex: PALETTE_SIZE - 1,
 	});
+
+	// Interpolate between the sorted RGB entries to generate
+	// the palette texture data
 	sortedEntries.forEach((entry, index) => {
 		paletteColors[entry.arrayIndex] = entry.rgb.slice();
 		if (index + 1 < sortedEntries.length) {
