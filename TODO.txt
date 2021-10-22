@@ -1,37 +1,31 @@
 TODO:
 
-
 Improve forkability
   Should the OPERATOR and PARADISE specific config values still exist?
-  Rename compute.frag to rain.compute
-  Rename bloom tex to blur tex
-    And rename bloom pass to blur pass
-  Document every variable, method, and section of the main function in compute.frag
+  Document every variable, method, and section of the main function in rainPass.compute
     Maybe rewrite it? Make the time based stuff easier to read?
 
   Write a document (and include images) that explains the underlying principle of the rain pass
 
-  Create interactive controls?
   Is the pipeline stuff just too bizarre?
 
 
 Resurrection
   Modified glyph order?
-
-  Post processing
-    Radial hue shift
-      Blue in top center
-      Yellow in bottom corners
-    Blurring towards the edges, like a tilt-shift effect
-      Maybe adjust the bloom pass's sampling based on distance to center
-
-  Upward glyphs?
-
   New glyphs?
+    Good luck with that, champ
 
 
 
 
+Audio
+  Synthesize raindrop sound
+  Use WebAudio to mess with it
+
+Idea: Build a UI
+  Changes some uniforms
+  Effect selection would swap out the desired effect pass, somehow
+  The color palette stuff would be hard
 
 
 Experiment with varying the colors in the palette pass
@@ -44,9 +38,3 @@ Experiment with varying the colors in the palette pass
 Deja vu effect: flashing rows
   Make them flash all the time
   Then use a thunder-like pattern to show and hide the flash
-
-Sounds
-  Raindrop sound
-  Deja vu sound
-  ripple sound
-  And some kind of ambient sound that they play over

@@ -59,7 +59,7 @@ export default (regl, config) => {
 		wrapT: "clamp",
 		type: "half float",
 	});
-	const computeFrag = loadText("shaders/compute.frag");
+	const rainPassCompute = loadText("shaders/rainPass.Compute");
 	const computeUniforms = {
 		...commonUniforms,
 		...extractEntries(config, [
@@ -100,8 +100,8 @@ export default (regl, config) => {
 
 	// We render the code into an FBO using MSDFs: https://github.com/Chlumsky/msdfgen
 	const msdf = loadImage(regl, config.glyphTexURL);
-	const renderVert = loadText("shaders/rain.vert");
-	const renderFrag = loadText("shaders/rain.frag");
+	const rainPassVert = loadText("shaders/rainPass.vert");
+	const rainPassFrag = loadText("shaders/rainPass.frag");
 	const output = makePassFBO(regl, config.useHalfFloat);
 	const renderUniforms = {
 		...commonUniforms,
@@ -166,13 +166,13 @@ export default (regl, config) => {
 			primary: output,
 		},
 		() => {
-			compute({ frag: computeFrag.text() });
+			compute({ frag: rainPassCompute.text() });
 			regl.clear({
 				depth: 1,
 				color: [0, 0, 0, 1],
 				framebuffer: output,
 			});
-			render({ camera, transform, screenSize, vert: renderVert.text(), frag: renderFrag.text() });
+			render({ camera, transform, screenSize, vert: rainPassVert.text(), frag: rainPassFrag.text() });
 		},
 		(w, h) => {
 			output.resize(w, h);
@@ -180,6 +180,6 @@ export default (regl, config) => {
 			glMatrix.mat4.perspective(camera, (Math.PI / 180) * 90, aspectRatio, 0.0001, 1000);
 			[screenSize[0], screenSize[1]] = aspectRatio > 1 ? [1, aspectRatio] : [1 / aspectRatio, 1];
 		},
-		[msdf.loaded, computeFrag.loaded, renderVert.loaded, renderFrag.loaded]
+		[msdf.loaded, rainPassCompute.loaded, rainPassVert.loaded, rainPassFrag.loaded]
 	);
 };
