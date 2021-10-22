@@ -29,12 +29,12 @@ const defaults = {
 	bloomSize: 0.6, // The amount the bloom calculation is scaled
 	highPassThreshold: 0.1, // The minimum brightness that is still blurred
 	cycleSpeed: 1, // The speed glyphs change
+	cycleFrameSkip: 1, // The global minimum number of frames between glyphs cycling
 	cycleStyleName: "cycleFasterWhenDimmed", // The way glyphs cycle, either proportional to their brightness or randomly
 	cursorEffectThreshold: 1, // The minimum brightness for a glyph to still be lit up as a cursor at the bottom of a raindrop
-	brightnessOffset: 0.0, // OPERATOR
-	brightnessMultiplier: 1.0, // OPERATOR
-	brightnessMinimum: 0, // OPERATOR
-	brightnessMix: 1.0, // The decay at which a glyph lights up and dims
+	brightnessOverride: 0.0, // A global override to the brightness of displayed glyphs. Only used if it is > 0.
+	brightnessThreshold: 0, // The minimum brightness for a glyph to still be considered visible
+	brightnessDecay: 1.0, // The rate at which glyphs light up and dim
 	fallSpeed: 1, // The speed the raindrops progress downwards
 	glyphEdgeCrop: 0.0, // The border around a glyph in a font texture that should be cropped out
 	glyphHeightToWidth: 1, // The aspect ratio of glyphs
@@ -70,12 +70,12 @@ const versions = {
 		...fonts.matrixcode,
 		bloomStrength: 0.75,
 		highPassThreshold: 0.0,
-		cycleSpeed: 0.05,
+		cycleSpeed: 0.2,
+		cycleFrameSkip: 6,
 		cycleStyleName: "cycleRandomly",
 		cursorEffectThreshold: 0.64,
-		brightnessOffset: 0.25,
-		brightnessMultiplier: 0.0,
-		brightnessMinimum: -1.0,
+		brightnessOverride: 0.25,
+		brightnessThreshold: -1.0,
 		fallSpeed: 0.65,
 		glyphEdgeCrop: 0.15,
 		glyphHeightToWidth: 1.35,
@@ -92,7 +92,7 @@ const versions = {
 		...defaults,
 		...fonts.gothic,
 		highPassThreshold: 0.7,
-		brightnessMix: 0.75,
+		brightnessDecay: 0.75,
 		fallSpeed: 2.0,
 		hasThunder: true,
 		numColumns: 60,
@@ -112,7 +112,7 @@ const versions = {
 		bloomStrength: 1.75,
 		highPassThreshold: 0,
 		cycleSpeed: 0.1,
-		brightnessMix: 0.05,
+		brightnessDecay: 0.05,
 		fallSpeed: 0.08,
 		hasSun: true,
 		isPolar: true,
@@ -141,7 +141,9 @@ const versions = {
 	},
 };
 versions.throwback = versions.operator;
-versions["1999"] = versions.classic;
+versions["1999"] = versions.operator;
+versions["2003"] = versions.classic;
+versions["2021"] = versions.resurrections;
 
 const range = (f, min = -Infinity, max = Infinity) => Math.max(min, Math.min(max, f));
 const nullNaN = (f) => (isNaN(f) ? null : f);

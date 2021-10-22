@@ -13,16 +13,18 @@ precision highp float;
 #define SQRT_5 2.23606797749979
 
 uniform float time;
+uniform float tick;
 uniform float numColumns, numRows;
 uniform sampler2D lastState;
 uniform bool hasSun;
 uniform bool hasThunder;
 uniform bool showComputationTexture;
-uniform float brightnessMinimum, brightnessMultiplier, brightnessOffset, brightnessMix;
+uniform float brightnessOverride, brightnessThreshold, brightnessDecay;
 uniform float animationSpeed, fallSpeed, cycleSpeed;
 uniform float raindropLength;
 uniform float glyphHeightToWidth;
 uniform int cycleStyle;
+uniform float cycleFrameSkip;
 uniform float rippleScale, rippleSpeed, rippleThickness;
 uniform int rippleType;
 uniform float cursorEffectThreshold;
@@ -60,8 +62,7 @@ float getGlyphCycleSpeed(float rainTime, float brightness) {
 	if (cycleStyle == 0 && brightness > 0.0) {
 		glyphCycleSpeed = pow(1.0 - brightness, 4.0);
 	} else if (cycleStyle == 1) {
-		glyphCycleSpeed = fract((rainTime + 0.7 * sin(RADS_TO_HZ * SQRT_2 * rainTime) + 1.1 * sin(RADS_TO_HZ * SQRT_5 * rainTime))) * 0.75;
-		// glyphCycleSpeed = fract(rainTime) * 0.75; // loop
+		glyphCycleSpeed = fract(rainTime);
 	}
 	return glyphCycleSpeed;
 }
@@ -144,7 +145,10 @@ void main()	{
 	if (hasThunder) rainBrightness = applyThunder(rainBrightness, simTime, screenPos);
 
 	float glyphCycleSpeed = getGlyphCycleSpeed(rainTime, rainBrightness);
-	float glyphCycle = fract(oldGlyphCycle + 0.005 * animationSpeed * cycleSpeed * glyphCycleSpeed);
+	float glyphCycle = oldGlyphCycle;
+	if (mod(tick, cycleFrameSkip) == 0.0) {
+		glyphCycle = fract(oldGlyphCycle + 0.005 * animationSpeed * cycleSpeed * glyphCycleSpeed * cycleFrameSkip);
+	}
 
 	float effect = 0.;
 	effect = applyRippleEffect(effect, simTime, screenPos);
@@ -152,12 +156,12 @@ void main()	{
 
 	float glyphDepth = rand(vec2(glyphPos.x, 0.0));
 
-	if (rainBrightness > brightnessMinimum) {
-		rainBrightness = rainBrightness * brightnessMultiplier + brightnessOffset;
+	if (brightnessOverride > 0. && rainBrightness > brightnessThreshold) {
+		rainBrightness = brightnessOverride;
 	}
 
 	if (!isInitializing) {
-		rainBrightness = mix(oldRainBrightness, rainBrightness, brightnessMix);
+		rainBrightness = mix(oldRainBrightness, rainBrightness, brightnessDecay);
 	}
 
 	if (showComputationTexture) {

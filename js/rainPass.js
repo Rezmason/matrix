@@ -63,12 +63,12 @@ export default (regl, config) => {
 	const computeUniforms = {
 		...commonUniforms,
 		...extractEntries(config, [
-			"brightnessMinimum",
-			"brightnessMix",
-			"brightnessMultiplier",
-			"brightnessOffset",
+			"brightnessThreshold",
+			"brightnessOverride",
+			"brightnessDecay",
 			"cursorEffectThreshold",
 			"cycleSpeed",
+			"cycleFrameSkip",
 			"fallSpeed",
 			"hasSun",
 			"hasThunder",

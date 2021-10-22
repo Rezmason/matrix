@@ -139,6 +139,7 @@ const makeFullScreenQuad = (regl, uniforms = {}, context = {}) =>
 		uniforms: {
 			...uniforms,
 			time: regl.context("time"),
+			tick: regl.context("tick"),
 		},
 
 		context,

@@ -1,7 +1,7 @@
 TODO:
 
 Improve forkability
-  Should the OPERATOR and PARADISE specific config values still exist?
+
   Document every variable, method, and section of the main function in rainPass.compute
     Maybe rewrite it? Make the time based stuff easier to read?
 
