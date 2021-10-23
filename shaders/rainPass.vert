@@ -4,7 +4,7 @@ attribute vec2 aPosition, aCorner;
 uniform sampler2D lastState;
 uniform float density;
 uniform vec2 quadSize;
-uniform float glyphHeightToWidth;
+uniform float glyphHeightToWidth, glyphVerticalSpacing;
 uniform mat4 camera, transform;
 uniform vec2 screenSize;
 uniform float time, animationSpeed, forwardSpeed;
@@ -32,7 +32,7 @@ void main() {
 		quadDepth = fract(vGlyph.b + time * animationSpeed * forwardSpeed);
 		vGlyph.b = quadDepth;
 	}
-	vec2 position = (aPosition + aCorner * vec2(density, 1.)) * quadSize;
+	vec2 position = (aPosition * vec2(1., glyphVerticalSpacing) + aCorner * vec2(density, 1.)) * quadSize;
 	vec4 pos = vec4((position - 0.5) * 2.0, quadDepth, 1.0);
 
 	// "Resurrected" columns are in the green channel, 

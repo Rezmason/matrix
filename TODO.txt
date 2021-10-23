@@ -1,22 +1,18 @@
 TODO:
 
 Improve forkability
+  Refactor rainPass.compute's sin(sqrt(5)) stuff, there must be a clearer expression
 
-  Document every variable, method, and section of the main function in rainPass.compute
-    Maybe rewrite it? Make the time based stuff easier to read?
-
-  Write a document (and include images) that explains the underlying principle of the rain pass
-
-  Is the pipeline stuff just too bizarre?
-
+  Write an explanation of the rain pass (and include images)
+    Compute
+    Volumetric quads
+    Fullscreen quad and spacial mapping
+    MSDFs
 
 Resurrection
   Modified glyph order?
   New glyphs?
     Good luck with that, champ
-
-
-
 
 Audio
   Synthesize raindrop sound

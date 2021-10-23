@@ -108,6 +108,7 @@ export default (regl, config) => {
 		...extractEntries(config, [
 			// vertex
 			"forwardSpeed",
+			"glyphVerticalSpacing",
 			// fragment
 			"glyphEdgeCrop",
 			"isPolar",

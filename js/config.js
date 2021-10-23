@@ -38,6 +38,7 @@ const defaults = {
 	fallSpeed: 1, // The speed the raindrops progress downwards
 	glyphEdgeCrop: 0.0, // The border around a glyph in a font texture that should be cropped out
 	glyphHeightToWidth: 1, // The aspect ratio of glyphs
+	glyphVerticalSpacing: 1, // The ratio of the vertical distance between glyphs to their height
 	hasSun: false, // Makes the glyphs more radiant. Admittedly not very technical.
 	hasThunder: false, // An effect that adds dramatic lightning flashes
 	isPolar: false, // Whether the glyphs arc across the screen or sit in a standard grid
@@ -74,7 +75,7 @@ const versions = {
 		cycleFrameSkip: 6,
 		cycleStyleName: "cycleRandomly",
 		cursorEffectThreshold: 0.64,
-		brightnessOverride: 0.25,
+		brightnessOverride: 0.22,
 		brightnessThreshold: -1.0,
 		fallSpeed: 0.65,
 		glyphEdgeCrop: 0.15,
@@ -132,12 +133,11 @@ const versions = {
 		...defaults,
 		...fonts.matrixcode,
 		resurrectingCodeRatio: 0.25,
+		glyphVerticalSpacing: 1.25,
 		effect: "resurrections",
-		width: 100,
+		numColumns: 100,
 		volumetric: true,
-		density: 1.5,
-		fallSpeed: 1.2,
-		raindropLength: 1.25,
+		cycleSpeed: 0.5,
 	},
 };
 versions.throwback = versions.operator;
