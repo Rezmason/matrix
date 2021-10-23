@@ -35,7 +35,7 @@ const defaults = {
 	brightnessOverride: 0.0, // A global override to the brightness of displayed glyphs. Only used if it is > 0.
 	brightnessThreshold: 0, // The minimum brightness for a glyph to still be considered visible
 	brightnessDecay: 1.0, // The rate at which glyphs light up and dim
-	fallSpeed: 1, // The speed the raindrops progress downwards
+	fallSpeed: 0.75, // The speed the raindrops progress downwards
 	glyphEdgeCrop: 0.0, // The border around a glyph in a font texture that should be cropped out
 	glyphHeightToWidth: 1, // The aspect ratio of glyphs
 	glyphVerticalSpacing: 1, // The ratio of the vertical distance between glyphs to their height
@@ -94,7 +94,7 @@ const versions = {
 		...fonts.gothic,
 		highPassThreshold: 0.7,
 		brightnessDecay: 0.75,
-		fallSpeed: 2.0,
+		fallSpeed: 1.2,
 		hasThunder: true,
 		numColumns: 60,
 		paletteEntries: [
@@ -104,7 +104,7 @@ const versions = {
 			{ hsl: [0.1, 1.0, 0.7], at: 0.7 },
 			{ hsl: [0.2, 1.0, 1.0], at: 1.0 },
 		],
-		raindropLength: 0.6,
+		raindropLength: 0.5,
 		slant: (22.5 * Math.PI) / 180,
 	},
 	paradise: {
