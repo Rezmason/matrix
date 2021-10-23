@@ -84,7 +84,7 @@ export default (regl, config) => {
 		frag: regl.prop("frag"),
 		uniforms: {
 			...computeUniforms,
-			lastState: doubleBuffer.back,
+			previousState: doubleBuffer.back,
 		},
 
 		framebuffer: doubleBuffer.front,
