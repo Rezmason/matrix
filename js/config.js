@@ -110,11 +110,11 @@ const versions = {
 	paradise: {
 		...defaults,
 		...fonts.coptic,
-		bloomStrength: 1.75,
+		bloomStrength: 1,
 		highPassThreshold: 0,
 		cycleSpeed: 0.1,
 		brightnessDecay: 0.05,
-		fallSpeed: 0.08,
+		fallSpeed: 0.02,
 		hasSun: true,
 		isPolar: true,
 		rippleTypeName: "circle",
