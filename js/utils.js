@@ -63,34 +63,6 @@ const loadImage = (regl, url) => {
 	};
 };
 
-const loadShader = (regl, url) => {
-	let texture = regl.texture([[0]]);
-	let loaded = false;
-	return {
-		texture: () => {
-			if (!loaded) {
-				console.warn(`texture still loading: ${url}`);
-			}
-			return texture;
-		},
-		loaded: (async () => {
-			if (url != null) {
-				const data = new Image();
-				data.crossOrigin = "anonymous";
-				data.src = url;
-				await data.decode();
-				loaded = true;
-				texture = regl.texture({
-					data,
-					mag: "linear",
-					min: "linear",
-					flipY: true,
-				});
-			}
-		})(),
-	};
-};
-
 const loadText = (url) => {
 	let text = "";
 	let loaded = false;
