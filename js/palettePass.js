@@ -67,7 +67,7 @@ export default (regl, config, inputs) => {
 	const palette = makePalette(regl, config.paletteEntries);
 	const { backgroundColor } = config;
 
-	const palettePassFrag = loadText("shaders/palettePass.frag");
+	const palettePassFrag = loadText("shaders/palettePass.frag.glsl");
 
 	const render = regl({
 		frag: regl.prop("frag"),

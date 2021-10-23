@@ -8,7 +8,7 @@ export default (regl, config, inputs) => {
 	const output = makePassFBO(regl, config.useHalfFloat);
 	const bgURL = "bgURL" in config ? config.bgURL : defaultBGURL;
 	const background = loadImage(regl, bgURL);
-	const imagePassFrag = loadText("shaders/imagePass.frag");
+	const imagePassFrag = loadText("shaders/imagePass.frag.glsl");
 	const render = regl({
 		frag: regl.prop("frag"),
 		uniforms: {

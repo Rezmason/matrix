@@ -42,7 +42,7 @@ export default (regl, config, inputs) => {
 		stripeColors.slice(0, numStripeColors * 3).map((f) => Math.floor(f * 0xff))
 	);
 
-	const stripePassFrag = loadText("shaders/stripePass.frag");
+	const stripePassFrag = loadText("shaders/stripePass.frag.glsl");
 
 	const render = regl({
 		frag: regl.prop("frag"),

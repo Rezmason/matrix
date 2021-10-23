@@ -59,7 +59,7 @@ export default (regl, config) => {
 		wrapT: "clamp",
 		type: "half float",
 	});
-	const rainPassCompute = loadText("shaders/rainPass.Compute");
+	const rainPassCompute = loadText("shaders/rainPass.compute.frag.glsl");
 	const computeUniforms = {
 		...commonUniforms,
 		...extractEntries(config, [
@@ -100,8 +100,8 @@ export default (regl, config) => {
 
 	// We render the code into an FBO using MSDFs: https://github.com/Chlumsky/msdfgen
 	const msdf = loadImage(regl, config.glyphTexURL);
-	const rainPassVert = loadText("shaders/rainPass.vert");
-	const rainPassFrag = loadText("shaders/rainPass.frag");
+	const rainPassVert = loadText("shaders/rainPass.vert.glsl");
+	const rainPassFrag = loadText("shaders/rainPass.frag.glsl");
 	const output = makePassFBO(regl, config.useHalfFloat);
 	const renderUniforms = {
 		...commonUniforms,
