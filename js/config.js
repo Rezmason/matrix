@@ -133,11 +133,11 @@ const versions = {
 		...defaults,
 		...fonts.matrixcode,
 		resurrectingCodeRatio: 0.25,
-		glyphVerticalSpacing: 1.25,
+		glyphVerticalSpacing: 1.5,
 		effect: "resurrections",
 		numColumns: 100,
 		volumetric: true,
-		cycleSpeed: 0.5,
+		fallSpeed: 0.4,
 	},
 };
 versions.throwback = versions.operator;
