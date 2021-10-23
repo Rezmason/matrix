@@ -4,7 +4,7 @@
 #endif
 precision lowp float;
 
-uniform sampler2D lastState;
+uniform sampler2D state;
 uniform float numColumns, numRows;
 uniform sampler2D glyphTex;
 uniform float glyphHeightToWidth, glyphSequenceLength, glyphTextureColumns, glyphEdgeCrop;
@@ -42,7 +42,7 @@ void main() {
 			uv.y -= 0.5;
 			float radius = length(uv);
 			float angle = atan(uv.y, uv.x) / (2. * PI) + 0.5;
-			uv = vec2(angle * 4. - 0.5, 1.5 - pow(radius, 0.5) * 1.5);
+			uv = vec2(fract(angle * 4. - 0.5), 1.5 * (1. - sqrt(radius)));
 		} else {
 			// Applies the slant and scales space so the viewport is fully covered
 			uv = vec2(
@@ -54,7 +54,7 @@ void main() {
 	}
 
 	// Unpack the values from the data texture
-	vec4 glyph = volumetric ? vGlyph : texture2D(lastState, uv);
+	vec4 glyph = volumetric ? vGlyph : texture2D(state, uv);
 	float brightness = glyph.r;
 	float symbolIndex = getSymbolIndex(glyph.g);
 	float quadDepth = glyph.b;

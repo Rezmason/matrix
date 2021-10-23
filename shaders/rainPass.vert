@@ -1,7 +1,7 @@
 #define PI 3.14159265359
 precision lowp float;
 attribute vec2 aPosition, aCorner;
-uniform sampler2D lastState;
+uniform sampler2D state;
 uniform float density;
 uniform vec2 quadSize;
 uniform float glyphHeightToWidth, glyphVerticalSpacing;
@@ -24,7 +24,7 @@ highp float rand( const in vec2 uv ) {
 void main() {
 
 	vUV = (aPosition + aCorner) * quadSize;
-	vGlyph = texture2D(lastState, aPosition * quadSize);
+	vGlyph = texture2D(state, aPosition * quadSize);
 
 	// Calculate the world space position
 	float quadDepth = 0.0;

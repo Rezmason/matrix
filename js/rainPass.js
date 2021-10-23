@@ -135,7 +135,7 @@ export default (regl, config) => {
 		uniforms: {
 			...renderUniforms,
 
-			lastState: doubleBuffer.front,
+			state: doubleBuffer.front,
 			glyphTex: msdf.texture,
 
 			camera: regl.prop("camera"),
