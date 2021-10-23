@@ -1,13 +1,10 @@
 TODO:
 
-Improve forkability
-  Refactor rainPass.compute's sin(sqrt(5)) stuff, there must be a clearer expression
-
-  Write an explanation of the rain pass (and include images)
-    Compute
-    Volumetric quads
-    Fullscreen quad and spacial mapping
-    MSDFs
+Write an explanation of the rain pass (and include images)
+  Compute
+  Volumetric quads
+  Fullscreen quad and spacial mapping
+  MSDFs
 
 Resurrection
   Modified glyph order?

@@ -40,20 +40,24 @@ vec2 randomVec2( const in vec2 uv ) {
 	return fract(vec2(sin(uv.x * 591.32 + uv.y * 154.077), cos(uv.x * 391.32 + uv.y * 49.077)));
 }
 
+float wobble(float x) {
+	return x + 0.3 * sin(SQRT_2 * x) + 0.2 * sin(SQRT_5 * x);
+}
+
 // Core functions
 
 // Rain time is the shader's key underlying concept.
 // It's why glyphs that share a column are lit simultaneously, and are brighter toward the bottom.
 float getRainTime(float simTime, vec2 glyphPos) {
-	float columnTimeOffset = randomFloat(vec2(glyphPos.x, 0.));
-	float columnSpeedOffset = randomFloat(vec2(glyphPos.x + 0.1, 0.));
+	float columnTimeOffset = randomFloat(vec2(glyphPos.x, 0.)) * 1000.;
+	float columnSpeedOffset = randomFloat(vec2(glyphPos.x + 0.1, 0.)) * 0.5 + 0.5;
 	// columnSpeedOffset = 0.; // TODO: loop
-	float columnTime = (columnTimeOffset * 1000. + simTime * 0.5 * fallSpeed) * (0.5 + columnSpeedOffset * 0.5) + (sin(simTime * fallSpeed * columnSpeedOffset) * 0.2);
+	float columnTime = columnTimeOffset + simTime * fallSpeed * columnSpeedOffset;
 	return (glyphPos.y * 0.01 + columnTime) / raindropLength;
 }
 
 float getBrightness(float rainTime) {
-	float value = 1. - fract((rainTime + 0.3 * sin(SQRT_2 * rainTime) + 0.2 * sin(SQRT_5 * rainTime)));
+	float value = 1. - fract(wobble(rainTime));
 	// value = 1. - fract(rainTime); // TODO: loop
 	return log(value * 1.25) * 3.;
 }
@@ -79,7 +83,7 @@ float applySunShowerBrightness(float brightness, vec2 screenPos) {
 
 float applyThunderBrightness(float brightness, float simTime, vec2 screenPos) {
 	simTime *= 0.5;
-	float thunder = 1. - fract((simTime + 0.3 * sin(SQRT_2 * simTime) + 0.2 * sin(SQRT_5 * simTime)));
+	float thunder = 1. - fract(wobble(simTime));
 	// thunder = 1. - fract(simTime + 0.3); // TODO: loop
 
 	thunder = log(thunder * 1.5) * 4.;
@@ -93,7 +97,7 @@ float applyRippleEffect(float effect, float simTime, vec2 screenPos) {
 		return effect;
 	}
 
-	float rippleTime = (simTime * 0.5 + 0.2 * sin(simTime)) * rippleSpeed + 1.;
+	float rippleTime = (simTime * 0.5 + sin(simTime) * 0.2) * rippleSpeed + 1.; // TODO: clarify
 	// rippleTime = (simTime * 0.5) * rippleSpeed + 1.; // TODO: loop
 
 	vec2 offset = randomVec2(vec2(floor(rippleTime), 0.)) - 0.5;

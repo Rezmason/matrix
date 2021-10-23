@@ -72,7 +72,7 @@ const versions = {
 		bloomStrength: 0.75,
 		highPassThreshold: 0.0,
 		cycleSpeed: 0.2,
-		cycleFrameSkip: 6,
+		cycleFrameSkip: 8,
 		cycleStyleName: "cycleRandomly",
 		cursorEffectThreshold: 0.64,
 		brightnessOverride: 0.22,
