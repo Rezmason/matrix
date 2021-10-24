@@ -73,11 +73,3 @@ export default async (canvas, config) => {
 
 	requestAnimationFrame(frame);
 };
-
-document.body.onload = () => {
-	if (navigator.gpu != null) {
-		initWebGPU();
-	} else {
-		// TODO: init regl
-	}
-};
