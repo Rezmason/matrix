@@ -13,11 +13,12 @@ export default async (canvas, config) => {
 	const adapter = await navigator.gpu.requestAdapter();
 	const device = await adapter.requestDevice();
 	const canvasContext = canvas.getContext("webgpu");
+	const presentationFormat = canvasContext.getPreferredFormat(adapter);
 	const queue = device.queue;
 
 	const canvasConfig = {
 		device,
-		format: canvasContext.getPreferredFormat(adapter),
+		format: presentationFormat,
 		size: getCanvasSize(canvas),
 	};
 
@@ -37,6 +38,13 @@ export default async (canvas, config) => {
 
 	// TODO: create pipelines, bind groups, shaders
 
+	const bundleEncoder = device.createRenderBundleEncoder({
+		colorFormats: [presentationFormat],
+	});
+	// TODO: create render bundle(s)
+	const bundle = bundleEncoder.finish();
+	const renderBundles = [bundle];
+
 	const frame = (now) => {
 		const canvasSize = getCanvasSize(canvas);
 		if (canvasSize[0] !== canvasConfig.size[0] || canvasSize[1] !== canvasConfig.size[1]) {
@@ -50,18 +58,15 @@ export default async (canvas, config) => {
 
 		// TODO: update the uniforms that change, write to queue
 
-		// TODO: passes and pipelines
-
 		renderPassConfig.colorAttachments[0].loadValue.g = Math.sin((now / 1000) * 2) / 2 + 0.5;
 		renderPassConfig.colorAttachments[0].view = canvasContext.getCurrentTexture().createView();
 
 		const encoder = device.createCommandEncoder();
 		const renderPass = encoder.beginRenderPass(renderPassConfig);
+		renderPass.executeBundles(renderBundles);
 		renderPass.endPass();
 		const commandBuffer = encoder.finish();
 		queue.submit([commandBuffer]);
-
-		// TODO: Record this, so it doesn't have to be reencoded
 
 		requestAnimationFrame(frame);
 	};

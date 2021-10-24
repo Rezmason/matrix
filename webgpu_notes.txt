@@ -37,3 +37,6 @@ You DO need a canvas to display what you're rendering
 Textures were never resizable, you simply forgot
 	Screen-size textures have to be destroyed and recreated
 	Transfer the data over if you need to
+
+Bind groups let you bind a bunch of resources at once
+Render bundles let you reissue commands
