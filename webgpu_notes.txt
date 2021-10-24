@@ -1,0 +1,39 @@
+Learning WebGPU
+	Request an adaptor from navigator.gpu
+	Request a device from the adapter
+		Devices have features and (numeric) limits
+			So do adapters, but the device ones are the important ones
+		Devices have a destroy method
+	Create objects from the device
+		Pipelines (optionally with async) and pipeline layouts
+		Shader modules (programs)
+		Textures and samplers
+			You need a sampler to sample a texture in a shader
+			Texture has a createView() method, these views get bound to bind groups and passes
+			Has destroy() method
+		Buffers
+			Has destroy() method
+		Bind groups and bind group layouts
+			Bind groups are the interfaces defined between the CPU and a pipeline
+		Command encoders
+			Used to create passes, like a render pass
+				begin, set, set, set, end, finish, submit to device queue
+					It should be possible to reuse command buffers
+		Render bundle encoders [What are these?]
+		Query sets
+			Useful for measuring stats that come from the GPU
+			[Is this needed to detect errors?]
+
+
+You do not need a canvas to webgpu.
+You DO need a canvas to display what you're rendering
+	Get canvas's "webgpu" context
+	Configure context to point at the device
+	Adjust it when you resize
+		detect in the RAF when the presentation size isn't the canvas size
+	Create a view of the context's current texture, and reference it in the render pass's color attachments
+		[When does that currentTexture change?]
+
+Textures were never resizable, you simply forgot
+	Screen-size textures have to be destroyed and recreated
+	Transfer the data over if you need to

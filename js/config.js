@@ -186,7 +186,7 @@ paramMapping.dropLength = paramMapping.raindropLength;
 paramMapping.angle = paramMapping.slant;
 paramMapping.colors = paramMapping.stripeColors;
 
-export default (searchString, make1DTexture) => {
+export default (searchString) => {
 	const urlParams = Object.fromEntries(
 		Array.from(new URLSearchParams(searchString).entries())
 			.filter(([key]) => key in paramMapping)
