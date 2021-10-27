@@ -6,6 +6,9 @@ const getCanvasSize = (canvas) => {
 export default async (canvas, config) => {
 	console.log(config);
 
+	const numColumns = config.numColumns;
+	const numRows = config.numColumns;
+
 	if (navigator.gpu == null) {
 		return;
 	}
@@ -36,14 +39,78 @@ export default async (canvas, config) => {
 
 	// TODO: create buffers, uniforms, textures, samplers
 
+	const uniformBufferSize = 4 * (1 + 1);
+	const uniformBuffer = device.createBuffer({
+		size: uniformBufferSize,
+		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST, // Which of these are necessary?
+		mappedAtCreation: true,
+	});
+	new Int32Array(uniformBuffer.getMappedRange()).set([numColumns, numRows]);
+	uniformBuffer.unmap();
+
 	// TODO: create pipelines, bind groups, shaders
+
+	const [vert, frag] = await Promise.all(["shaders/rainPass.vert.wgsl", "shaders/rainPass.frag.wgsl"].map(async (path) => (await fetch(path)).text()));
+
+	const additiveBlendComponent = {
+		operation: "add",
+		srcFactor: "one",
+		dstFactor: "one",
+	};
+
+	const additiveBlending = {
+		color: additiveBlendComponent,
+		alpha: additiveBlendComponent,
+	};
+
+	const rainRenderPipeline = device.createRenderPipeline({
+		vertex: {
+			module: device.createShaderModule({
+				code: vert,
+			}),
+			entryPoint: "main",
+		},
+		fragment: {
+			module: device.createShaderModule({
+				code: frag,
+			}),
+			entryPoint: "main",
+			targets: [
+				{
+					format: presentationFormat,
+					blend: additiveBlending,
+				},
+			],
+		},
+		primitive: {
+			// What happens if this isn't here?
+			topology: "triangle-list", // What happens if this isn't here?
+			cullMode: "none", // What happens if this isn't here?
+		},
+	});
+
+	const uniformBindGroup = device.createBindGroup({
+		layout: rainRenderPipeline.getBindGroupLayout(0),
+		entries: [
+			{
+				binding: 0,
+				resource: {
+					buffer: uniformBuffer,
+				},
+			},
+		],
+	});
 
 	const bundleEncoder = device.createRenderBundleEncoder({
 		colorFormats: [presentationFormat],
 	});
-	// TODO: create render bundle(s)
-	const bundle = bundleEncoder.finish();
-	const renderBundles = [bundle];
+
+	bundleEncoder.setPipeline(rainRenderPipeline);
+	bundleEncoder.setBindGroup(0, uniformBindGroup);
+	bundleEncoder.draw(6 * numColumns * numRows, 1, 0, 0);
+	const renderBundles = [bundleEncoder.finish()];
+
+	// queue.writeBuffer(uniformBuffer, 0, new Int32Array([numColumns, numRows]));
 
 	const frame = (now) => {
 		const canvasSize = getCanvasSize(canvas);
@@ -58,7 +125,7 @@ export default async (canvas, config) => {
 
 		// TODO: update the uniforms that change, write to queue
 
-		renderPassConfig.colorAttachments[0].loadValue.g = Math.sin((now / 1000) * 2) / 2 + 0.5;
+		renderPassConfig.colorAttachments[0].loadValue.r = Math.sin((now / 1000) * 2) / 2 + 0.5;
 		renderPassConfig.colorAttachments[0].view = canvasContext.getCurrentTexture().createView();
 
 		const encoder = device.createCommandEncoder();
