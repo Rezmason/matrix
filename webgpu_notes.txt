@@ -42,3 +42,4 @@ Bind groups let you bind a bunch of resources at once
 Render bundles let you reissue commands
 
 You can only use up to FOUR bind groups on your laptop's device!
+Here's an annoying gotcha: uniform buffers are like classic UBOs, and have esoteric ("std140") layout requirements!

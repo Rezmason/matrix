@@ -33,7 +33,6 @@ export default async (canvas, config) => {
 	console.log(config);
 
 	const NUM_VERTICES_PER_QUAD = 6;
-	const THIRTY_TWO_BITS = 4; // 4 bytes = 32 bits
 
 	const numColumns = config.numColumns;
 	const numRows = config.numColumns;
@@ -70,7 +69,8 @@ export default async (canvas, config) => {
 
 	const msdfTexture = await loadTexture(device, config.glyphTexURL);
 
-	const configBufferSize = THIRTY_TWO_BITS * (1 * 1 + 1 * 1);
+	// prettier-ignore
+	const configBufferSize = Float32Array.BYTES_PER_ELEMENT * (1 + 1);
 	const configBuffer = device.createBuffer({
 		size: configBufferSize,
 		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST, // Which of these are necessary?
@@ -79,7 +79,8 @@ export default async (canvas, config) => {
 	new Int32Array(configBuffer.getMappedRange()).set([numColumns, numRows]);
 	configBuffer.unmap();
 
-	const msdfBufferSize = THIRTY_TWO_BITS * (1 * 1);
+	// prettier-ignore
+	const msdfBufferSize = Float32Array.BYTES_PER_ELEMENT * (1);
 	const msdfBuffer = device.createBuffer({
 		size: msdfBufferSize,
 		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.FRAGMENT | GPUBufferUsage.COPY_DST, // Which of these are necessary?
@@ -88,23 +89,34 @@ export default async (canvas, config) => {
 	new Int32Array(msdfBuffer.getMappedRange()).set([config.glyphTextureColumns]);
 	msdfBuffer.unmap();
 
-	const timeBufferSize = THIRTY_TWO_BITS * (1 * 1 + 1 * 1);
+	// prettier-ignore
+	const timeBufferSize = Float32Array.BYTES_PER_ELEMENT * (1 + 1);
 	const timeBuffer = device.createBuffer({
-		size: configBufferSize,
+		size: timeBufferSize,
 		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.VERTEX | GPUBufferUsage.FRAGMENT | GPUBufferUsage.COMPUTE | GPUBufferUsage.COPY_DST, // Which of these are necessary?
 	});
 
-	const cameraBufferSize = THIRTY_TWO_BITS * (1 * 2);
+	// prettier-ignore
+	const cameraBufferSize = Float32Array.BYTES_PER_ELEMENT * (2 /* ??? */ + 2 + 16 + 16);
 	const cameraBuffer = device.createBuffer({
-		size: configBufferSize,
+		size: cameraBufferSize,
 		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.VERTEX | GPUBufferUsage.COMPUTE | GPUBufferUsage.COPY_DST, // Which of these are necessary?
 	});
+
+	const { mat4, vec3 } = glMatrix;
+	const camera = mat4.create();
+	const translation = vec3.set(vec3.create(), 0, 0.5 / numRows, -1);
+	const scale = vec3.set(vec3.create(), 1, 1, 1);
+	const transform = mat4.create();
+	mat4.translate(transform, transform, translation);
+	mat4.scale(transform, transform, scale);
 
 	const updateCameraBuffer = () => {
 		const canvasSize = canvasConfig.size;
 		const aspectRatio = canvasSize[0] / canvasSize[1];
+		mat4.perspective(camera, (Math.PI / 180) * 90, aspectRatio, 0.0001, 1000);
 		const screenSize = aspectRatio > 1 ? [1, aspectRatio] : [1 / aspectRatio, 1];
-		queue.writeBuffer(cameraBuffer, 0, new Float32Array(screenSize));
+		queue.writeBuffer(cameraBuffer, 0, new Float32Array([...screenSize, /* ??? */ -1, -1, ...camera, ...transform]));
 	};
 	updateCameraBuffer();
 

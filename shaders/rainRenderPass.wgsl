@@ -23,6 +23,8 @@ let TWO_PI:f32 = 6.28318530718; // No, I'm not using Tau.
 
 [[block]] struct CameraUniforms {
 	screenSize: vec2<f32>;
+	camera: mat4x4<f32>;
+	transform: mat4x4<f32>;
 };
 [[group(0), binding(5)]] var<uniform> cameraUniforms:CameraUniforms;
 
