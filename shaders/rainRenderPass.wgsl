@@ -11,20 +11,20 @@ let TWO_PI:f32 = 6.28318530718; // No, I'm not using Tau.
 [[block]] struct MSDFUniforms {
 	numColumns: i32;
 };
-[[group(1), binding(0)]] var<uniform> msdfUniforms:MSDFUniforms;
-[[group(1), binding(1)]] var msdfSampler: sampler;
-[[group(1), binding(2)]] var msdfTexture: texture_2d<f32>;
+[[group(0), binding(1)]] var<uniform> msdfUniforms:MSDFUniforms;
+[[group(0), binding(2)]] var msdfSampler: sampler;
+[[group(0), binding(3)]] var msdfTexture: texture_2d<f32>;
 
 [[block]] struct TimeUniforms {
 	now: i32;
 	frame: i32;
 };
-[[group(2), binding(0)]] var<uniform> timeUniforms:TimeUniforms;
+[[group(0), binding(4)]] var<uniform> timeUniforms:TimeUniforms;
 
 [[block]] struct CameraUniforms {
 	screenSize: vec2<f32>;
 };
-[[group(3), binding(0)]] var<uniform> cameraUniforms:CameraUniforms;
+[[group(0), binding(5)]] var<uniform> cameraUniforms:CameraUniforms;
 
 // Vertex shader
 

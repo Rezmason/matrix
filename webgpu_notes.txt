@@ -40,3 +40,5 @@ Textures were never resizable, you simply forgot
 
 Bind groups let you bind a bunch of resources at once
 Render bundles let you reissue commands
+
+You can only use up to FOUR bind groups on your laptop's device!

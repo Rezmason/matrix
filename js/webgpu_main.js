@@ -105,7 +105,7 @@ export default async (canvas, config) => {
 		const aspectRatio = canvasSize[0] / canvasSize[1];
 		const screenSize = aspectRatio > 1 ? [1, aspectRatio] : [1 / aspectRatio, 1];
 		queue.writeBuffer(cameraBuffer, 0, new Float32Array(screenSize));
-	}
+	};
 	updateCameraBuffer();
 
 	const [rainRenderShader] = await Promise.all(["shaders/rainRenderPass.wgsl"].map(async (path) => (await fetch(path)).text()));
@@ -145,7 +145,9 @@ export default async (canvas, config) => {
 		},
 	});
 
-	const configBindGroup = device.createBindGroup({
+	console.log(device.limits);
+
+	const bindGroup = device.createBindGroup({
 		layout: rainRenderPipeline.getBindGroupLayout(0),
 		entries: [
 			{
@@ -154,46 +156,28 @@ export default async (canvas, config) => {
 					buffer: configBuffer,
 				},
 			},
-		],
-	});
-
-	const msdfBindGroup = device.createBindGroup({
-		layout: rainRenderPipeline.getBindGroupLayout(1),
-		entries: [
 			{
-				binding: 0,
+				binding: 1,
 				resource: {
 					buffer: msdfBuffer,
 				},
 			},
 			{
-				binding: 1,
+				binding: 2,
 				resource: sampler,
 			},
 			{
-				binding: 2,
+				binding: 3,
 				resource: msdfTexture.createView(),
 			},
-		],
-	});
-
-	const timeBindGroup = device.createBindGroup({
-		layout: rainRenderPipeline.getBindGroupLayout(2),
-		entries: [
 			{
-				binding: 0,
+				binding: 4,
 				resource: {
 					buffer: timeBuffer,
 				},
 			},
-		],
-	});
-
-	const cameraBindGroup = device.createBindGroup({
-		layout: rainRenderPipeline.getBindGroupLayout(3),
-		entries: [
 			{
-				binding: 0,
+				binding: 5,
 				resource: {
 					buffer: cameraBuffer,
 				},
@@ -201,16 +185,12 @@ export default async (canvas, config) => {
 		],
 	});
 
-	const rainRenderPipelineBindGroups = [configBindGroup, msdfBindGroup, timeBindGroup, cameraBindGroup];
-
 	const bundleEncoder = device.createRenderBundleEncoder({
 		colorFormats: [presentationFormat],
 	});
 
 	bundleEncoder.setPipeline(rainRenderPipeline);
-	rainRenderPipelineBindGroups.forEach((bindGroup, index) => {
-		bundleEncoder.setBindGroup(index, bindGroup);
-	});
+	bundleEncoder.setBindGroup(0, bindGroup);
 	const numQuads = numColumns * numRows;
 	bundleEncoder.draw(NUM_VERTICES_PER_QUAD * numQuads, 1, 0, 0);
 	const renderBundles = [bundleEncoder.finish()];
