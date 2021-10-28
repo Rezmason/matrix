@@ -114,7 +114,7 @@ export default async (canvas, config) => {
 	const updateCameraBuffer = () => {
 		const canvasSize = canvasConfig.size;
 		const aspectRatio = canvasSize[0] / canvasSize[1];
-		mat4.perspective(camera, (Math.PI / 180) * 90, aspectRatio, 0.0001, 1000);
+		mat4.perspectiveZO(camera, (Math.PI / 180) * 90, aspectRatio, 0.0001, 1000);
 		const screenSize = aspectRatio > 1 ? [1, aspectRatio] : [1 / aspectRatio, 1];
 		queue.writeBuffer(cameraBuffer, 0, new Float32Array([...screenSize, /* ??? */ -1, -1, ...camera, ...transform]));
 	};
