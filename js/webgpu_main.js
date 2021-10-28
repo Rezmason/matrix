@@ -32,6 +32,8 @@ const loadTexture = async (device, url) => {
 export default async (canvas, config) => {
 	console.log(config);
 
+	const NUM_VERTICES_PER_QUAD = 6;
+
 	const numColumns = config.numColumns;
 	const numRows = config.numColumns;
 
@@ -183,7 +185,7 @@ export default async (canvas, config) => {
 		bundleEncoder.setBindGroup(index, bindGroup);
 	});
 	const numQuads = numColumns * numRows;
-	bundleEncoder.draw(6 * numQuads, 1, 0, 0);
+	bundleEncoder.draw(NUM_VERTICES_PER_QUAD * numQuads, 1, 0, 0);
 	const renderBundles = [bundleEncoder.finish()];
 
 	let frame = 0;

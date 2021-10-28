@@ -1,5 +1,6 @@
+let NUM_VERTICES_PER_QUAD:i32 = 6;
 let PI:f32 = 3.14159265359;
-let TWO_PI:f32 = 6.28318530718;
+let TWO_PI:f32 = 6.28318530718; // No, I'm not using Tau.
 
 [[block]] struct Uniforms {
 	numColumns: i32;
@@ -15,7 +16,7 @@ let TWO_PI:f32 = 6.28318530718;
 [[group(1), binding(2)]] var msdfTexture: texture_2d<f32>;
 
 [[block]] struct TimeUniforms {
-	time: i32;
+	now: i32;
 	frame: i32;
 };
 [[group(2), binding(0)]] var<uniform> timeUniforms:TimeUniforms;
@@ -30,11 +31,11 @@ struct VertexOutput {
 [[stage(vertex)]] fn vertMain([[builtin(vertex_index)]] VertexIndex:u32) -> VertexOutput {
 
 	var i = i32(VertexIndex);
-	var quadIndex = i / 6;
+	var quadIndex = i / NUM_VERTICES_PER_QUAD;
 
 	var cornerPosition = vec2<f32>(
 		f32(i % 2),
-		f32(((i + 1) % 6 / 3))
+		f32(((i + 1) % NUM_VERTICES_PER_QUAD / 3))
 	);
 
 	var x = uniforms.numColumns;
@@ -49,7 +50,6 @@ struct VertexOutput {
 		f32(uniforms.numRows)
 	);
 	position = 1.0 - position * 2.0;
-	// position.x = position.x + f32(quadIndex) * 0.01;
 
 	return VertexOutput(
 		vec4<f32>(position, 1.0, 1.0),
@@ -61,9 +61,9 @@ struct VertexOutput {
 
 [[stage(fragment)]] fn fragMain([[location(0)]] UV:vec2<f32>) -> [[location(0)]] vec4<f32> {
 	var msdf:vec4<f32> = textureSample(msdfTexture, msdfSampler, UV / f32(msdfUniforms.numColumns));
-	// msdf.b = msdf.b * (sin(f32(timeUniforms.time) / 1000.0 * TWO_PI) * 0.5 + 0.5);
+	// msdf.b = msdf.b * (sin(f32(timeUniforms.now) / 1000.0 * TWO_PI) * 0.5 + 0.5);
 	msdf.b = msdf.b * f32(timeUniforms.frame / 60 % 2);
-	var time = timeUniforms.time;
+	var now = timeUniforms.now;
 
 	return msdf;
 }
