@@ -21,6 +21,11 @@ let TWO_PI:f32 = 6.28318530718; // No, I'm not using Tau.
 };
 [[group(2), binding(0)]] var<uniform> timeUniforms:TimeUniforms;
 
+[[block]] struct CameraUniforms {
+	screenSize: vec2<f32>;
+};
+[[group(3), binding(0)]] var<uniform> cameraUniforms:CameraUniforms;
+
 // Vertex shader
 
 struct VertexOutput {
@@ -38,8 +43,6 @@ struct VertexOutput {
 		f32(((i + 1) % NUM_VERTICES_PER_QUAD / 3))
 	);
 
-	var x = uniforms.numColumns;
-
 	var position = cornerPosition;
 	position = position + vec2<f32>(
 		f32(quadIndex % uniforms.numColumns),
@@ -50,6 +53,7 @@ struct VertexOutput {
 		f32(uniforms.numRows)
 	);
 	position = 1.0 - position * 2.0;
+	position = position * cameraUniforms.screenSize;
 
 	return VertexOutput(
 		vec4<f32>(position, 1.0, 1.0),
