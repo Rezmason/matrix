@@ -6,6 +6,8 @@ Write an explanation of the rain pass (and include images)
   Fullscreen quad and spacial mapping
   MSDFs
 
+Support looping
+
 Resurrection
   Modified glyph order?
   New glyphs?

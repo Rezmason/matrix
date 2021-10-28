@@ -4,7 +4,7 @@ precision highp float;
 // 		R: brightness
 // 		G: progress through the glyph sequence
 // 		B: depth, aka distance from the screen
-// 		A: additional brightness for effects\
+// 		A: additional brightness for effects
 
 // Listen.
 // I understand if this shader looks confusing. Please don't be discouraged!
