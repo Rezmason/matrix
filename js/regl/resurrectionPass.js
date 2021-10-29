@@ -11,7 +11,7 @@ import { loadText, make1DTexture, makePassFBO, makePass } from "./utils.js";
 export default (regl, config, inputs) => {
 	const output = makePassFBO(regl, config.useHalfFloat);
 	const { backgroundColor } = config;
-	const resurrectionPassFrag = loadText("shaders/resurrectionPass.frag.glsl");
+	const resurrectionPassFrag = loadText("shaders/glsl/resurrectionPass.frag.glsl");
 
 	const render = regl({
 		frag: regl.prop("frag"),

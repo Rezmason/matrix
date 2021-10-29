@@ -122,7 +122,7 @@ export default async (canvas, config) => {
 	};
 	updateCameraBuffer();
 
-	const [rainRenderShader] = await Promise.all(["shaders/rainRenderPass.wgsl"].map(async (path) => (await fetch(path)).text()));
+	const [rainRenderShader] = await Promise.all(["shaders/wgsl/rainRenderPass.wgsl"].map(async (path) => (await fetch(path)).text()));
 
 	const rainRenderShaderModule = device.createShaderModule({ code: rainRenderShader });
 
