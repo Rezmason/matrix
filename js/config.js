@@ -1,19 +1,19 @@
 const fonts = {
 	coptic: {
 		// The script the Gnostic codices were written in
-		glyphTexURL: "coptic_msdf.png",
+		glyphTexURL: "assets/coptic_msdf.png",
 		glyphSequenceLength: 32,
 		glyphTextureColumns: 8,
 	},
 	gothic: {
 		// The script the Codex Argenteus was written in
-		glyphTexURL: "gothic_msdf.png",
+		glyphTexURL: "assets/gothic_msdf.png",
 		glyphSequenceLength: 27,
 		glyphTextureColumns: 8,
 	},
 	matrixcode: {
 		// The glyphs seen in the film trilogy
-		glyphTexURL: "matrixcode_msdf.png",
+		glyphTexURL: "assets/matrixcode_msdf.png",
 		glyphSequenceLength: 57,
 		glyphTextureColumns: 8,
 	},

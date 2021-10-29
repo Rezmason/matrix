@@ -2,8 +2,21 @@ TODO:
 
 WebGPU
   First decent rainRender
-    vertex, fragment, with noise for
-    data texture lookup with textureLoad
+    Port render pass 100%
+      For now, use noise instead of the data texture
+      Get all the uniforms in
+        Categorize them into buffers
+    Port compute pass 100%
+      Compute entry point can live in the same wgsl file, I think
+      More uniforms! Categorize!
+      use textureLoad for texel access in render pipeline
+    Render target
+      Resize accordingly
+    Put in its own module
+  Blur: compute or render?
+  The other passes should be a breeze
+    Just add them to the render bundle
+
   std140
     Document and share it
 

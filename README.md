@@ -17,7 +17,7 @@
 - [Custom image (`url=www.website.com/picture.jpg`)](https://rezmason.github.io/matrix/?effect=image&url=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg)
 - [Raw compute texture (`effect=none`) (_epilepsy warning_: lots of flickering)](https://rezmason.github.io/matrix/?effect=none)
 
-- [The free font (TrueType).](https://github.com/Rezmason/matrix/raw/master/Matrix-Code.ttf)
+- [The free font (TrueType).](https://github.com/Rezmason/matrix/raw/master/assets/Matrix-Code.ttf)
 ---
 ### about
 
