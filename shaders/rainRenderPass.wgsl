@@ -18,8 +18,8 @@ let TWO_PI:f32 = 6.28318530718;
 [[group(0), binding(3)]] var msdfTexture: texture_2d<f32>;
 
 [[block]] struct Time {
-	now: i32;
-	frame: i32;
+	seconds:f32;
+	frames:i32;
 };
 [[group(0), binding(4)]] var<uniform> time:Time;
 
@@ -63,7 +63,12 @@ struct VertexOutput {
 	// position = position * scene.screenSize;
 
 	var depth:f32 = 0.0;
-	var pos: vec4<f32> = vec4<f32>(position, depth, 1.0);
+
+	// depth = -0.5
+	// 	+ sin(time.seconds * 2.0 + f32(cellPosition.x) / f32(config.numColumns) * 10.0) * 0.2
+	// 	+ sin(time.seconds * 2.0 + f32(cellPosition.y) / f32(config.numColumns) * 10.0) * 0.2;
+
+	var pos:vec4<f32> = vec4<f32>(position, depth, 1.0);
 	pos.x = pos.x / config.glyphHeightToWidth;
 	pos = scene.camera * scene.transform * pos;
 
@@ -77,9 +82,8 @@ struct VertexOutput {
 
 [[stage(fragment)]] fn fragMain([[location(0)]] UV:vec2<f32>) -> [[location(0)]] vec4<f32> {
 	var color:vec4<f32> = textureSample(msdfTexture, msdfSampler, UV / f32(msdf.glyphTextureColumns));
-	// color.b = color.b * (sin(f32(time.now) / 1000.0 * TWO_PI) * 0.5 + 0.5);
-	color.b = color.b * f32(time.frame / 60 % 2);
-	var now = time.now;
+	// color.b = color.b * (sin(time.seconds * TWO_PI) * 0.5 + 0.5);
+	color.b = color.b * f32(time.frames / 60 % 2);
 
 	return color;
 }

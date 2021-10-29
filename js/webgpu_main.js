@@ -91,8 +91,7 @@ export default async (canvas, config) => {
 	msdfStructLayout.build([config.glyphTextureColumns, config.glyphSequenceLength], msdfBuffer.getMappedRange());
 	msdfBuffer.unmap();
 
-	// prettier-ignore
-	const timeStructLayout = std140(["i32", "i32"]);
+	const timeStructLayout = std140(["f32", "i32"]);
 	const timeBuffer = device.createBuffer({
 		size: timeStructLayout.size,
 		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.VERTEX | GPUBufferUsage.FRAGMENT | GPUBufferUsage.COMPUTE | GPUBufferUsage.COPY_DST, // Which of these are necessary?
@@ -221,7 +220,7 @@ export default async (canvas, config) => {
 			updateCameraBuffer();
 		}
 
-		queue.writeBuffer(timeBuffer, 0, timeStructLayout.build([now, frame]));
+		queue.writeBuffer(timeBuffer, 0, timeStructLayout.build([now / 1000, frame]));
 		frame++;
 
 		renderPassConfig.colorAttachments[0].view = canvasContext.getCurrentTexture().createView();
@@ -233,7 +232,7 @@ export default async (canvas, config) => {
 		const commandBuffer = encoder.finish();
 		queue.submit([commandBuffer]);
 
-		// requestAnimationFrame(renderLoop);
+		requestAnimationFrame(renderLoop);
 	};
 
 	requestAnimationFrame(renderLoop);
