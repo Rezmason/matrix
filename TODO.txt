@@ -1,7 +1,10 @@
 TODO:
 
 WebGPU
+  First decent rainRender
+    vertex, fragment, with noise for
   std140
+    Document and share it
 
 
 Write an explanation of the rain pass (and include images)
