@@ -2,13 +2,6 @@ TODO:
 
 WebGPU
   std140
-    Right now, buildStruct packs an array, which is changed to a typedarray and fed to a GPUBuffer
-      That limits the type to whatever the typedarray is
-    Instead, we need to represent the type of each value, and write it as such
-      Create an array buffer
-      Create a Float32Array view into it, and an Int32Array view
-      Transcribe the values into these views
-      Return the array buffer
 
 
 Write an explanation of the rain pass (and include images)

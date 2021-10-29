@@ -5,6 +5,7 @@ let TWO_PI:f32 = 6.28318530718;
 [[block]] struct Config {
 	numColumns: i32;
 	numRows: i32;
+	glyphHeightToWidth: f32;
 };
 [[group(0), binding(0)]] var<uniform> config:Config;
 
@@ -58,11 +59,12 @@ struct VertexOutput {
 		f32(config.numRows)
 	);
 	position = 1.0 - position * 2.0;
+
 	// position = position * scene.screenSize;
 
 	var depth:f32 = 0.0;
 	var pos: vec4<f32> = vec4<f32>(position, depth, 1.0);
-	// pos.x = pos.x / glyphHeightToWidth;
+	pos.x = pos.x / config.glyphHeightToWidth;
 	pos = scene.camera * scene.transform * pos;
 
 	return VertexOutput(
