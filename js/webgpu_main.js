@@ -143,13 +143,13 @@ export default async (canvas, config) => {
 	configBuffer.unmap();
 
 	// prettier-ignore
-	const msdfStructLayout = computeStructLayout(["f32"]);
+	const msdfStructLayout = computeStructLayout(["i32", "i32"]);
 	const msdfBuffer = device.createBuffer({
 		size: msdfStructLayout.size,
 		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.FRAGMENT, // Which of these are necessary?
 		mappedAtCreation: true,
 	});
-	new Int32Array(msdfBuffer.getMappedRange()).set(buildStruct(msdfStructLayout, [config.glyphTextureColumns]));
+	new Int32Array(msdfBuffer.getMappedRange()).set(buildStruct(msdfStructLayout, [config.glyphTextureColumns, config.glyphSequenceLength]));
 	msdfBuffer.unmap();
 
 	// prettier-ignore
@@ -160,9 +160,9 @@ export default async (canvas, config) => {
 	});
 
 	// prettier-ignore
-	const cameraStructLayout = computeStructLayout(["vec2<f32>", "mat4x4<f32>", "mat4x4<f32>"]);
-	const cameraBuffer = device.createBuffer({
-		size: cameraStructLayout.size,
+	const sceneStructLayout = computeStructLayout(["vec2<f32>", "mat4x4<f32>", "mat4x4<f32>"]);
+	const sceneBuffer = device.createBuffer({
+		size: sceneStructLayout.size,
 		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.VERTEX | GPUBufferUsage.COMPUTE | GPUBufferUsage.COPY_DST, // Which of these are necessary?
 	});
 
@@ -178,7 +178,7 @@ export default async (canvas, config) => {
 		const aspectRatio = canvasSize[0] / canvasSize[1];
 		mat4.perspectiveZO(camera, (Math.PI / 180) * 90, aspectRatio, 0.0001, 1000);
 		const screenSize = aspectRatio > 1 ? [1, aspectRatio] : [1 / aspectRatio, 1];
-		queue.writeBuffer(cameraBuffer, 0, new Float32Array(buildStruct(cameraStructLayout, [screenSize, camera, transform])));
+		queue.writeBuffer(sceneBuffer, 0, new Float32Array(buildStruct(sceneStructLayout, [screenSize, camera, transform])));
 	};
 	updateCameraBuffer();
 
@@ -253,7 +253,7 @@ export default async (canvas, config) => {
 			{
 				binding: 5,
 				resource: {
-					buffer: cameraBuffer,
+					buffer: sceneBuffer,
 				},
 			},
 		],
