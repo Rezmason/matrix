@@ -156,7 +156,7 @@ export default (regl, config) => {
 	const screenSize = [1, 1];
 	const { mat4, vec3 } = glMatrix;
 	const camera = mat4.create();
-	const translation = vec3.set(vec3.create(), 0, 0.5 / numRows, -1);
+	const translation = vec3.set(vec3.create(), 0, 0, -1);
 	const scale = vec3.set(vec3.create(), 1, 1, 1);
 	const transform = mat4.create();
 	mat4.translate(transform, transform, translation);

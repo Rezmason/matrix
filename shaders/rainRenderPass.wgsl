@@ -58,14 +58,12 @@ struct VertexOutput {
 		f32(config.numRows)
 	);
 	position = 1.0 - position * 2.0;
-	position = position * scene.screenSize;
+	// position = position * scene.screenSize;
 
 	var depth:f32 = 0.0;
-
 	var pos: vec4<f32> = vec4<f32>(position, depth, 1.0);
-
 	// pos.x = pos.x / glyphHeightToWidth;
-	// pos = scene.camera * scene.transform * pos;
+	pos = scene.camera * scene.transform * pos;
 
 	return VertexOutput(
 		pos,
