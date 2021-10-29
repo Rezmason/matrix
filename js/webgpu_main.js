@@ -1,3 +1,4 @@
+import std140 from "./std140.js";
 const { mat4, vec3 } = glMatrix;
 
 const getCanvasSize = (canvas) => {
@@ -29,83 +30,6 @@ const loadTexture = async (device, url) => {
 	);
 
 	return texture;
-};
-
-const supportedLayoutTypes = {
-	["i32"]: { alignAtByte: 1, sizeInBytes: 1, baseType: "i32" },
-	["u32"]: { alignAtByte: 1, sizeInBytes: 1, baseType: "u32" },
-	["f32"]: { alignAtByte: 1, sizeInBytes: 1, baseType: "f32" },
-
-	["atomic<i32>"]: { alignAtByte: 1, sizeInBytes: 1, baseType: "i32" },
-	["vec2<i32>"]: { alignAtByte: 2, sizeInBytes: 2, baseType: "i32" },
-	["vec3<i32>"]: { alignAtByte: 4, sizeInBytes: 3, baseType: "i32" },
-	["vec4<i32>"]: { alignAtByte: 4, sizeInBytes: 4, baseType: "i32" },
-
-	["atomic<u32>"]: { alignAtByte: 1, sizeInBytes: 1, baseType: "u32" },
-	["vec2<u32>"]: { alignAtByte: 2, sizeInBytes: 2, baseType: "u32" },
-	["vec3<u32>"]: { alignAtByte: 4, sizeInBytes: 3, baseType: "u32" },
-	["vec4<u32>"]: { alignAtByte: 4, sizeInBytes: 4, baseType: "u32" },
-
-	["atomic<f32>"]: { alignAtByte: 1, sizeInBytes: 1, baseType: "f32" },
-	["vec2<f32>"]: { alignAtByte: 2, sizeInBytes: 2, baseType: "f32" },
-	["vec3<f32>"]: { alignAtByte: 4, sizeInBytes: 3, baseType: "f32" },
-	["vec4<f32>"]: { alignAtByte: 4, sizeInBytes: 4, baseType: "f32" },
-
-	["mat2x2<f32>"]: { alignAtByte: 2, sizeInBytes: 4, baseType: "f32" },
-	["mat3x2<f32>"]: { alignAtByte: 2, sizeInBytes: 6, baseType: "f32" },
-	["mat4x2<f32>"]: { alignAtByte: 2, sizeInBytes: 8, baseType: "f32" },
-	["mat2x3<f32>"]: { alignAtByte: 4, sizeInBytes: 8, baseType: "f32" },
-	["mat3x3<f32>"]: { alignAtByte: 4, sizeInBytes: 12, baseType: "f32" },
-	["mat4x3<f32>"]: { alignAtByte: 4, sizeInBytes: 16, baseType: "f32" },
-	["mat2x4<f32>"]: { alignAtByte: 4, sizeInBytes: 8, baseType: "f32" },
-	["mat3x4<f32>"]: { alignAtByte: 4, sizeInBytes: 12, baseType: "f32" },
-	["mat4x4<f32>"]: { alignAtByte: 4, sizeInBytes: 16, baseType: "f32" },
-};
-
-const computeStructLayout = (types) => {
-	const entries = [];
-	let byteOffset = 0;
-	for (const type of types) {
-		if (supportedLayoutTypes[type] == null) {
-			throw new Error(`Unsupported type: ${type}`);
-		}
-		const { alignAtByte, sizeInBytes, baseType } = supportedLayoutTypes[type];
-		byteOffset = Math.ceil(byteOffset / alignAtByte) * alignAtByte;
-		entries.push({ baseType, byteOffset });
-		byteOffset += sizeInBytes;
-	}
-
-	// console.log(types);
-	// console.log(entries);
-
-	return {
-		entries,
-		size: byteOffset * Float32Array.BYTES_PER_ELEMENT,
-	};
-};
-
-const buildStruct = (buffer, layout, values) => {
-	const { entries } = layout;
-
-	if (values.length !== entries.length) {
-		throw new Error(`This struct contains ${entries.length} values, and you supplied ${values.length}.`);
-	}
-
-	buffer ??= new ArrayBuffer(layout.size);
-
-	const views = {
-		i32: new Int32Array(buffer),
-		u32: new Uint32Array(buffer),
-		f32: new Float32Array(buffer),
-	};
-
-	for (let i = 0; i < values.length; i++) {
-		const view = views[entries[i].baseType];
-		const value = values[i];
-		const array = value[Symbol.iterator] == null ? [value] : value;
-		view.set(array, entries[i].byteOffset);
-	}
-	return buffer;
 };
 
 export default async (canvas, config) => {
@@ -147,35 +71,35 @@ export default async (canvas, config) => {
 	const sampler = device.createSampler();
 	const msdfTexture = await loadTexture(device, config.glyphTexURL);
 
-	const configStructLayout = computeStructLayout(["i32", "i32", "f32"]);
+	const configStructLayout = std140(["i32", "i32", "f32"]);
 	const configBufferSize = configStructLayout.size;
 	const configBuffer = device.createBuffer({
 		size: configBufferSize,
 		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.VERTEX | GPUBufferUsage.FRAGMENT, // Which of these are necessary?
 		mappedAtCreation: true,
 	});
-	buildStruct(configBuffer.getMappedRange(), configStructLayout, [numColumns, numRows, config.glyphHeightToWidth]);
+	configStructLayout.build([numColumns, numRows, config.glyphHeightToWidth], configBuffer.getMappedRange());
 	configBuffer.unmap();
 
 	// prettier-ignore
-	const msdfStructLayout = computeStructLayout(["i32", "i32"]);
+	const msdfStructLayout = std140(["i32", "i32"]);
 	const msdfBuffer = device.createBuffer({
 		size: msdfStructLayout.size,
 		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.FRAGMENT, // Which of these are necessary?
 		mappedAtCreation: true,
 	});
-	buildStruct(msdfBuffer.getMappedRange(), msdfStructLayout, [config.glyphTextureColumns, config.glyphSequenceLength]);
+	msdfStructLayout.build([config.glyphTextureColumns, config.glyphSequenceLength], msdfBuffer.getMappedRange());
 	msdfBuffer.unmap();
 
 	// prettier-ignore
-	const timeStructLayout = computeStructLayout(["i32", "i32"]);
+	const timeStructLayout = std140(["i32", "i32"]);
 	const timeBuffer = device.createBuffer({
 		size: timeStructLayout.size,
 		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.VERTEX | GPUBufferUsage.FRAGMENT | GPUBufferUsage.COMPUTE | GPUBufferUsage.COPY_DST, // Which of these are necessary?
 	});
 
 	// prettier-ignore
-	const sceneStructLayout = computeStructLayout(["vec2<f32>", "mat4x4<f32>", "mat4x4<f32>"]);
+	const sceneStructLayout = std140(["vec2<f32>", "mat4x4<f32>", "mat4x4<f32>"]);
 	const sceneBuffer = device.createBuffer({
 		size: sceneStructLayout.size,
 		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.VERTEX | GPUBufferUsage.COMPUTE | GPUBufferUsage.COPY_DST, // Which of these are necessary?
@@ -193,7 +117,7 @@ export default async (canvas, config) => {
 		const aspectRatio = canvasSize[0] / canvasSize[1];
 		mat4.perspectiveZO(camera, (Math.PI / 180) * 90, aspectRatio, 0.0001, 1000);
 		const screenSize = aspectRatio > 1 ? [1, aspectRatio] : [1 / aspectRatio, 1];
-		queue.writeBuffer(sceneBuffer, 0, buildStruct(null, sceneStructLayout, [screenSize, camera, transform]));
+		queue.writeBuffer(sceneBuffer, 0, sceneStructLayout.build([screenSize, camera, transform]));
 	};
 	updateCameraBuffer();
 
@@ -297,7 +221,7 @@ export default async (canvas, config) => {
 			updateCameraBuffer();
 		}
 
-		queue.writeBuffer(timeBuffer, 0, buildStruct(null, timeStructLayout, [now, frame]));
+		queue.writeBuffer(timeBuffer, 0, timeStructLayout.build([now, frame]));
 		frame++;
 
 		renderPassConfig.colorAttachments[0].view = canvasContext.getCurrentTexture().createView();
