@@ -81,8 +81,17 @@ const buildStruct = (layout, values) => {
 		if (diff > 0) {
 			buffer.push(Array(diff).fill());
 		}
-		buffer.push(values[i]);
-		count += values[i].length + diff;
+		const value = values[i];
+		let array;
+		if (Array.isArray(value)) {
+			array = value;
+		} else if (value[Symbol.iterator] != null) {
+			array = Array.from(value);
+		} else {
+			array = [value];
+		}
+		buffer.push(array);
+		count += array.length + diff;
 	}
 	{
 		const diff = sizeInBytes - count;
