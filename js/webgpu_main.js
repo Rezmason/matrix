@@ -1,3 +1,5 @@
+const { mat4, vec3 } = glMatrix;
+
 const getCanvasSize = (canvas) => {
 	const devicePixelRatio = window.devicePixelRatio ?? 1;
 	return [canvas.clientWidth * devicePixelRatio, canvas.clientHeight * devicePixelRatio];
@@ -27,6 +29,68 @@ const loadTexture = async (device, url) => {
 	);
 
 	return texture;
+};
+
+const supportedLayoutTypes = {
+	i32: { alignAtByte: 1, sizeInBytes: 1 },
+	u32: { alignAtByte: 1, sizeInBytes: 1 },
+	f32: { alignAtByte: 1, sizeInBytes: 1 },
+	atomic: { alignAtByte: 1, sizeInBytes: 1 },
+	vec2: { alignAtByte: 2, sizeInBytes: 2 },
+	vec3: { alignAtByte: 4, sizeInBytes: 3 },
+	vec4: { alignAtByte: 4, sizeInBytes: 4 },
+	mat2x2: { alignAtByte: 2, sizeInBytes: 4 },
+	mat3x2: { alignAtByte: 2, sizeInBytes: 6 },
+	mat4x2: { alignAtByte: 2, sizeInBytes: 8 },
+	mat2x3: { alignAtByte: 4, sizeInBytes: 8 },
+	mat3x3: { alignAtByte: 4, sizeInBytes: 12 },
+	mat4x3: { alignAtByte: 4, sizeInBytes: 16 },
+	mat2x4: { alignAtByte: 4, sizeInBytes: 8 },
+	mat3x4: { alignAtByte: 4, sizeInBytes: 12 },
+	mat4x4: { alignAtByte: 4, sizeInBytes: 16 },
+};
+
+const computeStructLayout = (types) => {
+	const byteOffsets = [];
+	let sizeInBytes = 0;
+	for (const type of types) {
+		const layout = supportedLayoutTypes[type.split("<")[0]];
+		if (layout == null) {
+			throw new Error(`Unsupported type: ${type}`);
+		}
+		sizeInBytes += sizeInBytes % layout.alignAtByte;
+		byteOffsets.push(sizeInBytes);
+		sizeInBytes += layout.sizeInBytes;
+	}
+	return {
+		byteOffsets,
+		sizeInBytes,
+		size: sizeInBytes * Float32Array.BYTES_PER_ELEMENT,
+	};
+};
+
+const buildStruct = (layout, values) => {
+	const { byteOffsets, sizeInBytes } = layout;
+	if (values.length !== byteOffsets.length) {
+		throw new Error(`This struct contains ${byteOffsets.length} values, and you supplied only ${values.length}.`);
+	}
+	let buffer = [];
+	let count = 0;
+	for (let i = 0; i < values.length; i++) {
+		const diff = byteOffsets[i] - count;
+		if (diff > 0) {
+			buffer.push(Array(diff).fill());
+		}
+		buffer.push(values[i]);
+		count += values[i].length + diff;
+	}
+	{
+		const diff = sizeInBytes - count;
+		if (diff > 0) {
+			buffer.push(Array(diff).fill());
+		}
+	}
+	return buffer.flat();
 };
 
 export default async (canvas, config) => {
@@ -66,44 +130,42 @@ export default async (canvas, config) => {
 	};
 
 	const sampler = device.createSampler();
-
 	const msdfTexture = await loadTexture(device, config.glyphTexURL);
 
-	// prettier-ignore
-	const configBufferSize = Float32Array.BYTES_PER_ELEMENT * (1 + 1);
+	const configStructLayout = computeStructLayout(["i32", "i32"]);
+	const configBufferSize = configStructLayout.size;
 	const configBuffer = device.createBuffer({
 		size: configBufferSize,
-		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST, // Which of these are necessary?
+		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.VERTEX | GPUBufferUsage.FRAGMENT, // Which of these are necessary?
 		mappedAtCreation: true,
 	});
-	new Int32Array(configBuffer.getMappedRange()).set([numColumns, numRows]);
+	new Int32Array(configBuffer.getMappedRange()).set(buildStruct(configStructLayout, [numColumns, numRows]));
 	configBuffer.unmap();
 
 	// prettier-ignore
-	const msdfBufferSize = Float32Array.BYTES_PER_ELEMENT * (1);
+	const msdfStructLayout = computeStructLayout(["f32"]);
 	const msdfBuffer = device.createBuffer({
-		size: msdfBufferSize,
-		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.FRAGMENT | GPUBufferUsage.COPY_DST, // Which of these are necessary?
+		size: msdfStructLayout.size,
+		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.FRAGMENT, // Which of these are necessary?
 		mappedAtCreation: true,
 	});
-	new Int32Array(msdfBuffer.getMappedRange()).set([config.glyphTextureColumns]);
+	new Int32Array(msdfBuffer.getMappedRange()).set(buildStruct(msdfStructLayout, [config.glyphTextureColumns]));
 	msdfBuffer.unmap();
 
 	// prettier-ignore
-	const timeBufferSize = Float32Array.BYTES_PER_ELEMENT * (1 + 1);
+	const timeStructLayout = computeStructLayout(["i32", "i32"]);
 	const timeBuffer = device.createBuffer({
-		size: timeBufferSize,
+		size: timeStructLayout.size,
 		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.VERTEX | GPUBufferUsage.FRAGMENT | GPUBufferUsage.COMPUTE | GPUBufferUsage.COPY_DST, // Which of these are necessary?
 	});
 
 	// prettier-ignore
-	const cameraBufferSize = Float32Array.BYTES_PER_ELEMENT * (2 /* ??? */ + 2 + 16 + 16);
+	const cameraStructLayout = computeStructLayout(["vec2<f32>", "mat4x4<f32>", "mat4x4<f32>"]);
 	const cameraBuffer = device.createBuffer({
-		size: cameraBufferSize,
+		size: cameraStructLayout.size,
 		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.VERTEX | GPUBufferUsage.COMPUTE | GPUBufferUsage.COPY_DST, // Which of these are necessary?
 	});
 
-	const { mat4, vec3 } = glMatrix;
 	const camera = mat4.create();
 	const translation = vec3.set(vec3.create(), 0, 0.5 / numRows, -1);
 	const scale = vec3.set(vec3.create(), 1, 1, 1);
@@ -116,7 +178,7 @@ export default async (canvas, config) => {
 		const aspectRatio = canvasSize[0] / canvasSize[1];
 		mat4.perspectiveZO(camera, (Math.PI / 180) * 90, aspectRatio, 0.0001, 1000);
 		const screenSize = aspectRatio > 1 ? [1, aspectRatio] : [1 / aspectRatio, 1];
-		queue.writeBuffer(cameraBuffer, 0, new Float32Array([...screenSize, /* ??? */ -1, -1, ...camera, ...transform]));
+		queue.writeBuffer(cameraBuffer, 0, new Float32Array(buildStruct(cameraStructLayout, [screenSize, camera, transform])));
 	};
 	updateCameraBuffer();
 
@@ -220,7 +282,7 @@ export default async (canvas, config) => {
 			updateCameraBuffer();
 		}
 
-		queue.writeBuffer(timeBuffer, 0, new Int32Array([now, frame]));
+		queue.writeBuffer(timeBuffer, 0, new Int32Array(buildStruct(timeStructLayout, [now, frame])));
 		frame++;
 
 		renderPassConfig.colorAttachments[0].view = canvasContext.getCurrentTexture().createView();
