@@ -16,7 +16,7 @@ const loadTexture = async (device, url) => {
 	const texture = device.createTexture({
 		size: [imageBitmap.width, imageBitmap.height, 1],
 		format: "rgba8unorm",
-		usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT, // Which of these are necessary?
+		usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
 	});
 
 	device.queue.copyExternalImageToTexture(
@@ -79,17 +79,16 @@ export default async (canvas, config) => {
 	const configBufferSize = configStructLayout.size;
 	const configBuffer = device.createBuffer({
 		size: configBufferSize,
-		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.VERTEX | GPUBufferUsage.FRAGMENT, // Which of these are necessary?
+		usage: GPUBufferUsage.UNIFORM,
 		mappedAtCreation: true,
 	});
 	configStructLayout.build([numColumns, numRows, config.glyphHeightToWidth], configBuffer.getMappedRange());
 	configBuffer.unmap();
 
-	// prettier-ignore
 	const msdfStructLayout = std140(["i32", "i32"]);
 	const msdfBuffer = device.createBuffer({
 		size: msdfStructLayout.size,
-		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.FRAGMENT, // Which of these are necessary?
+		usage: GPUBufferUsage.UNIFORM,
 		mappedAtCreation: true,
 	});
 	msdfStructLayout.build([config.glyphTextureColumns, config.glyphSequenceLength], msdfBuffer.getMappedRange());
@@ -98,14 +97,13 @@ export default async (canvas, config) => {
 	const timeStructLayout = std140(["f32", "i32"]);
 	const timeBuffer = device.createBuffer({
 		size: timeStructLayout.size,
-		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.VERTEX | GPUBufferUsage.FRAGMENT | GPUBufferUsage.COMPUTE | GPUBufferUsage.COPY_DST, // Which of these are necessary?
+		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
 	});
 
-	// prettier-ignore
 	const sceneStructLayout = std140(["vec2<f32>", "mat4x4<f32>", "mat4x4<f32>"]);
 	const sceneBuffer = device.createBuffer({
 		size: sceneStructLayout.size,
-		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.VERTEX | GPUBufferUsage.COMPUTE | GPUBufferUsage.COPY_DST, // Which of these are necessary?
+		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
 	});
 
 	const camera = mat4.create();
@@ -153,11 +151,6 @@ export default async (canvas, config) => {
 					blend: additiveBlending,
 				},
 			],
-		},
-		primitive: {
-			// What happens if this isn't here?
-			topology: "triangle-list", // What happens if this isn't here?
-			cullMode: "back", // What happens if this isn't here?
 		},
 	});
 
