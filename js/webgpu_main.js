@@ -68,7 +68,11 @@ export default async (canvas, config) => {
 		],
 	};
 
-	const sampler = device.createSampler();
+	const msdfSampler = device.createSampler({
+		magFilter: "linear",
+		minFilter: "linear",
+	});
+
 	const msdfTexture = await loadTexture(device, config.glyphTexURL);
 
 	const configStructLayout = std140(["i32", "i32", "f32"]);
@@ -176,7 +180,7 @@ export default async (canvas, config) => {
 			},
 			{
 				binding: 2,
-				resource: sampler,
+				resource: msdfSampler,
 			},
 			{
 				binding: 3,

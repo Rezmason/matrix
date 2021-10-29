@@ -43,3 +43,7 @@ Render bundles let you reissue commands
 
 You can only use up to FOUR bind groups on your laptop's device!
 Here's an annoying gotcha: uniform buffers are like classic UBOs, and have esoteric ("std140") layout requirements!
+
+Texture lookup in vertex shader
+	You can only sample textures in fragment stages
+	But you can use textureLoad anywhere to get a specific texel, no sampler needed

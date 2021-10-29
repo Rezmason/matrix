@@ -3,6 +3,7 @@ TODO:
 WebGPU
   First decent rainRender
     vertex, fragment, with noise for
+    data texture lookup with textureLoad
   std140
     Document and share it
 
