@@ -68,7 +68,7 @@ const buildStruct = (fields, values, buffer) => {
 	for (let i = 0; i < values.length; i++) {
 		const view = views[fields[i].baseType];
 		const value = values[i];
-		const array = value[Symbol.iterator] == null ? [value] : value;
+		const array = value[Symbol.iterator] == null ? [Number(value)] : value;
 		view.set(array, fields[i].byteOffset);
 	}
 	return buffer;

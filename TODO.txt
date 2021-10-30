@@ -4,12 +4,10 @@ WebGPU
   First decent rainRender
     Port render pass 100%
       For now, use noise instead of the data texture
-      Get all the uniforms in
-        Categorize them into buffers
     Port compute pass 100%
       Compute entry point can live in the same wgsl file, I think
-      More uniforms! Categorize!
       use textureLoad for texel access in render pipeline
+    Reorder the config fields
     Render target
       Resize accordingly
     Put in its own module

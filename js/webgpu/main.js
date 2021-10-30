@@ -2,14 +2,25 @@ import std140 from "./std140.js";
 import { getCanvasSize, loadTexture, makeUniformBuffer } from "./utils.js";
 const { mat4, vec3 } = glMatrix;
 
-export default async (canvas, config) => {
-	console.log(config);
+const rippleTypes = {
+	box: 0,
+	circle: 1,
+};
 
+const cycleStyles = {
+	cycleFasterWhenDimmed: 0,
+	cycleRandomly: 1,
+};
+
+const numVerticesPerQuad = 2 * 3;
+
+export default async (canvas, config) => {
 	const adapter = await navigator.gpu.requestAdapter();
 	const device = await adapter.requestDevice();
 	const canvasContext = canvas.getContext("webgpu");
 	const presentationFormat = canvasContext.getPreferredFormat(adapter);
-	const queue = device.queue;
+
+	console.table(device.limits);
 
 	const canvasConfig = {
 		device,
@@ -19,39 +30,94 @@ export default async (canvas, config) => {
 
 	canvasContext.configure(canvasConfig);
 
-	const renderPassConfig = {
-		colorAttachments: [
-			{
-				view: canvasContext.getCurrentTexture().createView(),
-				loadValue: { r: 0, g: 0, b: 0, a: 1 },
-				storeOp: "store",
-			},
-		],
-	};
+	const msdfTexturePromise = loadTexture(device, config.glyphTexURL);
+	const rainRenderShaderPromise = fetch("shaders/wgsl/rainRenderPass.wgsl").then((response) => response.text());
 
-	const NUM_VERTICES_PER_QUAD = 6;
+	// The volumetric mode multiplies the number of columns
+	// to reach the desired density, and then overlaps them
+	const volumetric = config.volumetric;
+	const density = volumetric && config.effect !== "none" ? config.density : 1;
+	const [numRows, numColumns] = [config.numColumns, config.numColumns * density];
 
-	const numColumns = config.numColumns;
-	const numRows = config.numColumns;
+	// The volumetric mode requires us to create a grid of quads,
+	// rather than a single quad for our geometry
+	const [numQuadRows, numQuadColumns] = volumetric ? [numRows, numColumns] : [1, 1];
+	const numQuads = numQuadRows * numQuadColumns;
+	const quadSize = [1 / numQuadColumns, 1 / numQuadRows];
 
-	const msdfSampler = device.createSampler({
-		magFilter: "linear",
-		minFilter: "linear",
-	});
+	// Various effect-related values
+	const rippleType = config.rippleTypeName in rippleTypes ? rippleTypes[config.rippleTypeName] : -1;
+	const cycleStyle = config.cycleStyleName in cycleStyles ? cycleStyles[config.cycleStyleName] : 0;
+	const slantVec = [Math.cos(config.slant), Math.sin(config.slant)];
+	const slantScale = 1 / (Math.abs(Math.sin(2 * config.slant)) * (Math.sqrt(2) - 1) + 1);
+	const showComputationTexture = config.effect === "none";
 
-	const msdfTexture = await loadTexture(device, config.glyphTexURL);
+	const configData = [
+		// common
+		{ name: "animationSpeed", type: "f32", value: config.animationSpeed },
+		{ name: "glyphHeightToWidth", type: "f32", value: config.glyphHeightToWidth },
+		{ name: "resurrectingCodeRatio", type: "f32", value: config.resurrectingCodeRatio },
+		{ name: "numColumns", type: "i32", value: numColumns },
+		{ name: "numRows", type: "i32", value: numRows },
+		{ name: "showComputationTexture", type: "i32", value: showComputationTexture },
 
-	const configStructLayout = std140(["i32", "i32", "f32"]);
-	const configBuffer = makeUniformBuffer(device, configStructLayout, [numColumns, numRows, config.glyphHeightToWidth]);
+		// compute
+		{ name: "brightnessThreshold", type: "f32", value: config.brightnessThreshold },
+		{ name: "brightnessOverride", type: "f32", value: config.brightnessOverride },
+		{ name: "brightnessDecay", type: "f32", value: config.brightnessDecay },
+		{ name: "cursorEffectThreshold", type: "f32", value: config.cursorEffectThreshold },
+		{ name: "cycleSpeed", type: "f32", value: config.cycleSpeed },
+		{ name: "cycleFrameSkip", type: "i32", value: config.cycleFrameSkip },
+		{ name: "fallSpeed", type: "f32", value: config.fallSpeed },
+		{ name: "hasSun", type: "i32", value: config.hasSun },
+		{ name: "hasThunder", type: "i32", value: config.hasThunder },
+		{ name: "raindropLength", type: "f32", value: config.raindropLength },
+		{ name: "rippleScale", type: "f32", value: config.rippleScale },
+		{ name: "rippleSpeed", type: "f32", value: config.rippleSpeed },
+		{ name: "rippleThickness", type: "f32", value: config.rippleThickness },
+		{ name: "cycleStyle", type: "i32", value: cycleStyle },
+		{ name: "rippleType", type: "i32", value: rippleType },
 
-	const msdfStructLayout = std140(["i32", "i32"]);
-	const msdfBuffer = makeUniformBuffer(device, msdfStructLayout, [config.glyphTextureColumns, config.glyphSequenceLength]);
+		// render
+		{ name: "forwardSpeed", type: "f32", value: config.forwardSpeed },
+		{ name: "glyphVerticalSpacing", type: "f32", value: config.glyphVerticalSpacing },
+		{ name: "glyphEdgeCrop", type: "f32", value: config.glyphEdgeCrop },
+		{ name: "isPolar", type: "i32", value: config.isPolar },
+		{ name: "density", type: "f32", value: density },
+		{ name: "numQuadColumns", type: "i32", value: numQuadColumns },
+		{ name: "numQuadRows", type: "i32", value: numQuadRows },
+		{ name: "quadSize", type: "f32", value: quadSize },
+		{ name: "slantScale", type: "f32", value: slantScale },
+		{ name: "slantVec", type: "vec2<f32>", value: slantVec },
+		{ name: "volumetric", type: "i32", value: volumetric },
+	];
+	console.table(configData);
 
-	const timeStructLayout = std140(["f32", "i32"]);
-	const timeBuffer = makeUniformBuffer(device, timeStructLayout);
+	const configLayout = std140(configData.map((field) => field.type));
+	const configBuffer = makeUniformBuffer(
+		device,
+		configLayout,
+		configData.map((field) => field.value)
+	);
 
-	const sceneStructLayout = std140(["vec2<f32>", "mat4x4<f32>", "mat4x4<f32>"]);
-	const sceneBuffer = makeUniformBuffer(device, sceneStructLayout);
+	const msdfData = [
+		{ name: "glyphSequenceLength", type: "i32", value: config.glyphSequenceLength },
+		{ name: "glyphTextureColumns", type: "i32", value: config.glyphTextureColumns },
+	];
+	console.table(msdfData);
+
+	const msdfLayout = std140(msdfData.map((field) => field.type));
+	const msdfBuffer = makeUniformBuffer(
+		device,
+		msdfLayout,
+		msdfData.map((field) => field.value)
+	);
+
+	const timeLayout = std140(["f32", "i32"]);
+	const timeBuffer = makeUniformBuffer(device, timeLayout);
+
+	const sceneLayout = std140(["vec2<f32>", "mat4x4<f32>", "mat4x4<f32>"]);
+	const sceneBuffer = makeUniformBuffer(device, sceneLayout);
 
 	const transform = mat4.create();
 	mat4.translate(transform, transform, vec3.fromValues(0, 0, -1));
@@ -62,11 +128,16 @@ export default async (canvas, config) => {
 		const aspectRatio = canvasSize[0] / canvasSize[1];
 		mat4.perspectiveZO(camera, (Math.PI / 180) * 90, aspectRatio, 0.0001, 1000);
 		const screenSize = aspectRatio > 1 ? [1, aspectRatio] : [1 / aspectRatio, 1];
-		queue.writeBuffer(sceneBuffer, 0, sceneStructLayout.build([screenSize, camera, transform]));
+		device.queue.writeBuffer(sceneBuffer, 0, sceneLayout.build([screenSize, camera, transform]));
 	};
 	updateCameraBuffer();
 
-	const [rainRenderShader] = await Promise.all(["shaders/wgsl/rainRenderPass.wgsl"].map(async (path) => (await fetch(path)).text()));
+	const msdfSampler = device.createSampler({
+		magFilter: "linear",
+		minFilter: "linear",
+	});
+
+	const [msdfTexture, rainRenderShader] = await Promise.all([msdfTexturePromise, rainRenderShaderPromise]);
 
 	const rainRenderShaderModule = device.createShaderModule({ code: rainRenderShader });
 
@@ -96,8 +167,6 @@ export default async (canvas, config) => {
 		},
 	});
 
-	console.log(device.limits);
-
 	const bindGroup = device.createBindGroup({
 		layout: rainRenderPipeline.getBindGroupLayout(0),
 		entries: [configBuffer, msdfBuffer, msdfSampler, msdfTexture.createView(), timeBuffer, sceneBuffer]
@@ -114,9 +183,18 @@ export default async (canvas, config) => {
 
 	bundleEncoder.setPipeline(rainRenderPipeline);
 	bundleEncoder.setBindGroup(0, bindGroup);
-	const numQuads = numColumns * numRows;
-	bundleEncoder.draw(NUM_VERTICES_PER_QUAD * numQuads, 1, 0, 0);
+	bundleEncoder.draw(numVerticesPerQuad * numQuads, 1, 0, 0);
 	const renderBundles = [bundleEncoder.finish()];
+
+	const renderPassConfig = {
+		colorAttachments: [
+			{
+				view: canvasContext.getCurrentTexture().createView(),
+				loadValue: { r: 0, g: 0, b: 0, a: 1 },
+				storeOp: "store",
+			},
+		],
+	};
 
 	let frame = 0;
 
@@ -131,7 +209,7 @@ export default async (canvas, config) => {
 			updateCameraBuffer();
 		}
 
-		queue.writeBuffer(timeBuffer, 0, timeStructLayout.build([now / 1000, frame]));
+		device.queue.writeBuffer(timeBuffer, 0, timeLayout.build([now / 1000, frame]));
 		frame++;
 
 		renderPassConfig.colorAttachments[0].view = canvasContext.getCurrentTexture().createView();
@@ -141,7 +219,7 @@ export default async (canvas, config) => {
 		renderPass.executeBundles(renderBundles);
 		renderPass.endPass();
 		const commandBuffer = encoder.finish();
-		queue.submit([commandBuffer]);
+		device.queue.submit([commandBuffer]);
 
 		requestAnimationFrame(renderLoop);
 	};
