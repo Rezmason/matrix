@@ -22,11 +22,11 @@ float median3(vec3 i) {
 	return max(min(i.r, i.g), min(max(i.r, i.g), i.b));
 }
 
-float getSymbolIndex(float glyphCycle) {
+vec2 getSymbolUV(float glyphCycle) {
 	float symbol = floor(glyphSequenceLength * glyphCycle);
 	float symbolX = mod(symbol, glyphTextureColumns);
 	float symbolY = ((glyphTextureColumns - 1.0) - (symbol - symbolX) / glyphTextureColumns);
-	return symbolY * glyphTextureColumns + symbolX;
+	return vec2(symbolX, symbolY);
 }
 
 void main() {
@@ -56,7 +56,7 @@ void main() {
 	// Unpack the values from the data texture
 	vec4 glyph = volumetric ? vGlyph : texture2D(state, uv);
 	float brightness = glyph.r;
-	float symbolIndex = getSymbolIndex(glyph.g);
+	vec2 symbolUV = getSymbolUV(glyph.g);
 	float quadDepth = glyph.b;
 	float effect = glyph.a;
 
@@ -66,8 +66,7 @@ void main() {
 		brightness = brightness * min(1.0, quadDepth);
 	}
 
-	// resolve UV to position of glyph in MSDF texture
-	vec2 symbolUV = vec2(mod(symbolIndex, glyphTextureColumns), floor(symbolIndex / glyphTextureColumns));
+	// resolve UV to cropped position of glyph in MSDF texture
 	vec2 glyphUV = fract(uv * vec2(numColumns, numRows));
 	glyphUV -= 0.5;
 	glyphUV *= clamp(1.0 - glyphEdgeCrop, 0.0, 1.0);
