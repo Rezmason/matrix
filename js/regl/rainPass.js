@@ -155,12 +155,9 @@ export default (regl, config) => {
 	// Camera and transform math for the volumetric mode
 	const screenSize = [1, 1];
 	const { mat4, vec3 } = glMatrix;
-	const camera = mat4.create();
-	const translation = vec3.set(vec3.create(), 0, 0, -1);
-	const scale = vec3.set(vec3.create(), 1, 1, 1);
 	const transform = mat4.create();
-	mat4.translate(transform, transform, translation);
-	mat4.scale(transform, transform, scale);
+	mat4.translate(transform, transform, vec3.fromValues(0, 0, -1));
+	const camera = mat4.create();
 
 	return makePass(
 		{

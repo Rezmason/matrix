@@ -17,6 +17,8 @@ WebGPU
   The other passes should be a breeze
     Just add them to the render bundle
 
+  Update links in issues
+
   std140
     Document and share it
 

@@ -1,48 +1,9 @@
 import std140 from "./std140.js";
+import { getCanvasSize, loadTexture, makeUniformBuffer } from "./utils.js";
 const { mat4, vec3 } = glMatrix;
-
-const getCanvasSize = (canvas) => {
-	const devicePixelRatio = window.devicePixelRatio ?? 1;
-	return [canvas.clientWidth * devicePixelRatio, canvas.clientHeight * devicePixelRatio];
-};
-
-const loadTexture = async (device, url) => {
-	const image = new Image();
-	image.crossOrigin = "anonymous";
-	image.src = url;
-	await image.decode();
-	const imageBitmap = await createImageBitmap(image);
-
-	const texture = device.createTexture({
-		size: [imageBitmap.width, imageBitmap.height, 1],
-		format: "rgba8unorm",
-		usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
-	});
-
-	device.queue.copyExternalImageToTexture(
-		{
-			source: imageBitmap,
-		},
-		{
-			texture: texture,
-		},
-		[imageBitmap.width, imageBitmap.height]
-	);
-
-	return texture;
-};
 
 export default async (canvas, config) => {
 	console.log(config);
-
-	const NUM_VERTICES_PER_QUAD = 6;
-
-	const numColumns = config.numColumns;
-	const numRows = config.numColumns;
-
-	if (navigator.gpu == null) {
-		return;
-	}
 
 	const adapter = await navigator.gpu.requestAdapter();
 	const device = await adapter.requestDevice();
@@ -68,6 +29,11 @@ export default async (canvas, config) => {
 		],
 	};
 
+	const NUM_VERTICES_PER_QUAD = 6;
+
+	const numColumns = config.numColumns;
+	const numRows = config.numColumns;
+
 	const msdfSampler = device.createSampler({
 		magFilter: "linear",
 		minFilter: "linear",
@@ -76,42 +42,20 @@ export default async (canvas, config) => {
 	const msdfTexture = await loadTexture(device, config.glyphTexURL);
 
 	const configStructLayout = std140(["i32", "i32", "f32"]);
-	const configBufferSize = configStructLayout.size;
-	const configBuffer = device.createBuffer({
-		size: configBufferSize,
-		usage: GPUBufferUsage.UNIFORM,
-		mappedAtCreation: true,
-	});
-	configStructLayout.build([numColumns, numRows, config.glyphHeightToWidth], configBuffer.getMappedRange());
-	configBuffer.unmap();
+	const configBuffer = makeUniformBuffer(device, configStructLayout, [numColumns, numRows, config.glyphHeightToWidth]);
 
 	const msdfStructLayout = std140(["i32", "i32"]);
-	const msdfBuffer = device.createBuffer({
-		size: msdfStructLayout.size,
-		usage: GPUBufferUsage.UNIFORM,
-		mappedAtCreation: true,
-	});
-	msdfStructLayout.build([config.glyphTextureColumns, config.glyphSequenceLength], msdfBuffer.getMappedRange());
-	msdfBuffer.unmap();
+	const msdfBuffer = makeUniformBuffer(device, msdfStructLayout, [config.glyphTextureColumns, config.glyphSequenceLength]);
 
 	const timeStructLayout = std140(["f32", "i32"]);
-	const timeBuffer = device.createBuffer({
-		size: timeStructLayout.size,
-		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-	});
+	const timeBuffer = makeUniformBuffer(device, timeStructLayout);
 
 	const sceneStructLayout = std140(["vec2<f32>", "mat4x4<f32>", "mat4x4<f32>"]);
-	const sceneBuffer = device.createBuffer({
-		size: sceneStructLayout.size,
-		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-	});
+	const sceneBuffer = makeUniformBuffer(device, sceneStructLayout);
 
-	const camera = mat4.create();
-	const translation = vec3.set(vec3.create(), 0, 0, -1);
-	const scale = vec3.set(vec3.create(), 1, 1, 1);
 	const transform = mat4.create();
-	mat4.translate(transform, transform, translation);
-	mat4.scale(transform, transform, scale);
+	mat4.translate(transform, transform, vec3.fromValues(0, 0, -1));
+	const camera = mat4.create();
 
 	const updateCameraBuffer = () => {
 		const canvasSize = canvasConfig.size;
@@ -132,11 +76,6 @@ export default async (canvas, config) => {
 		dstFactor: "one",
 	};
 
-	const additiveBlending = {
-		color: additiveBlendComponent,
-		alpha: additiveBlendComponent,
-	};
-
 	const rainRenderPipeline = device.createRenderPipeline({
 		vertex: {
 			module: rainRenderShaderModule,
@@ -148,7 +87,10 @@ export default async (canvas, config) => {
 			targets: [
 				{
 					format: presentationFormat,
-					blend: additiveBlending,
+					blend: {
+						color: additiveBlendComponent,
+						alpha: additiveBlendComponent,
+					},
 				},
 			],
 		},
@@ -158,40 +100,12 @@ export default async (canvas, config) => {
 
 	const bindGroup = device.createBindGroup({
 		layout: rainRenderPipeline.getBindGroupLayout(0),
-		entries: [
-			{
-				binding: 0,
-				resource: {
-					buffer: configBuffer,
-				},
-			},
-			{
-				binding: 1,
-				resource: {
-					buffer: msdfBuffer,
-				},
-			},
-			{
-				binding: 2,
-				resource: msdfSampler,
-			},
-			{
-				binding: 3,
-				resource: msdfTexture.createView(),
-			},
-			{
-				binding: 4,
-				resource: {
-					buffer: timeBuffer,
-				},
-			},
-			{
-				binding: 5,
-				resource: {
-					buffer: sceneBuffer,
-				},
-			},
-		],
+		entries: [configBuffer, msdfBuffer, msdfSampler, msdfTexture.createView(), timeBuffer, sceneBuffer]
+			.map((resource) => (resource instanceof GPUBuffer ? { buffer: resource } : resource))
+			.map((resource, binding) => ({
+				binding,
+				resource,
+			})),
 	});
 
 	const bundleEncoder = device.createRenderBundleEncoder({
