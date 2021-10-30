@@ -4,6 +4,8 @@ let TWO_PI:f32 = 6.28318530718;
 let SQRT_2:f32 = 1.4142135623730951;
 let SQRT_5:f32 = 2.23606797749979;
 
+// Bound resources
+
 [[block]] struct Config {
 	// common
 	animationSpeed : f32;
@@ -66,6 +68,23 @@ let SQRT_5:f32 = 2.23606797749979;
 };
 [[group(0), binding(5)]] var<uniform> scene:Scene;
 
+// Shader params
+
+struct VertInput {
+	[[builtin(vertex_index)]] index:u32;
+};
+
+struct VertOutput {
+	[[builtin(position)]] Position:vec4<f32>;
+	[[location(0)]] UV:vec2<f32>;
+	[[location(1)]] Channel:vec3<f32>;
+	[[location(2)]] Glyph:vec4<f32>;
+};
+
+struct FragOutput {
+	[[location(0)]] color:vec4<f32>;
+};
+
 // Helper functions for generating randomness, borrowed from elsewhere
 
 fn randomFloat( uv:vec2<f32> ) -> f32 {
@@ -87,17 +106,12 @@ fn wobble(x:f32) -> f32 {
 
 // Vertex shader
 
-struct VertexOutput {
-	[[builtin(position)]] Position:vec4<f32>;
-	[[location(0)]] UV:vec2<f32>;
-};
-
-[[stage(vertex)]] fn vertMain([[builtin(vertex_index)]] VertexIndex:u32) -> VertexOutput {
+[[stage(vertex)]] fn vertMain(input: VertInput) -> VertOutput {
 
 	var timePlaceholder = time.seconds;
 
 
-	var i = i32(VertexIndex);
+	var i = i32(input.index);
 	var quadIndex = i / NUM_VERTICES_PER_QUAD;
 
 	var cornerPosition = vec2<f32>(
@@ -130,18 +144,20 @@ struct VertexOutput {
 	pos.x = pos.x / config.glyphHeightToWidth;
 	pos = scene.camera * scene.transform * pos;
 
-	return VertexOutput(
+	return VertOutput(
 		pos,
-		cornerPosition
+		cornerPosition,
+		vec3<f32>(0.0), // channel
+		vec4<f32>(0.0) // glyph
 	);
 }
 
 // Fragment shader
 
-[[stage(fragment)]] fn fragMain([[location(0)]] UV:vec2<f32>) -> [[location(0)]] vec4<f32> {
-	var color:vec4<f32> = textureSample(msdfTexture, msdfSampler, UV / f32(msdf.glyphTextureColumns));
+[[stage(fragment)]] fn fragMain(input: VertOutput) -> FragOutput {
+	var color:vec4<f32> = textureSample(msdfTexture, msdfSampler, input.UV / f32(msdf.glyphTextureColumns));
 
-	color = vec4<f32>(UV, 0.5, 1.0);
-
-	return color;
+	return FragOutput(
+		color
+	);
 }
