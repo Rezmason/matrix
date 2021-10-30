@@ -1,6 +1,8 @@
 let NUM_VERTICES_PER_QUAD:i32 = 6;
 let PI:f32 = 3.14159265359;
 let TWO_PI:f32 = 6.28318530718;
+let SQRT_2:f32 = 1.4142135623730951;
+let SQRT_5:f32 = 2.23606797749979;
 
 [[block]] struct Config {
 	numColumns: i32;
@@ -29,6 +31,25 @@ let TWO_PI:f32 = 6.28318530718;
 	transform: mat4x4<f32>;
 };
 [[group(0), binding(5)]] var<uniform> scene:Scene;
+
+// Helper functions for generating randomness, borrowed from elsewhere
+
+fn randomFloat( uv:vec2<f32> ) -> f32 {
+	let a = 12.9898;
+	let b = 78.233;
+	let c = 43758.5453;
+	let dt = dot( uv, vec2<f32>( a,b ) );
+	let sn = dt % PI;
+	return fract(sin(sn) * c);
+}
+
+fn randomVec2( uv:vec2<f32> ) -> vec2<f32> {
+	return fract(vec2<f32>(sin(uv.x * 591.32 + uv.y * 154.077), cos(uv.x * 391.32 + uv.y * 49.077)));
+}
+
+fn wobble(x:f32) -> f32 {
+	return x + 0.3 * sin(SQRT_2 * x) + 0.2 * sin(SQRT_5 * x);
+}
 
 // Vertex shader
 
