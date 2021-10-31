@@ -1,8 +1,8 @@
-let NUM_VERTICES_PER_QUAD:i32 = 6; // 2 * 3
-let PI:f32 = 3.14159265359;
-let TWO_PI:f32 = 6.28318530718;
-let SQRT_2:f32 = 1.4142135623730951;
-let SQRT_5:f32 = 2.23606797749979;
+let NUM_VERTICES_PER_QUAD : i32 = 6; // 2 * 3
+let PI : f32 = 3.14159265359;
+let TWO_PI : f32 = 6.28318530718;
+let SQRT_2 : f32 = 1.4142135623730951;
+let SQRT_5 : f32 = 2.23606797749979;
 
 // Bound resources
 
@@ -41,68 +41,68 @@ let SQRT_5:f32 = 2.23606797749979;
 	slantVec : vec2<f32>;
 	volumetric : i32;
 };
-[[group(0), binding(0)]] var<uniform> config:Config;
+[[group(0), binding(0)]] var<uniform> config : Config;
 
 [[block]] struct MSDF {
-	glyphSequenceLength: i32;
-	glyphTextureColumns: i32;
+	glyphSequenceLength : i32;
+	glyphTextureColumns : i32;
 };
-[[group(0), binding(1)]] var<uniform> msdf:MSDF;
-[[group(0), binding(2)]] var msdfSampler: sampler;
-[[group(0), binding(3)]] var msdfTexture: texture_2d<f32>;
+[[group(0), binding(1)]] var<uniform> msdf : MSDF;
+[[group(0), binding(2)]] var msdfSampler : sampler;
+[[group(0), binding(3)]] var msdfTexture : texture_2d<f32>;
 
 [[block]] struct Time {
-	seconds:f32;
-	frames:i32;
+	seconds : f32;
+	frames : i32;
 };
-[[group(0), binding(4)]] var<uniform> time:Time;
+[[group(0), binding(4)]] var<uniform> time : Time;
 
 [[block]] struct Scene {
-	screenSize: vec2<f32>;
-	camera: mat4x4<f32>;
-	transform: mat4x4<f32>;
+	screenSize : vec2<f32>;
+	camera : mat4x4<f32>;
+	transform : mat4x4<f32>;
 };
-[[group(0), binding(5)]] var<uniform> scene:Scene;
+[[group(0), binding(5)]] var<uniform> scene : Scene;
 
 // Shader params
 
 struct VertInput {
-	[[builtin(vertex_index)]] index:u32;
+	[[builtin(vertex_index)]] index : u32;
 };
 
 struct VertOutput {
-	[[builtin(position)]] Position:vec4<f32>;
-	[[location(0)]] uv:vec2<f32>;
-	[[location(1)]] channel:vec3<f32>;
-	[[location(2)]] glyph:vec4<f32>;
+	[[builtin(position)]] Position : vec4<f32>;
+	[[location(0)]] uv : vec2<f32>;
+	[[location(1)]] channel : vec3<f32>;
+	[[location(2)]] glyph : vec4<f32>;
 };
 
 struct FragOutput {
-	[[location(0)]] color:vec4<f32>;
+	[[location(0)]] color : vec4<f32>;
 };
 
 // Helper functions for generating randomness, borrowed from elsewhere
 
-fn randomFloat( uv:vec2<f32> ) -> f32 {
+fn randomFloat( uv : vec2<f32> ) -> f32 {
 	let a = 12.9898;
 	let b = 78.233;
 	let c = 43758.5453;
-	let dt = dot( uv, vec2<f32>( a,b ) );
+	let dt = dot( uv, vec2<f32>( a, b ) );
 	let sn = dt % PI;
 	return fract(sin(sn) * c);
 }
 
-fn randomVec2( uv:vec2<f32> ) -> vec2<f32> {
+fn randomVec2( uv : vec2<f32> ) -> vec2<f32> {
 	return fract(vec2<f32>(sin(uv.x * 591.32 + uv.y * 154.077), cos(uv.x * 391.32 + uv.y * 49.077)));
 }
 
-fn wobble(x:f32) -> f32 {
+fn wobble(x : f32) -> f32 {
 	return x + 0.3 * sin(SQRT_2 * x) + 0.2 * sin(SQRT_5 * x);
 }
 
 // Vertex shader
 
-[[stage(vertex)]] fn vertMain(input: VertInput) -> VertOutput {
+[[stage(vertex)]] fn vertMain(input : VertInput) -> VertOutput {
 
 	var volumetric = bool(config.volumetric);
 
@@ -129,7 +129,7 @@ fn wobble(x:f32) -> f32 {
 	var uv = (quadPosition + quadCorner) / quadGridSize;
 
 	// Retrieve the quad's glyph data
-	var vGlyph = vec4<f32>(1.0, 0.0, randomFloat(vec2<f32>(quadPosition.x, 1.0)), 0.0); // TODO: texture2D(state, quadPosition / quadGridSize);
+	var vGlyph = vec4<f32>(1.0, 0.0, randomFloat(vec2<f32>(quadPosition.x, 1.0)), 0.0); // TODO : texture2D(state, quadPosition / quadGridSize);
 
 	// Calculate the quad's depth
 	var quadDepth = 0.0;
@@ -153,7 +153,7 @@ fn wobble(x:f32) -> f32 {
 		vChannel = vec3<f32>(0.0, 1.0, 0.0);
 	}
 
-	vChannel = vec3<f32>(1.0); // TODO: remove
+	vChannel = vec3<f32>(1.0); // TODO : remove
 
 	// Convert the vertex's world space position to screen space
 	var screenPosition = vec4<f32>(worldPosition, quadDepth, 1.0);
@@ -174,18 +174,18 @@ fn wobble(x:f32) -> f32 {
 
 // Fragment shader
 
-fn median3(i:vec3<f32>) -> f32 {
+fn median3(i : vec3<f32>) -> f32 {
 	return max(min(i.r, i.g), min(max(i.r, i.g), i.b));
 }
 
-fn getSymbolUV(glyphCycle:f32) -> vec2<f32> {
+fn getSymbolUV(glyphCycle : f32) -> vec2<f32> {
 	var symbol = i32(f32(msdf.glyphSequenceLength) * glyphCycle);
 	var symbolX = symbol % msdf.glyphTextureColumns;
 	var symbolY = symbol / msdf.glyphTextureColumns;
 	return vec2<f32>(f32(symbolX), f32(symbolY));
 }
 
-[[stage(fragment)]] fn fragMain(input: VertOutput) -> FragOutput {
+[[stage(fragment)]] fn fragMain(input : VertOutput) -> FragOutput {
 
 	var volumetric = bool(config.volumetric);
 	var uv = input.uv;
@@ -210,13 +210,13 @@ fn getSymbolUV(glyphCycle:f32) -> vec2<f32> {
 	}
 
 	// Retrieve values from the data texture
-	var glyph:vec4<f32>;
+	var glyph : vec4<f32>;
 	if (volumetric) {
 		glyph = input.glyph;
 	} else {
-		glyph = vec4<f32>(1.0); // TODO: texture2D(state, uv);
+		glyph = vec4<f32>(1.0); // TODO : texture2D(state, uv);
 	}
-	glyph = input.glyph; // TODO: remove
+	glyph = input.glyph; // TODO : remove
 	var brightness = glyph.r;
 	var symbolUV = getSymbolUV(glyph.g);
 	var quadDepth = glyph.b;
@@ -235,12 +235,12 @@ fn getSymbolUV(glyphCycle:f32) -> vec2<f32> {
 	glyphUV = glyphUV + 0.5;
 	var msdfUV = (glyphUV + symbolUV) / f32(msdf.glyphTextureColumns);
 
-	// MSDF: calculate brightness of fragment based on distance to shape
+	// MSDF : calculate brightness of fragment based on distance to shape
 	var dist = textureSample(msdfTexture, msdfSampler, msdfUV).rgb;
 	var sigDist = median3(dist) - 0.5;
 	var alpha = clamp(sigDist / fwidth(sigDist) + 0.5, 0.0, 1.0);
 
-	var output:FragOutput;
+	var output : FragOutput;
 
 	if (bool(config.showComputationTexture)) {
 		output.color = vec4<f32>(glyph.rgb * alpha, 1.0);
