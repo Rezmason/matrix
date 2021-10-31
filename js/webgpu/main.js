@@ -37,13 +37,11 @@ export default async (canvas, config) => {
 	// to reach the desired density, and then overlaps them
 	const volumetric = config.volumetric;
 	const density = volumetric && config.effect !== "none" ? config.density : 1;
-	const [numRows, numColumns] = [config.numColumns, config.numColumns * density];
+	const gridSize = [config.numColumns * density, config.numColumns];
 
 	// The volumetric mode requires us to create a grid of quads,
 	// rather than a single quad for our geometry
-	const [numQuadRows, numQuadColumns] = volumetric ? [numRows, numColumns] : [1, 1];
-	const numQuads = numQuadRows * numQuadColumns;
-	const quadSize = [1 / numQuadColumns, 1 / numQuadRows];
+	const numQuads = volumetric ? gridSize[0] * gridSize[1] : 1;
 
 	// Various effect-related values
 	const rippleType = config.rippleTypeName in rippleTypes ? rippleTypes[config.rippleTypeName] : -1;
@@ -57,8 +55,7 @@ export default async (canvas, config) => {
 		{ name: "animationSpeed", type: "f32", value: config.animationSpeed },
 		{ name: "glyphHeightToWidth", type: "f32", value: config.glyphHeightToWidth },
 		{ name: "resurrectingCodeRatio", type: "f32", value: config.resurrectingCodeRatio },
-		{ name: "numColumns", type: "i32", value: numColumns },
-		{ name: "numRows", type: "i32", value: numRows },
+		{ name: "gridSize", type: "vec2<f32>", value: gridSize },
 		{ name: "showComputationTexture", type: "i32", value: showComputationTexture },
 
 		// compute
@@ -84,9 +81,6 @@ export default async (canvas, config) => {
 		{ name: "glyphEdgeCrop", type: "f32", value: config.glyphEdgeCrop },
 		{ name: "isPolar", type: "i32", value: config.isPolar },
 		{ name: "density", type: "f32", value: density },
-		{ name: "numQuadColumns", type: "i32", value: numQuadColumns },
-		{ name: "numQuadRows", type: "i32", value: numQuadRows },
-		{ name: "quadSize", type: "vec2<f32>", value: quadSize },
 		{ name: "slantScale", type: "f32", value: slantScale },
 		{ name: "slantVec", type: "vec2<f32>", value: slantVec },
 		{ name: "volumetric", type: "i32", value: volumetric },
