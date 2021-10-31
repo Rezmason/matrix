@@ -2,8 +2,7 @@ TODO:
 
 WebGPU
   First decent rainRender
-    Port render pass 100%
-      For now, use noise instead of the data texture
+    Is there a way to whittle out quadSize?
     Port compute pass 100%
       Compute entry point can live in the same wgsl file, I think
       use textureLoad for texel access in render pipeline

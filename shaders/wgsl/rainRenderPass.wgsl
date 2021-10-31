@@ -40,7 +40,7 @@ let SQRT_5:f32 = 2.23606797749979;
 	density : f32;
 	numQuadColumns : i32;
 	numQuadRows : i32;
-	quadSize : f32;
+	quadSize : vec2<f32>;
 	slantScale : f32;
 	slantVec : vec2<f32>;
 	volumetric : i32;
@@ -108,47 +108,59 @@ fn wobble(x:f32) -> f32 {
 
 [[stage(vertex)]] fn vertMain(input: VertInput) -> VertOutput {
 
-	var timePlaceholder = time.seconds;
-
+	var volumetric = bool(config.volumetric);
 
 	var i = i32(input.index);
 	var quadIndex = i / NUM_VERTICES_PER_QUAD;
 
-	var cornerPosition = vec2<f32>(
+	var quadCorner = vec2<f32>(
 		f32(i % 2),
-		f32(((i + 1) % NUM_VERTICES_PER_QUAD / 3))
+		f32((i + 1) % NUM_VERTICES_PER_QUAD / 3)
 	);
 
-	var quadPosition = vec2<i32>(
-		quadIndex % config.numQuadColumns,
-		quadIndex / config.numQuadColumns
+	var quadPosition = vec2<f32>(
+		f32(quadIndex % config.numQuadColumns),
+		f32(quadIndex / config.numQuadColumns)
 	);
 
-	var position = cornerPosition;
-	position = position + vec2<f32>(quadPosition);
-	position = position / vec2<f32>(
-		f32(config.numQuadColumns),
-		f32(config.numQuadRows)
-	);
-	position = 1.0 - position * 2.0;
+	var vUV = (quadPosition + quadCorner) * config.quadSize;
+	var vGlyph = vec4<f32>(1.0, 0.15, randomFloat(vec2<f32>(quadPosition.x, 1.0)), 0.0); // TODO: texture2D(state, quadPosition * config.quadSize);
 
-	// position = position * scene.screenSize;
+	// Calculate the world space position
+	var quadDepth = 0.0;
+	if (volumetric && !bool(config.showComputationTexture)) {
+		quadDepth = fract(vGlyph.b + time.seconds * config.animationSpeed * config.forwardSpeed);
+		vGlyph.b = quadDepth;
+	}
+	var position = (quadPosition * vec2<f32>(1.0, config.glyphVerticalSpacing) + quadCorner * vec2<f32>(config.density, 1.0)) * config.quadSize;
+	var pos = vec4<f32>((position - 0.5) * 2.0, quadDepth, 1.0);
 
-	var depth:f32 = 0.0;
+	pos.y = -pos.y;
 
-	// depth = -0.5
-	// 	+ sin(time.seconds * 2.0 + f32(quadPosition.x) / f32(config.numQuadColumns) * 10.0) * 0.2
-	// 	+ sin(time.seconds * 2.0 + f32(quadPosition.y) / f32(config.numQuadRows) * 10.0) * 0.2;
+	// "Resurrected" columns are in the green channel,
+	// and are vertically flipped (along with their glyphs)
+	var vChannel = vec3<f32>(1.0, 0.0, 0.0);
+	if (volumetric && randomFloat(vec2<f32>(quadPosition.x, 0.0)) < config.resurrectingCodeRatio) {
+		pos.y = -pos.y;
+		vChannel = vec3<f32>(0.0, 1.0, 0.0);
+	}
 
-	var pos:vec4<f32> = vec4<f32>(position, depth, 1.0);
-	pos.x = pos.x / config.glyphHeightToWidth;
-	pos = scene.camera * scene.transform * pos;
+	vChannel = vec3<f32>(1.0); // TODO: remove
+
+	// Convert the world space position to screen space
+	if (volumetric) {
+		pos.x = pos.x / config.glyphHeightToWidth;
+		pos = scene.camera * scene.transform * pos;
+	} else {
+		pos.x = pos.x * scene.screenSize.x;
+		pos.y = pos.y * scene.screenSize.y;
+	}
 
 	return VertOutput(
 		pos,
-		cornerPosition,
-		vec3<f32>(1.0), // channel
-		vec4<f32>(1.0) // glyph
+		vUV,
+		vChannel,
+		vGlyph
 	);
 }
 
@@ -167,11 +179,12 @@ fn getSymbolUV(glyphCycle:f32) -> vec2<f32> {
 
 [[stage(fragment)]] fn fragMain(input: VertOutput) -> FragOutput {
 
+	var volumetric = bool(config.volumetric);
 	var uv = input.uv;
 
 	// In normal mode, derives the current glyph and UV from vUV
-	if (config.volumetric == 0) {
-		if (config.isPolar == 1) {
+	if (!volumetric) {
+		if (bool(config.isPolar)) {
 			// Curved space that makes letters appear to radiate from up above
 			uv = (uv - 0.5) * 0.5;
 			uv.y = uv.y - 0.5;
@@ -190,11 +203,12 @@ fn getSymbolUV(glyphCycle:f32) -> vec2<f32> {
 
 	// Unpack the values from the data texture
 	var glyph:vec4<f32>;
-	if (config.volumetric == 1) {
+	if (volumetric) {
 		glyph = input.glyph;
 	} else {
 		glyph = vec4<f32>(1.0); // TODO: texture2D(state, uv);
 	}
+	glyph = input.glyph; // TODO: remove
 	var brightness = glyph.r;
 	var symbolUV = getSymbolUV(glyph.g);
 	var quadDepth = glyph.b;
@@ -202,7 +216,7 @@ fn getSymbolUV(glyphCycle:f32) -> vec2<f32> {
 
 	brightness = max(effect, brightness);
 	// In volumetric mode, distant glyphs are dimmer
-	if (config.volumetric == 1) {
+	if (volumetric) {
 		brightness = brightness * min(1.0, quadDepth);
 	}
 
@@ -220,7 +234,7 @@ fn getSymbolUV(glyphCycle:f32) -> vec2<f32> {
 
 	var output:FragOutput;
 
-	if (config.showComputationTexture == 1) {
+	if (bool(config.showComputationTexture)) {
 		output.color = vec4<f32>(glyph.rgb * alpha, 1.0);
 	} else {
 		output.color = vec4<f32>(input.channel * brightness * alpha, 1.0);

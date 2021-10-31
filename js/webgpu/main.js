@@ -86,7 +86,7 @@ export default async (canvas, config) => {
 		{ name: "density", type: "f32", value: density },
 		{ name: "numQuadColumns", type: "i32", value: numQuadColumns },
 		{ name: "numQuadRows", type: "i32", value: numQuadRows },
-		{ name: "quadSize", type: "f32", value: quadSize },
+		{ name: "quadSize", type: "vec2<f32>", value: quadSize },
 		{ name: "slantScale", type: "f32", value: slantScale },
 		{ name: "slantVec", type: "vec2<f32>", value: slantVec },
 		{ name: "volumetric", type: "i32", value: volumetric },
