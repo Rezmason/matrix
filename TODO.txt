@@ -2,7 +2,6 @@ TODO:
 
 WebGPU
   First decent rainRender
-    What's wrong with the other font textures?
     Port compute pass 100%
       Compute entry point can live in the same wgsl file, I think
       use textureLoad for texel access in render pipeline

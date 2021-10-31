@@ -129,7 +129,7 @@ fn wobble(x:f32) -> f32 {
 	var uv = (quadPosition + quadCorner) / quadGridSize;
 
 	// Retrieve the quad's glyph data
-	var vGlyph = vec4<f32>(1.0, 0.72, randomFloat(vec2<f32>(quadPosition.x, 1.0)), 0.0); // TODO: texture2D(state, quadPosition / quadGridSize);
+	var vGlyph = vec4<f32>(1.0, 0.0, randomFloat(vec2<f32>(quadPosition.x, 1.0)), 0.0); // TODO: texture2D(state, quadPosition / quadGridSize);
 
 	// Calculate the quad's depth
 	var quadDepth = 0.0;
@@ -181,7 +181,7 @@ fn median3(i:vec3<f32>) -> f32 {
 fn getSymbolUV(glyphCycle:f32) -> vec2<f32> {
 	var symbol = i32(f32(msdf.glyphSequenceLength) * glyphCycle);
 	var symbolX = symbol % msdf.glyphTextureColumns;
-	var symbolY = ((msdf.glyphTextureColumns - 1) - (symbol - symbolX) / msdf.glyphTextureColumns);
+	var symbolY = symbol / msdf.glyphTextureColumns;
 	return vec2<f32>(f32(symbolX), f32(symbolY));
 }
 
