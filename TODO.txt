@@ -3,12 +3,6 @@ TODO:
 WebGPU
   First decent rainRender
     Port compute pass 100%
-      Compute entry point can live in the same wgsl file, I think
-        ping-pong buffers
-      Bind both ping-pong buffers in render pass
-        The frame integer can be used by the render code to reference the correct one
-    Reorder the config fields
-    Reconsider how the bind groups are organized?
     Render target
       Resize accordingly
     Put in its own module

@@ -31,17 +31,18 @@ export default async (canvas, config) => {
 	canvasContext.configure(canvasConfig);
 
 	const msdfTexturePromise = loadTexture(device, config.glyphTexURL);
-	const rainRenderShaderPromise = fetch("shaders/wgsl/rainRenderPass.wgsl").then((response) => response.text());
+	const rainShaderPromise = fetch("shaders/wgsl/rainPass.wgsl").then((response) => response.text());
 
 	// The volumetric mode multiplies the number of columns
 	// to reach the desired density, and then overlaps them
 	const volumetric = config.volumetric;
 	const density = volumetric && config.effect !== "none" ? config.density : 1;
 	const gridSize = [config.numColumns * density, config.numColumns];
+	const numCells = gridSize[0] * gridSize[1];
 
 	// The volumetric mode requires us to create a grid of quads,
 	// rather than a single quad for our geometry
-	const numQuads = volumetric ? gridSize[0] * gridSize[1] : 1;
+	const numQuads = volumetric ? numCells : 1;
 
 	// Various effect-related values
 	const rippleType = config.rippleTypeName in rippleTypes ? rippleTypes[config.rippleTypeName] : -1;
@@ -102,6 +103,13 @@ export default async (canvas, config) => {
 	const sceneLayout = std140(["vec2<f32>", "mat4x4<f32>", "mat4x4<f32>"]);
 	const sceneBuffer = makeUniformBuffer(device, sceneLayout);
 
+	const cellBufferDescriptor = {
+		size: numCells * std140(["vec4<f32>"]).size, // TODO: Is this correct?
+		usage: GPUBufferUsage.STORAGE,
+	};
+	const cellsPingBuffer = device.createBuffer(cellBufferDescriptor);
+	const cellsPongBuffer = device.createBuffer(cellBufferDescriptor);
+
 	const transform = mat4.create();
 	mat4.translate(transform, transform, vec3.fromValues(0, 0, -1));
 	const camera = mat4.create();
@@ -120,13 +128,13 @@ export default async (canvas, config) => {
 		minFilter: "linear",
 	});
 
-	const [msdfTexture, rainRenderShader] = await Promise.all([msdfTexturePromise, rainRenderShaderPromise]);
+	const [msdfTexture, rainShader] = await Promise.all([msdfTexturePromise, rainShaderPromise]);
 
-	const rainRenderShaderModule = device.createShaderModule({ code: rainRenderShader });
+	const rainShaderModule = device.createShaderModule({ code: rainShader });
 
 	const rainComputePipeline = device.createComputePipeline({
 		compute: {
-			module: rainRenderShaderModule,
+			module: rainShaderModule,
 			entryPoint: "computeMain",
 		},
 	});
@@ -139,11 +147,11 @@ export default async (canvas, config) => {
 
 	const rainRenderPipeline = device.createRenderPipeline({
 		vertex: {
-			module: rainRenderShaderModule,
+			module: rainShaderModule,
 			entryPoint: "vertMain",
 		},
 		fragment: {
-			module: rainRenderShaderModule,
+			module: rainShaderModule,
 			entryPoint: "fragMain",
 			targets: [
 				{
@@ -157,9 +165,9 @@ export default async (canvas, config) => {
 		},
 	});
 
-	const renderBindGroup = device.createBindGroup({
-		layout: rainRenderPipeline.getBindGroupLayout(0),
-		entries: [configBuffer, timeBuffer, sceneBuffer, msdfSampler, msdfTexture.createView()]
+	const computeBindGroup = device.createBindGroup({
+		layout: rainComputePipeline.getBindGroupLayout(0),
+		entries: [configBuffer, timeBuffer, cellsPingBuffer, cellsPongBuffer]
 			.map((resource) => (resource instanceof GPUBuffer ? { buffer: resource } : resource))
 			.map((resource, binding) => ({
 				binding,
@@ -167,9 +175,9 @@ export default async (canvas, config) => {
 			})),
 	});
 
-	const computeBindGroup = device.createBindGroup({
-		layout: rainComputePipeline.getBindGroupLayout(0),
-		entries: [configBuffer, timeBuffer]
+	const renderBindGroup = device.createBindGroup({
+		layout: rainRenderPipeline.getBindGroupLayout(0),
+		entries: [configBuffer, timeBuffer, sceneBuffer, msdfSampler, msdfTexture.createView(), cellsPingBuffer, cellsPongBuffer]
 			.map((resource) => (resource instanceof GPUBuffer ? { buffer: resource } : resource))
 			.map((resource, binding) => ({
 				binding,
@@ -212,8 +220,6 @@ export default async (canvas, config) => {
 		device.queue.writeBuffer(timeBuffer, 0, timeLayout.build([now / 1000, frame]));
 		frame++;
 
-		renderPassConfig.colorAttachments[0].view = canvasContext.getCurrentTexture().createView();
-
 		const encoder = device.createCommandEncoder();
 
 		const computePass = encoder.beginComputePass();
@@ -222,6 +228,7 @@ export default async (canvas, config) => {
 		computePass.dispatch(...gridSize, 1);
 		computePass.endPass();
 
+		renderPassConfig.colorAttachments[0].view = canvasContext.getCurrentTexture().createView();
 		const renderPass = encoder.beginRenderPass(renderPassConfig);
 		renderPass.executeBundles(renderBundles);
 		renderPass.endPass();

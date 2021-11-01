@@ -1,11 +1,3 @@
-let NUM_VERTICES_PER_QUAD : i32 = 6; // 2 * 3
-let PI : f32 = 3.14159265359;
-let TWO_PI : f32 = 6.28318530718;
-let SQRT_2 : f32 = 1.4142135623730951;
-let SQRT_5 : f32 = 2.23606797749979;
-
-// Bound resources
-
 [[block]] struct Config {
 	// common
 	animationSpeed : f32;
@@ -43,25 +35,36 @@ let SQRT_5 : f32 = 2.23606797749979;
 	slantVec : vec2<f32>;
 	volumetric : i32;
 };
-[[group(0), binding(0)]] var<uniform> config : Config;
 
 [[block]] struct Time {
 	seconds : f32;
 	frames : i32;
 };
-[[group(0), binding(1)]] var<uniform> time : Time;
 
 [[block]] struct Scene {
 	screenSize : vec2<f32>;
 	camera : mat4x4<f32>;
 	transform : mat4x4<f32>;
 };
-[[group(0), binding(2)]] var<uniform> scene : Scene;
 
+[[block]] struct CellData {
+	cells: array<vec4<f32>>;
+};
+
+// Shared bindings
+[[group(0), binding(0)]] var<uniform> config : Config;
+[[group(0), binding(1)]] var<uniform> time : Time;
+
+// Compute bindings
+[[group(0), binding(2)]] var<storage, read_write> cellsPing_RW : CellData;
+[[group(0), binding(3)]] var<storage, read_write> cellsPong_RW : CellData;
+
+// Render bindings
+[[group(0), binding(2)]] var<uniform> scene : Scene;
 [[group(0), binding(3)]] var msdfSampler : sampler;
 [[group(0), binding(4)]] var msdfTexture : texture_2d<f32>;
-
-
+[[group(0), binding(5)]] var<storage, read> cellsPing_RO : CellData;
+[[group(0), binding(6)]] var<storage, read> cellsPong_RO : CellData;
 
 // Shader params
 
@@ -83,6 +86,14 @@ struct VertOutput {
 struct FragOutput {
 	[[location(0)]] color : vec4<f32>;
 };
+
+// Constants
+
+let NUM_VERTICES_PER_QUAD : i32 = 6; // 2 * 3
+let PI : f32 = 3.14159265359;
+let TWO_PI : f32 = 6.28318530718;
+let SQRT_2 : f32 = 1.4142135623730951;
+let SQRT_5 : f32 = 2.23606797749979;
 
 // Helper functions for generating randomness, borrowed from elsewhere
 
@@ -106,8 +117,16 @@ fn wobble(x : f32) -> f32 {
 // Compute shader
 
 [[stage(compute), workgroup_size(1, 1, 1)]] fn computeMain(input : ComputeInput) {
+	var animationSpeed = config.animationSpeed; // TODO: remove
 	var hasSun = bool(config.hasSun); // TODO: remove
 	var seconds = time.seconds; // TODO: remove
+
+	var row = i32(input.id.y);
+	var column = i32(input.id.x);
+	var i = row * i32(config.gridSize.x);
+
+	cellsPing_RW.cells[i] = vec4<f32>((1.0 + time.seconds * 0.1) % 1.0, 0.0, 0.0, 0.0);
+	cellsPong_RW.cells[i] = vec4<f32>((0.5 + time.seconds * 0.1) % 1.0, 0.5, 0.0, 0.0);
 }
 
 // Vertex shader
@@ -139,7 +158,12 @@ fn wobble(x : f32) -> f32 {
 	var uv = (quadPosition + quadCorner) / quadGridSize;
 
 	// Retrieve the quad's glyph data
-	var vGlyph = vec4<f32>(1.0, 0.0, randomFloat(vec2<f32>(quadPosition.x, 1.0)), 0.0); // TODO : texture2D(state, quadPosition / quadGridSize);
+	var vGlyph: vec4<f32>;
+	if ((time.frames / 100) % 2 == 0) {
+		vGlyph = cellsPing_RO.cells[quadIndex];
+	} else {
+		vGlyph = cellsPong_RO.cells[quadIndex];
+	}
 
 	// Calculate the quad's depth
 	var quadDepth = 0.0;
@@ -196,6 +220,9 @@ fn getSymbolUV(glyphCycle : f32) -> vec2<f32> {
 }
 
 [[stage(fragment)]] fn fragMain(input : VertOutput) -> FragOutput {
+
+	var firstCellA = cellsPing_RO.cells[0]; // TODO: remove
+	var firstCellB = cellsPong_RO.cells[0]; // TODO: remove
 
 	var volumetric = bool(config.volumetric);
 	var uv = input.uv;
