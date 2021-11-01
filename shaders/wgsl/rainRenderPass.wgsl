@@ -9,6 +9,8 @@ let SQRT_5 : f32 = 2.23606797749979;
 [[block]] struct Config {
 	// common
 	animationSpeed : f32;
+	glyphSequenceLength : i32;
+	glyphTextureColumns : i32;
 	glyphHeightToWidth : f32;
 	resurrectingCodeRatio : f32;
 	gridSize : vec2<f32>;
@@ -43,28 +45,29 @@ let SQRT_5 : f32 = 2.23606797749979;
 };
 [[group(0), binding(0)]] var<uniform> config : Config;
 
-[[block]] struct MSDF {
-	glyphSequenceLength : i32;
-	glyphTextureColumns : i32;
-};
-[[group(0), binding(1)]] var<uniform> msdf : MSDF;
-[[group(0), binding(2)]] var msdfSampler : sampler;
-[[group(0), binding(3)]] var msdfTexture : texture_2d<f32>;
-
 [[block]] struct Time {
 	seconds : f32;
 	frames : i32;
 };
-[[group(0), binding(4)]] var<uniform> time : Time;
+[[group(0), binding(1)]] var<uniform> time : Time;
 
 [[block]] struct Scene {
 	screenSize : vec2<f32>;
 	camera : mat4x4<f32>;
 	transform : mat4x4<f32>;
 };
-[[group(0), binding(5)]] var<uniform> scene : Scene;
+[[group(0), binding(2)]] var<uniform> scene : Scene;
+
+[[group(0), binding(3)]] var msdfSampler : sampler;
+[[group(0), binding(4)]] var msdfTexture : texture_2d<f32>;
+
+
 
 // Shader params
+
+struct ComputeInput {
+	[[builtin(global_invocation_id)]] id : vec3<u32>;
+};
 
 struct VertInput {
 	[[builtin(vertex_index)]] index : u32;
@@ -98,6 +101,13 @@ fn randomVec2( uv : vec2<f32> ) -> vec2<f32> {
 
 fn wobble(x : f32) -> f32 {
 	return x + 0.3 * sin(SQRT_2 * x) + 0.2 * sin(SQRT_5 * x);
+}
+
+// Compute shader
+
+[[stage(compute), workgroup_size(1, 1, 1)]] fn computeMain(input : ComputeInput) {
+	var hasSun = bool(config.hasSun); // TODO: remove
+	var seconds = time.seconds; // TODO: remove
 }
 
 // Vertex shader
@@ -179,9 +189,9 @@ fn median3(i : vec3<f32>) -> f32 {
 }
 
 fn getSymbolUV(glyphCycle : f32) -> vec2<f32> {
-	var symbol = i32(f32(msdf.glyphSequenceLength) * glyphCycle);
-	var symbolX = symbol % msdf.glyphTextureColumns;
-	var symbolY = symbol / msdf.glyphTextureColumns;
+	var symbol = i32(f32(config.glyphSequenceLength) * glyphCycle);
+	var symbolX = symbol % config.glyphTextureColumns;
+	var symbolY = symbol / config.glyphTextureColumns;
 	return vec2<f32>(f32(symbolX), f32(symbolY));
 }
 
@@ -233,7 +243,7 @@ fn getSymbolUV(glyphCycle : f32) -> vec2<f32> {
 	glyphUV = glyphUV - 0.5;
 	glyphUV = glyphUV * clamp(1.0 - config.glyphEdgeCrop, 0.0, 1.0);
 	glyphUV = glyphUV + 0.5;
-	var msdfUV = (glyphUV + symbolUV) / f32(msdf.glyphTextureColumns);
+	var msdfUV = (glyphUV + symbolUV) / f32(config.glyphTextureColumns);
 
 	// MSDF : calculate brightness of fragment based on distance to shape
 	var dist = textureSample(msdfTexture, msdfSampler, msdfUV).rgb;

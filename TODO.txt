@@ -4,14 +4,18 @@ WebGPU
   First decent rainRender
     Port compute pass 100%
       Compute entry point can live in the same wgsl file, I think
-      use textureLoad for texel access in render pipeline
+        ping-pong buffers
+      Bind both ping-pong buffers in render pass
+        The frame integer can be used by the render code to reference the correct one
     Reorder the config fields
+    Reconsider how the bind groups are organized?
     Render target
       Resize accordingly
     Put in its own module
   Blur: compute or render?
   The other passes should be a breeze
     Just add them to the render bundle
+
 
   Update links in issues
 

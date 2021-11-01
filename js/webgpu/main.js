@@ -53,6 +53,8 @@ export default async (canvas, config) => {
 	const configData = [
 		// common
 		{ name: "animationSpeed", type: "f32", value: config.animationSpeed },
+		{ name: "glyphSequenceLength", type: "i32", value: config.glyphSequenceLength },
+		{ name: "glyphTextureColumns", type: "i32", value: config.glyphTextureColumns },
 		{ name: "glyphHeightToWidth", type: "f32", value: config.glyphHeightToWidth },
 		{ name: "resurrectingCodeRatio", type: "f32", value: config.resurrectingCodeRatio },
 		{ name: "gridSize", type: "vec2<f32>", value: gridSize },
@@ -94,19 +96,6 @@ export default async (canvas, config) => {
 		configData.map((field) => field.value)
 	);
 
-	const msdfData = [
-		{ name: "glyphSequenceLength", type: "i32", value: config.glyphSequenceLength },
-		{ name: "glyphTextureColumns", type: "i32", value: config.glyphTextureColumns },
-	];
-	console.table(msdfData);
-
-	const msdfLayout = std140(msdfData.map((field) => field.type));
-	const msdfBuffer = makeUniformBuffer(
-		device,
-		msdfLayout,
-		msdfData.map((field) => field.value)
-	);
-
 	const timeLayout = std140(["f32", "i32"]);
 	const timeBuffer = makeUniformBuffer(device, timeLayout);
 
@@ -135,6 +124,13 @@ export default async (canvas, config) => {
 
 	const rainRenderShaderModule = device.createShaderModule({ code: rainRenderShader });
 
+	const rainComputePipeline = device.createComputePipeline({
+		compute: {
+			module: rainRenderShaderModule,
+			entryPoint: "computeMain",
+		},
+	});
+
 	const additiveBlendComponent = {
 		operation: "add",
 		srcFactor: "one",
@@ -161,9 +157,19 @@ export default async (canvas, config) => {
 		},
 	});
 
-	const bindGroup = device.createBindGroup({
+	const renderBindGroup = device.createBindGroup({
 		layout: rainRenderPipeline.getBindGroupLayout(0),
-		entries: [configBuffer, msdfBuffer, msdfSampler, msdfTexture.createView(), timeBuffer, sceneBuffer]
+		entries: [configBuffer, timeBuffer, sceneBuffer, msdfSampler, msdfTexture.createView()]
+			.map((resource) => (resource instanceof GPUBuffer ? { buffer: resource } : resource))
+			.map((resource, binding) => ({
+				binding,
+				resource,
+			})),
+	});
+
+	const computeBindGroup = device.createBindGroup({
+		layout: rainComputePipeline.getBindGroupLayout(0),
+		entries: [configBuffer, timeBuffer]
 			.map((resource) => (resource instanceof GPUBuffer ? { buffer: resource } : resource))
 			.map((resource, binding) => ({
 				binding,
@@ -176,7 +182,7 @@ export default async (canvas, config) => {
 	});
 
 	bundleEncoder.setPipeline(rainRenderPipeline);
-	bundleEncoder.setBindGroup(0, bindGroup);
+	bundleEncoder.setBindGroup(0, renderBindGroup);
 	bundleEncoder.draw(numVerticesPerQuad * numQuads, 1, 0, 0);
 	const renderBundles = [bundleEncoder.finish()];
 
@@ -209,6 +215,13 @@ export default async (canvas, config) => {
 		renderPassConfig.colorAttachments[0].view = canvasContext.getCurrentTexture().createView();
 
 		const encoder = device.createCommandEncoder();
+
+		const computePass = encoder.beginComputePass();
+		computePass.setPipeline(rainComputePipeline);
+		computePass.setBindGroup(0, computeBindGroup);
+		computePass.dispatch(...gridSize, 1);
+		computePass.endPass();
+
 		const renderPass = encoder.beginRenderPass(renderPassConfig);
 		renderPass.executeBundles(renderBundles);
 		renderPass.endPass();
