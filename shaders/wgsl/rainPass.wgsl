@@ -266,7 +266,7 @@ fn computeResult (isFirstFrame : bool, previousResult : vec4<f32>, glyphPos : ve
 	var row = i32(input.id.y);
 	var column = i32(input.id.x);
 
-	if (column > i32(config.gridSize.x)) {
+	if (column >= i32(config.gridSize.x)) {
 		return;
 	}
 
