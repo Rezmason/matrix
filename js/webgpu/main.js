@@ -103,12 +103,10 @@ export default async (canvas, config) => {
 	const sceneLayout = std140(["vec2<f32>", "mat4x4<f32>", "mat4x4<f32>"]);
 	const sceneBuffer = makeUniformBuffer(device, sceneLayout);
 
-	const cellBufferDescriptor = {
-		size: numCells * std140(["vec4<f32>"]).size, // TODO: Is this correct?
+	const cellsBuffer = device.createBuffer({
+		size: numCells * std140(["vec4<f32>"]).size,
 		usage: GPUBufferUsage.STORAGE,
-	};
-	const cellsPingBuffer = device.createBuffer(cellBufferDescriptor);
-	const cellsPongBuffer = device.createBuffer(cellBufferDescriptor);
+	});
 
 	const transform = mat4.create();
 	mat4.translate(transform, transform, vec3.fromValues(0, 0, -1));
@@ -167,7 +165,7 @@ export default async (canvas, config) => {
 
 	const computeBindGroup = device.createBindGroup({
 		layout: rainComputePipeline.getBindGroupLayout(0),
-		entries: [configBuffer, timeBuffer, cellsPingBuffer, cellsPongBuffer]
+		entries: [configBuffer, timeBuffer, cellsBuffer]
 			.map((resource) => (resource instanceof GPUBuffer ? { buffer: resource } : resource))
 			.map((resource, binding) => ({
 				binding,
@@ -177,7 +175,7 @@ export default async (canvas, config) => {
 
 	const renderBindGroup = device.createBindGroup({
 		layout: rainRenderPipeline.getBindGroupLayout(0),
-		entries: [configBuffer, timeBuffer, sceneBuffer, msdfSampler, msdfTexture.createView(), cellsPingBuffer, cellsPongBuffer]
+		entries: [configBuffer, timeBuffer, sceneBuffer, msdfSampler, msdfTexture.createView(), cellsBuffer]
 			.map((resource) => (resource instanceof GPUBuffer ? { buffer: resource } : resource))
 			.map((resource, binding) => ({
 				binding,
@@ -225,7 +223,7 @@ export default async (canvas, config) => {
 		const computePass = encoder.beginComputePass();
 		computePass.setPipeline(rainComputePipeline);
 		computePass.setBindGroup(0, computeBindGroup);
-		computePass.dispatch(...gridSize, 1);
+		computePass.dispatch(Math.ceil(gridSize[0] / 32), gridSize[1], 1);
 		computePass.endPass();
 
 		renderPassConfig.colorAttachments[0].view = canvasContext.getCurrentTexture().createView();

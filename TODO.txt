@@ -1,13 +1,8 @@
 TODO:
 
 WebGPU
-  First decent rainRender
-    Fix the rain direction
-    Fix polar glyph direction
-  Maybe re-flip everything
-    Render target
-      Resize accordingly
-    Put in its own module
+  Render targets
+    Resize accordingly
   Blur: compute or render?
   The other passes should be a breeze
     Just add them to the render bundle

@@ -56,15 +56,13 @@
 [[group(0), binding(1)]] var<uniform> time : Time;
 
 // Compute bindings
-[[group(0), binding(2)]] var<storage, read_write> cellsPing_RW : CellData;
-[[group(0), binding(3)]] var<storage, read_write> cellsPong_RW : CellData;
+[[group(0), binding(2)]] var<storage, read_write> cells_RW : CellData;
 
 // Render bindings
 [[group(0), binding(2)]] var<uniform> scene : Scene;
 [[group(0), binding(3)]] var msdfSampler : sampler;
 [[group(0), binding(4)]] var msdfTexture : texture_2d<f32>;
-[[group(0), binding(5)]] var<storage, read> cellsPing_RO : CellData;
-[[group(0), binding(6)]] var<storage, read> cellsPong_RO : CellData;
+[[group(0), binding(5)]] var<storage, read> cells_RO : CellData;
 
 // Shader params
 
@@ -263,30 +261,22 @@ fn computeResult (isFirstFrame : bool, previousResult : vec4<f32>, glyphPos : ve
 	return result;
 }
 
-[[stage(compute), workgroup_size(1, 1, 1)]] fn computeMain(input : ComputeInput) {
+[[stage(compute), workgroup_size(32, 1, 1)]] fn computeMain(input : ComputeInput) {
 
 	var row = i32(input.id.y);
 	var column = i32(input.id.x);
+
+	if (column > i32(config.gridSize.x)) {
+		return;
+	}
+
 	var i = row * i32(config.gridSize.x) + column;
 
 	var isFirstFrame = time.frames == 0;
 	var glyphPos = vec2<f32>(f32(column), f32(row));
 	var screenPos = glyphPos / config.gridSize;
-	var previousResult : vec4<f32>;
-
-	if (time.frames % 2 == 0) {
-		previousResult = cellsPong_RW.cells[i];
-	} else {
-		previousResult = cellsPing_RW.cells[i];
-	}
-
-	var result = computeResult(isFirstFrame, previousResult, glyphPos, screenPos);
-
-	if (time.frames % 2 == 0) {
-		cellsPing_RW.cells[i] = result;
-	} else {
-		cellsPong_RW.cells[i] = result;
-	}
+	var previousResult = cells_RW.cells[i];
+	cells_RW.cells[i] = computeResult(isFirstFrame, previousResult, glyphPos, screenPos);
 }
 
 // Vertex shader
@@ -318,12 +308,7 @@ fn computeResult (isFirstFrame : bool, previousResult : vec4<f32>, glyphPos : ve
 	var uv = (quadPosition + quadCorner) / quadGridSize;
 
 	// Retrieve the quad's glyph data
-	var vGlyph: vec4<f32>;
-	if (time.frames % 2 == 0) {
-		vGlyph = cellsPing_RO.cells[quadIndex];
-	} else {
-		vGlyph = cellsPong_RO.cells[quadIndex];
-	}
+	var vGlyph = cells_RO.cells[quadIndex];
 
 	// Calculate the quad's depth
 	var quadDepth = 0.0;
@@ -337,7 +322,6 @@ fn computeResult (isFirstFrame : bool, previousResult : vec4<f32>, glyphPos : ve
 	worldPosition = worldPosition + quadCorner * vec2<f32>(config.density, 1.0);
 	worldPosition = worldPosition / quadGridSize;
 	worldPosition = (worldPosition - 0.5) * 2.0;
-	worldPosition.y = -worldPosition.y;
 
 	// "Resurrected" columns are in the green channel,
 	// and are vertically flipped (along with their glyphs)
@@ -388,16 +372,18 @@ fn getSymbolUV(glyphCycle : f32) -> vec2<f32> {
 	if (!volumetric) {
 		if (bool(config.isPolar)) {
 			// Curve space to make the letters appear to radiate from up above
-			uv = (uv - 0.5) * 0.5;
-			uv.y = uv.y + 0.5;
+			uv = uv - 0.5;
+			uv = uv * 0.5;
+			uv.y = uv.y - 0.5;
 			var radius = length(uv);
 			var angle = atan2(uv.y, uv.x) / (2.0 * PI) + 0.5;
 			uv = vec2<f32>(fract(angle * 4.0 - 0.5), 1.5 * (1.0 - sqrt(radius)));
+
 		} else {
 			// Apply the slant and a scale to space so the viewport is still fully covered by the geometry
 			uv = vec2<f32>(
-				(uv.x - 0.5) * config.slantVec.x + (uv.y - 0.5) * -config.slantVec.y,
-				(uv.y - 0.5) * config.slantVec.x - (uv.x - 0.5) * -config.slantVec.y
+				(uv.x - 0.5) * config.slantVec.x + (uv.y - 0.5) * config.slantVec.y,
+				(uv.y - 0.5) * config.slantVec.x - (uv.x - 0.5) * config.slantVec.y
 			) * config.slantScale + 0.5;
 		}
 		uv.y = uv.y / config.glyphHeightToWidth;
@@ -410,11 +396,7 @@ fn getSymbolUV(glyphCycle : f32) -> vec2<f32> {
 	} else {
 		var gridCoord : vec2<i32> = vec2<i32>(uv * config.gridSize);
 		var gridIndex = gridCoord.y * i32(config.gridSize.x) + gridCoord.x;
-		if (time.frames % 2 == 0) {
-			glyph = cellsPing_RO.cells[gridIndex];
-		} else {
-			glyph = cellsPong_RO.cells[gridIndex];
-		}
+		glyph = cells_RO.cells[gridIndex];
 	}
 	var brightness = glyph.r;
 	var symbolUV = getSymbolUV(glyph.g);
@@ -429,6 +411,7 @@ fn getSymbolUV(glyphCycle : f32) -> vec2<f32> {
 
 	// resolve UV to cropped position of glyph in MSDF texture
 	var glyphUV = fract(uv * config.gridSize);
+	glyphUV.y = 1.0 - glyphUV.y; // WebGL -> WebGPU y-flip
 	glyphUV = glyphUV - 0.5;
 	glyphUV = glyphUV * clamp(1.0 - config.glyphEdgeCrop, 0.0, 1.0);
 	glyphUV = glyphUV + 0.5;
