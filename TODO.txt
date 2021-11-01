@@ -2,7 +2,9 @@ TODO:
 
 WebGPU
   First decent rainRender
-    Port compute pass 100%
+    Fix the rain direction
+    Fix polar glyph direction
+  Maybe re-flip everything
     Render target
       Resize accordingly
     Put in its own module

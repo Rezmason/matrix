@@ -116,17 +116,177 @@ fn wobble(x : f32) -> f32 {
 
 // Compute shader
 
+// Core functions
+
+// Rain time is the shader's key underlying concept.
+// It's why glyphs that share a column are lit simultaneously, and are brighter toward the bottom.
+fn getRainTime(simTime : f32, glyphPos : vec2<f32>) -> f32 {
+	var columnTimeOffset = randomFloat(vec2<f32>(glyphPos.x, 0.0)) * 1000.0;
+	var columnSpeedOffset = randomFloat(vec2<f32>(glyphPos.x + 0.1, 0.0)) * 0.5 + 0.5;
+	// columnSpeedOffset = 0.0; // TODO: loop
+	var columnTime = columnTimeOffset + simTime * config.fallSpeed * columnSpeedOffset;
+	return (glyphPos.y * 0.01 + columnTime) / config.raindropLength;
+}
+
+fn getBrightness(rainTime : f32) -> f32 {
+	var value = 1.0 - fract(wobble(rainTime));
+	// value = 1.0 - fract(rainTime); // TODO: loop
+	return log(value * 1.25) * 3.0;
+}
+
+fn getCycleSpeed(rainTime : f32, brightness : f32) -> f32 {
+	var localCycleSpeed = 0.0;
+	if (config.cycleStyle == 0 && brightness > 0.0) {
+		localCycleSpeed = pow(1.0 - brightness, 4.0);
+	} elseif (config.cycleStyle == 1) {
+		localCycleSpeed = fract(rainTime);
+	}
+	return config.animationSpeed * config.cycleSpeed * localCycleSpeed;
+}
+
+// Additional effects
+
+fn applySunShowerBrightness(brightness : f32, screenPos : vec2<f32>) -> f32 {
+	if (brightness >= -4.0) {
+		return pow(fract(brightness * 0.5), 3.0) * screenPos.y * 1.5;
+	}
+	return brightness;
+}
+
+fn applyThunderBrightness(brightness : f32, simTime : f32, screenPos : vec2<f32>) -> f32 {
+	var thunderTime = simTime * 0.5;
+	var thunder = 1.0 - fract(wobble(thunderTime));
+	// thunder = 1.0 - fract(thunderTime + 0.3); // TODO: loop
+
+	thunder = log(thunder * 1.5) * 4.0;
+	thunder = clamp(thunder, 0.0, 1.0);
+	thunder = thunder * pow(screenPos.y, 2.0) * 3.0;
+	return brightness + thunder;
+}
+
+fn applyRippleEffect(effect : f32, simTime : f32, screenPos : vec2<f32>) -> f32 {
+	if (config.rippleType == -1) {
+		return effect;
+	}
+
+	var rippleTime = (simTime * 0.5 + sin(simTime) * 0.2) * config.rippleSpeed + 1.0; // TODO: clarify
+	// rippleTime = (simTime * 0.5) * config.rippleSpeed + 1.0; // TODO: loop
+
+	var offset = randomVec2(vec2<f32>(floor(rippleTime), 0.0)) - 0.5;
+	// offset = vec2<f32>(0.0); // TODO: loop
+	var ripplePos = screenPos * 2.0 - 1.0 + offset;
+	var rippleDistance : f32;
+	if (config.rippleType == 0) {
+		var boxDistance = abs(ripplePos) * vec2<f32>(1.0, config.glyphHeightToWidth);
+		rippleDistance = max(boxDistance.x, boxDistance.y);
+	} elseif (config.rippleType == 1) {
+		rippleDistance = length(ripplePos);
+	}
+
+	var rippleValue = fract(rippleTime) * config.rippleScale - rippleDistance;
+
+	if (rippleValue > 0.0 && rippleValue < config.rippleThickness) {
+		return effect + 0.75;
+	}
+
+	return effect;
+}
+
+fn applyCursorEffect(effect : f32, brightness : f32) -> f32 {
+	if (brightness >= config.cursorEffectThreshold) {
+		return 1.0;
+	}
+	return effect;
+}
+
+// Main function
+
+fn computeResult (isFirstFrame : bool, previousResult : vec4<f32>, glyphPos : vec2<f32>, screenPos : vec2<f32>) -> vec4<f32> {
+
+	// Determine the glyph's local time.
+	var simTime = time.seconds * config.animationSpeed;
+	var rainTime = getRainTime(simTime, glyphPos);
+
+	// Rain time is the backbone of this effect.
+
+	// Determine the glyph's brightness.
+	var previousBrightness = previousResult.r;
+	var brightness = getBrightness(rainTime);
+	if (bool(config.hasSun)) {
+		brightness = applySunShowerBrightness(brightness, screenPos);
+	}
+	if (bool(config.hasThunder)) {
+		brightness = applyThunderBrightness(brightness, simTime, screenPos);
+	}
+
+	// Determine the glyph's cycle— the percent this glyph has progressed through the glyph sequence
+	var previousCycle = previousResult.g;
+	var resetGlyph = isFirstFrame; // || previousBrightness <= 0.0; // TODO: loop
+	if (resetGlyph) {
+		if (bool(config.showComputationTexture)) {
+			previousCycle = 0.0;
+		} else {
+			previousCycle = randomFloat(screenPos);
+		}
+	}
+	var localCycleSpeed = getCycleSpeed(rainTime, brightness);
+	var cycle = previousCycle;
+	if (time.frames % config.cycleFrameSkip == 0) {
+		cycle = fract(previousCycle + 0.005 * localCycleSpeed * f32(config.cycleFrameSkip));
+	}
+
+	// Determine the glyph's effect— the amount the glyph lights up for other reasons
+	var effect = 0.0;
+	effect = applyRippleEffect(effect, simTime, screenPos); // Round or square ripples across the grid
+	effect = applyCursorEffect(effect, brightness); // The bright glyphs at the "bottom" of raindrops
+
+	// Modes that don't fade glyphs set their actual brightness here
+	if (config.brightnessOverride > 0.0 && brightness > config.brightnessThreshold) {
+		brightness = config.brightnessOverride;
+	}
+
+	// Blend the glyph's brightness with its previous brightness, so it winks on and off organically
+	if (!isFirstFrame) {
+		brightness = mix(previousBrightness, brightness, config.brightnessDecay);
+	}
+
+	// Determine the glyph depth. This is a static value for each column.
+	var depth = randomFloat(vec2<f32>(screenPos.x, 0.0));
+
+	var result = vec4<f32>(brightness, cycle, depth, effect);
+
+	// Better use of the blue channel, for demonstrating how the glyph cycle works
+	if (bool(config.showComputationTexture)) {
+		result.b = min(1.0, localCycleSpeed);
+	}
+
+	return result;
+}
+
 [[stage(compute), workgroup_size(1, 1, 1)]] fn computeMain(input : ComputeInput) {
-	var animationSpeed = config.animationSpeed; // TODO: remove
-	var hasSun = bool(config.hasSun); // TODO: remove
-	var seconds = time.seconds; // TODO: remove
 
 	var row = i32(input.id.y);
 	var column = i32(input.id.x);
-	var i = row * i32(config.gridSize.x);
+	var i = row * i32(config.gridSize.x) + column;
 
-	cellsPing_RW.cells[i] = vec4<f32>((1.0 + time.seconds * 0.1) % 1.0, 0.0, 0.0, 0.0);
-	cellsPong_RW.cells[i] = vec4<f32>((0.5 + time.seconds * 0.1) % 1.0, 0.5, 0.0, 0.0);
+	var isFirstFrame = time.frames == 0;
+	var glyphPos = vec2<f32>(f32(column), f32(row));
+	var screenPos = glyphPos / config.gridSize;
+	var previousResult : vec4<f32>;
+
+	if (time.frames % 2 == 0) {
+		previousResult = cellsPong_RW.cells[i];
+	} else {
+		previousResult = cellsPing_RW.cells[i];
+	}
+
+	var result = computeResult(isFirstFrame, previousResult, glyphPos, screenPos);
+
+	if (time.frames % 2 == 0) {
+		cellsPing_RW.cells[i] = result;
+	} else {
+		cellsPong_RW.cells[i] = result;
+	}
 }
 
 // Vertex shader
@@ -159,7 +319,7 @@ fn wobble(x : f32) -> f32 {
 
 	// Retrieve the quad's glyph data
 	var vGlyph: vec4<f32>;
-	if ((time.frames / 100) % 2 == 0) {
+	if (time.frames % 2 == 0) {
 		vGlyph = cellsPing_RO.cells[quadIndex];
 	} else {
 		vGlyph = cellsPong_RO.cells[quadIndex];
@@ -221,9 +381,6 @@ fn getSymbolUV(glyphCycle : f32) -> vec2<f32> {
 
 [[stage(fragment)]] fn fragMain(input : VertOutput) -> FragOutput {
 
-	var firstCellA = cellsPing_RO.cells[0]; // TODO: remove
-	var firstCellB = cellsPong_RO.cells[0]; // TODO: remove
-
 	var volumetric = bool(config.volumetric);
 	var uv = input.uv;
 
@@ -235,7 +392,7 @@ fn getSymbolUV(glyphCycle : f32) -> vec2<f32> {
 			uv.y = uv.y + 0.5;
 			var radius = length(uv);
 			var angle = atan2(uv.y, uv.x) / (2.0 * PI) + 0.5;
-			uv = -vec2<f32>(fract(angle * 4.0 - 0.5), 1.5 * (1.0 - sqrt(radius)));
+			uv = vec2<f32>(fract(angle * 4.0 - 0.5), 1.5 * (1.0 - sqrt(radius)));
 		} else {
 			// Apply the slant and a scale to space so the viewport is still fully covered by the geometry
 			uv = vec2<f32>(
@@ -251,9 +408,14 @@ fn getSymbolUV(glyphCycle : f32) -> vec2<f32> {
 	if (volumetric) {
 		glyph = input.glyph;
 	} else {
-		glyph = vec4<f32>(1.0); // TODO : texture2D(state, uv);
+		var gridCoord : vec2<i32> = vec2<i32>(uv * config.gridSize);
+		var gridIndex = gridCoord.y * i32(config.gridSize.x) + gridCoord.x;
+		if (time.frames % 2 == 0) {
+			glyph = cellsPing_RO.cells[gridIndex];
+		} else {
+			glyph = cellsPong_RO.cells[gridIndex];
+		}
 	}
-	glyph = input.glyph; // TODO : remove
 	var brightness = glyph.r;
 	var symbolUV = getSymbolUV(glyph.g);
 	var quadDepth = glyph.b;
