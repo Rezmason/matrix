@@ -331,8 +331,6 @@ fn computeResult (isFirstFrame : bool, previousResult : vec4<f32>, glyphPos : ve
 		vChannel = vec3<f32>(0.0, 1.0, 0.0);
 	}
 
-	vChannel = vec3<f32>(1.0); // TODO : remove
-
 	// Convert the vertex's world space position to screen space
 	var screenPosition = vec4<f32>(worldPosition, quadDepth, 1.0);
 	if (volumetric) {
