@@ -4,11 +4,9 @@ const getCanvasSize = (canvas) => {
 };
 
 const loadTexture = async (device, url) => {
-	const image = new Image();
-	image.crossOrigin = "anonymous";
-	image.src = url;
-	await image.decode();
-	const imageBitmap = await createImageBitmap(image);
+	const response = await fetch(url, { credentials: "include" });
+	const data = await response.blob();
+	const imageBitmap = await createImageBitmap(data);
 
 	const texture = device.createTexture({
 		size: [imageBitmap.width, imageBitmap.height, 1],
