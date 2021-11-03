@@ -1,5 +1,5 @@
 import std140 from "./std140.js";
-import { getCanvasSize, loadTexture, loadShaderModule, makeUniformBuffer } from "./utils.js";
+import { getCanvasSize, createRTT, loadTexture, loadShaderModule, makeUniformBuffer } from "./utils.js";
 const { mat4, vec3 } = glMatrix;
 
 const rippleTypes = {
@@ -25,10 +25,8 @@ export default async (canvas, config) => {
 	const canvasConfig = {
 		device,
 		format: presentationFormat,
-		size: getCanvasSize(canvas),
+		size: [NaN, NaN],
 	};
-
-	canvasContext.configure(canvasConfig);
 
 	const assets = [
 		loadTexture(device, config.glyphTexURL),
@@ -124,7 +122,7 @@ export default async (canvas, config) => {
 	};
 	updateCameraBuffer();
 
-	const msdfSampler = device.createSampler({
+	const linearSampler = device.createSampler({
 		magFilter: "linear",
 		minFilter: "linear",
 	});
@@ -192,7 +190,7 @@ export default async (canvas, config) => {
 
 	const rainRenderBindGroup = device.createBindGroup({
 		layout: rainRenderPipeline.getBindGroupLayout(0),
-		entries: [configBuffer, timeBuffer, sceneBuffer, msdfSampler, msdfTexture.createView(), cellsBuffer]
+		entries: [configBuffer, timeBuffer, sceneBuffer, linearSampler, msdfTexture.createView(), cellsBuffer]
 			.map((resource) => (resource instanceof GPUBuffer ? { buffer: resource } : resource))
 			.map((resource, binding) => ({
 				binding,
@@ -200,20 +198,12 @@ export default async (canvas, config) => {
 			})),
 	});
 
-	const renderToCanvasBindGroup = device.createBindGroup({
-		layout: renderToCanvasPipeline.getBindGroupLayout(0),
-		entries: [msdfSampler, msdfTexture.createView()]
-			.map((resource) => (resource instanceof GPUBuffer ? { buffer: resource } : resource))
-			.map((resource, binding) => ({
-				binding,
-				resource,
-			})),
-	});
+	let rtt, renderToCanvasBindGroup;
 
 	const rainRenderPassConfig = {
 		colorAttachments: [
 			{
-				view: canvasContext.getCurrentTexture().createView(),
+				view: null,
 				loadValue: { r: 0, g: 0, b: 0, a: 1 },
 				storeOp: "store",
 			},
@@ -223,7 +213,7 @@ export default async (canvas, config) => {
 	const renderToCanvasPassConfig = {
 		colorAttachments: [
 			{
-				view: canvasContext.getCurrentTexture().createView(),
+				view: null,
 				loadValue: { r: 0, g: 0, b: 0, a: 1 },
 				storeOp: "store",
 			},
@@ -238,7 +228,18 @@ export default async (canvas, config) => {
 			canvasConfig.size = canvasSize;
 			canvasContext.configure(canvasConfig);
 
-			// TODO: destroy and recreate all screen size textures
+			rtt = createRTT(adapter, device, canvasContext);
+			rainRenderPassConfig.colorAttachments[0].view = rtt.createView();
+
+			renderToCanvasBindGroup = device.createBindGroup({
+				layout: renderToCanvasPipeline.getBindGroupLayout(0),
+				entries: [linearSampler, rtt.createView()]
+					.map((resource) => (resource instanceof GPUBuffer ? { buffer: resource } : resource))
+					.map((resource, binding) => ({
+						binding,
+						resource,
+					})),
+			});
 
 			updateCameraBuffer();
 		}
@@ -254,19 +255,18 @@ export default async (canvas, config) => {
 		rainComputePass.dispatch(Math.ceil(gridSize[0] / 32), gridSize[1], 1);
 		rainComputePass.endPass();
 
-		rainRenderPassConfig.colorAttachments[0].view = canvasContext.getCurrentTexture().createView();
 		const rainRenderPass = encoder.beginRenderPass(rainRenderPassConfig);
 		rainRenderPass.setPipeline(rainRenderPipeline);
 		rainRenderPass.setBindGroup(0, rainRenderBindGroup);
 		rainRenderPass.draw(numVerticesPerQuad * numQuads, 1, 0, 0);
 		rainRenderPass.endPass();
 
-		// renderToCanvasPassConfig.colorAttachments[0].view = canvasContext.getCurrentTexture().createView();
-		// const renderToCanvasPass = encoder.beginRenderPass(renderToCanvasPassConfig);
-		// renderToCanvasPass.setPipeline(renderToCanvasPipeline);
-		// renderToCanvasPass.setBindGroup(0, renderToCanvasBindGroup);
-		// renderToCanvasPass.draw(numVerticesPerQuad, 1, 0, 0);
-		// renderToCanvasPass.endPass();
+		renderToCanvasPassConfig.colorAttachments[0].view = canvasContext.getCurrentTexture().createView();
+		const renderToCanvasPass = encoder.beginRenderPass(renderToCanvasPassConfig);
+		renderToCanvasPass.setPipeline(renderToCanvasPipeline);
+		renderToCanvasPass.setBindGroup(0, renderToCanvasBindGroup);
+		renderToCanvasPass.draw(numVerticesPerQuad, 1, 0, 0);
+		renderToCanvasPass.endPass();
 
 		const commandBuffer = encoder.finish();
 		device.queue.submit([commandBuffer]);

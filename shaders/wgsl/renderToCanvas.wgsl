@@ -13,5 +13,5 @@ struct VertOutput {
 }
 
 [[stage(fragment)]] fn fragMain(input : VertOutput) -> [[location(0)]] vec4<f32> {
-	return textureSample(inputTexture, inputSampler, input.uv);
+	return textureSample(inputTexture, inputSampler, vec2<f32>(input.uv.x, 1.0 - input.uv.y));
 }

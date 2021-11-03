@@ -27,6 +27,14 @@ const loadTexture = async (device, url) => {
 	return texture;
 };
 
+const createRTT = (adapter, device, canvasContext) => {
+	return device.createTexture({
+		size: [...getCanvasSize(canvasContext.canvas), 1],
+		format: canvasContext.getPreferredFormat(adapter),
+		usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT// TODO: reduce
+	});
+};
+
 const loadShaderModule = async (device, url) => {
 	const response = await fetch(url);
 	const code = await response.text();
@@ -46,4 +54,4 @@ const makeUniformBuffer = (device, structLayout, values = null) => {
 	return buffer;
 };
 
-export { getCanvasSize, loadTexture, loadShaderModule, makeUniformBuffer };
+export { getCanvasSize, loadTexture, createRTT, loadShaderModule, makeUniformBuffer };
