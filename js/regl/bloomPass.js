@@ -41,7 +41,7 @@ export default (regl, config, inputs) => {
 	// A 2D gaussian blur is just a 1D blur done horizontally, then done vertically.
 	// The FBO pyramid's levels represent separate levels of detail;
 	// by blurring them all, this basic blur approximates a more complex gaussian:
-	// https://software.intel.com/en-us/articles/compute-shader-hdr-and-bloom
+	// https://web.archive.org/web/20191124072602/https://software.intel.com/en-us/articles/compute-shader-hdr-and-bloom
 
 	const blurFrag = loadText("shaders/glsl/blur.frag.glsl");
 	const blur = regl({

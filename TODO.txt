@@ -7,7 +7,7 @@ WebGPU
   The other passes should be a breeze
     Just add them to the render bundle
 
-
+  Make sure you got CORS right in the texture fetch
   Update links in issues
 
   std140
