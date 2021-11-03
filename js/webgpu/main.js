@@ -1,5 +1,5 @@
 import std140 from "./std140.js";
-import { getCanvasSize, loadTexture, makeUniformBuffer } from "./utils.js";
+import { getCanvasSize, loadTexture, loadShaderModule, makeUniformBuffer } from "./utils.js";
 const { mat4, vec3 } = glMatrix;
 
 const rippleTypes = {
@@ -30,8 +30,11 @@ export default async (canvas, config) => {
 
 	canvasContext.configure(canvasConfig);
 
-	const msdfTexturePromise = loadTexture(device, config.glyphTexURL);
-	const rainShaderPromise = fetch("shaders/wgsl/rainPass.wgsl").then((response) => response.text());
+	const assets = [
+		loadTexture(device, config.glyphTexURL),
+		loadShaderModule(device, "shaders/wgsl/rainPass.wgsl"),
+		loadShaderModule(device, "shaders/wgsl/renderToCanvas.wgsl"),
+	];
 
 	// The volumetric mode multiplies the number of columns
 	// to reach the desired density, and then overlaps them
@@ -126,9 +129,7 @@ export default async (canvas, config) => {
 		minFilter: "linear",
 	});
 
-	const [msdfTexture, rainShader] = await Promise.all([msdfTexturePromise, rainShaderPromise]);
-
-	const rainShaderModule = device.createShaderModule({ code: rainShader });
+	const [msdfTexture, rainShaderModule, renderToCanvasShaderModule] = await Promise.all(assets);
 
 	const rainComputePipeline = device.createComputePipeline({
 		compute: {
@@ -163,7 +164,23 @@ export default async (canvas, config) => {
 		},
 	});
 
-	const computeBindGroup = device.createBindGroup({
+	const renderToCanvasPipeline = device.createRenderPipeline({
+		vertex: {
+			module: renderToCanvasShaderModule,
+			entryPoint: "vertMain",
+		},
+		fragment: {
+			module: renderToCanvasShaderModule,
+			entryPoint: "fragMain",
+			targets: [
+				{
+					format: presentationFormat,
+				},
+			],
+		},
+	});
+
+	const rainComputeBindGroup = device.createBindGroup({
 		layout: rainComputePipeline.getBindGroupLayout(0),
 		entries: [configBuffer, timeBuffer, cellsBuffer]
 			.map((resource) => (resource instanceof GPUBuffer ? { buffer: resource } : resource))
@@ -173,7 +190,7 @@ export default async (canvas, config) => {
 			})),
 	});
 
-	const renderBindGroup = device.createBindGroup({
+	const rainRenderBindGroup = device.createBindGroup({
 		layout: rainRenderPipeline.getBindGroupLayout(0),
 		entries: [configBuffer, timeBuffer, sceneBuffer, msdfSampler, msdfTexture.createView(), cellsBuffer]
 			.map((resource) => (resource instanceof GPUBuffer ? { buffer: resource } : resource))
@@ -183,16 +200,27 @@ export default async (canvas, config) => {
 			})),
 	});
 
-	const bundleEncoder = device.createRenderBundleEncoder({
-		colorFormats: [presentationFormat],
+	const renderToCanvasBindGroup = device.createBindGroup({
+		layout: renderToCanvasPipeline.getBindGroupLayout(0),
+		entries: [msdfSampler, msdfTexture.createView()]
+			.map((resource) => (resource instanceof GPUBuffer ? { buffer: resource } : resource))
+			.map((resource, binding) => ({
+				binding,
+				resource,
+			})),
 	});
 
-	bundleEncoder.setPipeline(rainRenderPipeline);
-	bundleEncoder.setBindGroup(0, renderBindGroup);
-	bundleEncoder.draw(numVerticesPerQuad * numQuads, 1, 0, 0);
-	const renderBundles = [bundleEncoder.finish()];
+	const rainRenderPassConfig = {
+		colorAttachments: [
+			{
+				view: canvasContext.getCurrentTexture().createView(),
+				loadValue: { r: 0, g: 0, b: 0, a: 1 },
+				storeOp: "store",
+			},
+		],
+	};
 
-	const renderPassConfig = {
+	const renderToCanvasPassConfig = {
 		colorAttachments: [
 			{
 				view: canvasContext.getCurrentTexture().createView(),
@@ -220,16 +248,26 @@ export default async (canvas, config) => {
 
 		const encoder = device.createCommandEncoder();
 
-		const computePass = encoder.beginComputePass();
-		computePass.setPipeline(rainComputePipeline);
-		computePass.setBindGroup(0, computeBindGroup);
-		computePass.dispatch(Math.ceil(gridSize[0] / 32), gridSize[1], 1);
-		computePass.endPass();
+		const rainComputePass = encoder.beginComputePass();
+		rainComputePass.setPipeline(rainComputePipeline);
+		rainComputePass.setBindGroup(0, rainComputeBindGroup);
+		rainComputePass.dispatch(Math.ceil(gridSize[0] / 32), gridSize[1], 1);
+		rainComputePass.endPass();
 
-		renderPassConfig.colorAttachments[0].view = canvasContext.getCurrentTexture().createView();
-		const renderPass = encoder.beginRenderPass(renderPassConfig);
-		renderPass.executeBundles(renderBundles);
-		renderPass.endPass();
+		rainRenderPassConfig.colorAttachments[0].view = canvasContext.getCurrentTexture().createView();
+		const rainRenderPass = encoder.beginRenderPass(rainRenderPassConfig);
+		rainRenderPass.setPipeline(rainRenderPipeline);
+		rainRenderPass.setBindGroup(0, rainRenderBindGroup);
+		rainRenderPass.draw(numVerticesPerQuad * numQuads, 1, 0, 0);
+		rainRenderPass.endPass();
+
+		// renderToCanvasPassConfig.colorAttachments[0].view = canvasContext.getCurrentTexture().createView();
+		// const renderToCanvasPass = encoder.beginRenderPass(renderToCanvasPassConfig);
+		// renderToCanvasPass.setPipeline(renderToCanvasPipeline);
+		// renderToCanvasPass.setBindGroup(0, renderToCanvasBindGroup);
+		// renderToCanvasPass.draw(numVerticesPerQuad, 1, 0, 0);
+		// renderToCanvasPass.endPass();
+
 		const commandBuffer = encoder.finish();
 		device.queue.submit([commandBuffer]);
 

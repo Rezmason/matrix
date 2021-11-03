@@ -27,6 +27,12 @@ const loadTexture = async (device, url) => {
 	return texture;
 };
 
+const loadShaderModule = async (device, url) => {
+	const response = await fetch(url);
+	const code = await response.text();
+	return device.createShaderModule({ code });
+};
+
 const makeUniformBuffer = (device, structLayout, values = null) => {
 	const buffer = device.createBuffer({
 		size: structLayout.size,
@@ -40,4 +46,4 @@ const makeUniformBuffer = (device, structLayout, values = null) => {
 	return buffer;
 };
 
-export { getCanvasSize, loadTexture, makeUniformBuffer };
+export { getCanvasSize, loadTexture, loadShaderModule, makeUniformBuffer };
