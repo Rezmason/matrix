@@ -61,4 +61,7 @@ const makePass = (outputs, ready, setSize, execute) => {
 	};
 };
 
-export { getCanvasSize, loadTexture, loadShaderModule, makeUniformBuffer, makePass };
+const makePipeline = (steps, getInputs, context) =>
+	steps.filter((f) => f != null).reduce((pipeline, f, i) => [...pipeline, f(context, i == 0 ? null : getInputs(pipeline[i - 1]))], []);
+
+export { getCanvasSize, loadTexture, loadShaderModule, makeUniformBuffer, makePass, makePipeline };

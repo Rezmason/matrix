@@ -1,5 +1,5 @@
 import std140 from "./std140.js";
-import { getCanvasSize, makeUniformBuffer } from "./utils.js";
+import { getCanvasSize, makeUniformBuffer, makePipeline } from "./utils.js";
 import makeRain from "./rainPass.js";
 
 export default async (canvas, config) => {
@@ -27,9 +27,9 @@ export default async (canvas, config) => {
 		timeBuffer,
 	};
 
-	const passes = [makeRain(context)];
+	const pipeline = makePipeline([makeRain /*makeBloomPass, effects[effectName]*/], (p) => p.outputs, context);
 
-	await Promise.all(passes.map((pass) => pass.ready));
+	await Promise.all(pipeline.map((step) => step.ready));
 
 	let frame = 0;
 
@@ -38,14 +38,14 @@ export default async (canvas, config) => {
 		if (canvasSize[0] !== canvasConfig.size[0] || canvasSize[1] !== canvasConfig.size[1]) {
 			canvasConfig.size = canvasSize;
 			canvasContext.configure(canvasConfig);
-			passes.forEach((pass) => pass.setSize(...canvasSize));
+			pipeline.forEach((step) => step.setSize(...canvasSize));
 		}
 
 		device.queue.writeBuffer(timeBuffer, 0, timeLayout.build([now / 1000, frame]));
 		frame++;
 
 		const encoder = device.createCommandEncoder();
-		passes.forEach((pass) => pass.execute(encoder));
+		pipeline.forEach((step) => step.execute(encoder));
 		device.queue.submit([encoder.finish()]);
 		requestAnimationFrame(renderLoop);
 	};

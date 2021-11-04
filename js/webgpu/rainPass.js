@@ -15,7 +15,7 @@ const cycleStyles = {
 
 const numVerticesPerQuad = 2 * 3;
 
-export default (context) => {
+export default (context, inputs) => {
 	const { config, adapter, device, canvasContext, timeBuffer } = context;
 
 	const assets = [loadTexture(device, config.glyphTexURL), loadShaderModule(device, "shaders/wgsl/rainPass.wgsl")];
