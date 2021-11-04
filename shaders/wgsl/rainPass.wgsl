@@ -60,7 +60,7 @@
 
 // Render bindings
 [[group(0), binding(2)]] var<uniform> scene : Scene;
-[[group(0), binding(3)]] var msdfSampler : sampler;
+[[group(0), binding(3)]] var linearSampler : sampler;
 [[group(0), binding(4)]] var msdfTexture : texture_2d<f32>;
 [[group(0), binding(5)]] var<storage, read> cells_RO : CellData;
 
@@ -416,7 +416,7 @@ fn getSymbolUV(glyphCycle : f32) -> vec2<f32> {
 	var msdfUV = (glyphUV + symbolUV) / f32(config.glyphTextureColumns);
 
 	// MSDF : calculate brightness of fragment based on distance to shape
-	var dist = textureSample(msdfTexture, msdfSampler, msdfUV).rgb;
+	var dist = textureSample(msdfTexture, linearSampler, msdfUV).rgb;
 	var sigDist = median3(dist) - 0.5;
 	var alpha = clamp(sigDist / fwidth(sigDist) + 0.5, 0.0, 1.0);
 

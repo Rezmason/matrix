@@ -4,8 +4,8 @@ WebGPU
   Render targets
     Resize accordingly
   Blur: compute or render?
+    What is workgroupBarrier in compute shaders?
   The other passes should be a breeze
-    Just add them to the render bundle
 
   Make sure you got CORS right in the texture fetch
   Update links in issues
