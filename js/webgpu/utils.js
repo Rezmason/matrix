@@ -46,4 +46,19 @@ const makeUniformBuffer = (device, structLayout, values = null) => {
 	return buffer;
 };
 
-export { getCanvasSize, loadTexture, loadShaderModule, makeUniformBuffer };
+const makePass = (outputs, ready, setSize, execute) => {
+	if (ready == null) {
+		ready = Promise.resolve();
+	} else if (ready instanceof Array) {
+		ready = Promise.all(ready);
+	}
+
+	return {
+		outputs,
+		ready,
+		setSize,
+		execute,
+	};
+};
+
+export { getCanvasSize, loadTexture, loadShaderModule, makeUniformBuffer, makePass };
