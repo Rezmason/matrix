@@ -27,6 +27,14 @@ const loadTexture = async (device, url) => {
 	return texture;
 };
 
+const createRenderTargetTexture = (device, width, height, format = "rgba8unorm") =>
+	device.createTexture({
+		size: [width, height, 1],
+		format,
+		usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+		// TODO: whittle these down
+	});
+
 const loadShaderModule = async (device, url) => {
 	const response = await fetch(url);
 	const code = await response.text();
@@ -46,22 +54,14 @@ const makeUniformBuffer = (device, structLayout, values = null) => {
 	return buffer;
 };
 
-const makePass = (outputs, ready, setSize, execute) => {
-	if (ready == null) {
-		ready = Promise.resolve();
-	} else if (ready instanceof Array) {
-		ready = Promise.all(ready);
-	}
+const makePass = (ready, setSize, getOutputs, execute) => ({
+	ready: ready ?? Promise.resolve(),
+	setSize: setSize ?? (() => {}),
+	getOutputs: getOutputs ?? (() => ({})),
+	execute: execute ?? (() => {}),
+});
 
-	return {
-		outputs,
-		ready,
-		setSize,
-		execute,
-	};
-};
+const makePipeline = (context, steps) =>
+	steps.filter((f) => f != null).reduce((pipeline, f, i) => [...pipeline, f(context, i == 0 ? null : pipeline[i - 1].getOutputs)], []);
 
-const makePipeline = (steps, getInputs, context) =>
-	steps.filter((f) => f != null).reduce((pipeline, f, i) => [...pipeline, f(context, i == 0 ? null : getInputs(pipeline[i - 1]))], []);
-
-export { getCanvasSize, loadTexture, loadShaderModule, makeUniformBuffer, makePass, makePipeline };
+export { getCanvasSize, createRenderTargetTexture, loadTexture, loadShaderModule, makeUniformBuffer, makePass, makePipeline };

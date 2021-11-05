@@ -14,6 +14,9 @@ export default async (canvas, config) => {
 		device,
 		format: presentationFormat,
 		size: [NaN, NaN],
+		usage:
+			// GPUTextureUsage.STORAGE_BINDING |
+			GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST,
 	};
 
 	const timeLayout = std140(["f32", "i32"]);
@@ -27,7 +30,7 @@ export default async (canvas, config) => {
 		timeBuffer,
 	};
 
-	const pipeline = makePipeline([makeRain /*makeBloomPass, effects[effectName]*/], (p) => p.outputs, context);
+	const pipeline = makePipeline(context, [makeRain /*makeBloomPass, effects[effectName]*/]);
 
 	await Promise.all(pipeline.map((step) => step.ready));
 
@@ -46,6 +49,7 @@ export default async (canvas, config) => {
 
 		const encoder = device.createCommandEncoder();
 		pipeline.forEach((step) => step.execute(encoder));
+		encoder.copyTextureToTexture({ texture: pipeline[pipeline.length - 1].getOutputs().primary }, { texture: canvasContext.getCurrentTexture() }, canvasSize);
 		device.queue.submit([encoder.finish()]);
 		requestAnimationFrame(renderLoop);
 	};

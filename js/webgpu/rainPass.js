@@ -1,5 +1,5 @@
 import std140 from "./std140.js";
-import { loadTexture, loadShaderModule, makeUniformBuffer, makePass } from "./utils.js";
+import { createRenderTargetTexture, loadTexture, loadShaderModule, makeUniformBuffer, makePass } from "./utils.js";
 
 const { mat4, vec3 } = glMatrix;
 
@@ -15,23 +15,7 @@ const cycleStyles = {
 
 const numVerticesPerQuad = 2 * 3;
 
-export default (context, inputs) => {
-	const { config, adapter, device, canvasContext, timeBuffer } = context;
-
-	const assets = [loadTexture(device, config.glyphTexURL), loadShaderModule(device, "shaders/wgsl/rainPass.wgsl")];
-
-	// The volumetric mode multiplies the number of columns
-	// to reach the desired density, and then overlaps them
-	const volumetric = config.volumetric;
-	const density = volumetric && config.effect !== "none" ? config.density : 1;
-	const gridSize = [config.numColumns * density, config.numColumns];
-	const numCells = gridSize[0] * gridSize[1];
-
-	// The volumetric mode requires us to create a grid of quads,
-	// rather than a single quad for our geometry
-	const numQuads = volumetric ? numCells : 1;
-
-	// Various effect-related values
+const makeConfigBuffer = (device, config, density, gridSize) => {
 	const rippleType = config.rippleTypeName in rippleTypes ? rippleTypes[config.rippleTypeName] : -1;
 	const cycleStyle = config.cycleStyleName in cycleStyles ? cycleStyles[config.cycleStyleName] : 0;
 	const slantVec = [Math.cos(config.slant), Math.sin(config.slant)];
@@ -73,16 +57,33 @@ export default (context, inputs) => {
 		{ name: "density", type: "f32", value: density },
 		{ name: "slantScale", type: "f32", value: slantScale },
 		{ name: "slantVec", type: "vec2<f32>", value: slantVec },
-		{ name: "volumetric", type: "i32", value: volumetric },
+		{ name: "volumetric", type: "i32", value: config.volumetric },
 	];
 	console.table(configData);
 
-	const configLayout = std140(configData.map((field) => field.type));
-	const configBuffer = makeUniformBuffer(
+	return makeUniformBuffer(
 		device,
-		configLayout,
+		std140(configData.map((field) => field.type)),
 		configData.map((field) => field.value)
 	);
+};
+
+export default (context, getInputs) => {
+	const { config, adapter, device, canvasContext, timeBuffer } = context;
+
+	const assets = [loadTexture(device, config.glyphTexURL), loadShaderModule(device, "shaders/wgsl/rainPass.wgsl")];
+
+	// The volumetric mode multiplies the number of columns
+	// to reach the desired density, and then overlaps them
+	const density = config.volumetric && config.effect !== "none" ? config.density : 1;
+	const gridSize = [config.numColumns * density, config.numColumns];
+	const numCells = gridSize[0] * gridSize[1];
+
+	// The volumetric mode requires us to create a grid of quads,
+	// rather than a single quad for our geometry
+	const numQuads = config.volumetric ? numCells : 1;
+
+	const configBuffer = makeConfigBuffer(device, config, density, gridSize);
 
 	const sceneLayout = std140(["vec2<f32>", "mat4x4<f32>", "mat4x4<f32>"]);
 	const sceneBuffer = makeUniformBuffer(device, sceneLayout);
@@ -101,11 +102,23 @@ export default (context, inputs) => {
 		minFilter: "linear",
 	});
 
+	const renderPassConfig = {
+		colorAttachments: [
+			{
+				view: null,
+				loadValue: { r: 0, g: 0, b: 0, a: 1 },
+				storeOp: "store",
+			},
+		],
+	};
+
+	const presentationFormat = canvasContext.getPreferredFormat(adapter);
+
 	let rainComputePipeline;
 	let rainRenderPipeline;
 	let computeBindGroup;
 	let renderBindGroup;
-	let renderPassConfig;
+	let renderTargetTexture;
 
 	const ready = (async () => {
 		const [msdfTexture, rainShaderModule] = await Promise.all(assets);
@@ -122,8 +135,6 @@ export default (context, inputs) => {
 			srcFactor: "one",
 			dstFactor: "one",
 		};
-
-		const presentationFormat = canvasContext.getPreferredFormat(adapter);
 
 		rainRenderPipeline = device.createRenderPipeline({
 			vertex: {
@@ -164,23 +175,17 @@ export default (context, inputs) => {
 					resource,
 				})),
 		});
-
-		renderPassConfig = {
-			colorAttachments: [
-				{
-					view: null,
-					loadValue: { r: 0, g: 0, b: 0, a: 1 },
-					storeOp: "store",
-				},
-			],
-		};
 	})();
 
 	const setSize = (width, height) => {
+		// Update scene buffer
 		const aspectRatio = width / height;
 		mat4.perspectiveZO(camera, (Math.PI / 180) * 90, aspectRatio, 0.0001, 1000);
 		const screenSize = aspectRatio > 1 ? [1, aspectRatio] : [1 / aspectRatio, 1];
 		device.queue.writeBuffer(sceneBuffer, 0, sceneLayout.build([screenSize, camera, transform]));
+
+		// Update
+		renderTargetTexture = createRenderTargetTexture(device, width, height, presentationFormat);
 	};
 
 	const execute = (encoder) => {
@@ -190,7 +195,7 @@ export default (context, inputs) => {
 		computePass.dispatch(Math.ceil(gridSize[0] / 32), gridSize[1], 1);
 		computePass.endPass();
 
-		renderPassConfig.colorAttachments[0].view = canvasContext.getCurrentTexture().createView();
+		renderPassConfig.colorAttachments[0].view = renderTargetTexture.createView();
 		const renderPass = encoder.beginRenderPass(renderPassConfig);
 		renderPass.setPipeline(rainRenderPipeline);
 		renderPass.setBindGroup(0, renderBindGroup);
@@ -198,7 +203,9 @@ export default (context, inputs) => {
 		renderPass.endPass();
 	};
 
-	const outputs = {}; // TODO
+	const getOutputs = () => ({
+		primary: renderTargetTexture,
+	});
 
-	return makePass(outputs, ready, setSize, execute);
+	return makePass(ready, setSize, getOutputs, execute);
 };

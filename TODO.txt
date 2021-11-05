@@ -1,8 +1,6 @@
 TODO:
 
 WebGPU
-  Render targets
-    Resize accordingly
   Blur: compute or render?
     What is workgroupBarrier in compute shaders?
   The other passes should be a breeze
