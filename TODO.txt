@@ -1,12 +1,11 @@
 TODO:
 
 WebGPU
-  Blur: compute or render?
-    What is workgroupBarrier in compute shaders?
-  The other passes should be a breeze
+  blur pass
 
-  Make sure you got CORS right in the texture fetch
   Update links in issues
+
+  Try to change post processing to compute shaders once they're easier to support
 
   std140
     Document and share it

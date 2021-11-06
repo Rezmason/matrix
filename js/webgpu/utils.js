@@ -4,7 +4,7 @@ const getCanvasSize = (canvas) => {
 };
 
 const loadTexture = async (device, url) => {
-	const response = await fetch(url, { credentials: "include" });
+	const response = await fetch(url);
 	const data = await response.blob();
 	const imageBitmap = await createImageBitmap(data);
 
@@ -27,7 +27,7 @@ const loadTexture = async (device, url) => {
 	return texture;
 };
 
-const createRenderTargetTexture = (device, width, height, format = "rgba8unorm") =>
+const makePassFBO = (device, width, height, format = "rgba8unorm") =>
 	device.createTexture({
 		size: [width, height, 1],
 		format,
@@ -54,6 +54,19 @@ const makeUniformBuffer = (device, structLayout, values = null) => {
 	return buffer;
 };
 
+const make1DTexture = (device, rgbas) => {
+	const size = [rgbas.length];
+	const texture = device.createTexture({
+		size,
+		// dimension: "1d",
+		format: "rgba8unorm",
+		usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
+	});
+	const data = new Uint8ClampedArray(rgbas.map((color) => color.map((f) => f * 0xff)).flat());
+	device.queue.writeTexture({ texture }, data, {}, size);
+	return texture;
+};
+
 const makePass = (ready, setSize, getOutputs, execute) => ({
 	ready: ready ?? Promise.resolve(),
 	setSize: setSize ?? (() => {}),
@@ -64,4 +77,4 @@ const makePass = (ready, setSize, getOutputs, execute) => ({
 const makePipeline = (context, steps) =>
 	steps.filter((f) => f != null).reduce((pipeline, f, i) => [...pipeline, f(context, i == 0 ? null : pipeline[i - 1].getOutputs)], []);
 
-export { getCanvasSize, createRenderTargetTexture, loadTexture, loadShaderModule, makeUniformBuffer, makePass, makePipeline };
+export { getCanvasSize, makePassFBO, make1DTexture, loadTexture, loadShaderModule, makeUniformBuffer, makePass, makePipeline };

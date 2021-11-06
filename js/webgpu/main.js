@@ -1,6 +1,25 @@
 import std140 from "./std140.js";
 import { getCanvasSize, makeUniformBuffer, makePipeline } from "./utils.js";
+
 import makeRain from "./rainPass.js";
+// import makeBloomPass from "./bloomPass.js";
+import makePalettePass from "./palettePass.js";
+import makeStripePass from "./stripePass.js";
+import makeImagePass from "./imagePass.js";
+import makeResurrectionPass from "./resurrectionPass.js";
+
+const effects = {
+	none: null,
+	plain: makePalettePass,
+	customStripes: makeStripePass,
+	stripes: makeStripePass,
+	pride: makeStripePass,
+	transPride: makeStripePass,
+	trans: makeStripePass,
+	image: makeImagePass,
+	resurrection: makeResurrectionPass,
+	resurrections: makeResurrectionPass,
+};
 
 export default async (canvas, config) => {
 	const adapter = await navigator.gpu.requestAdapter();
@@ -30,13 +49,18 @@ export default async (canvas, config) => {
 		timeBuffer,
 	};
 
-	const pipeline = makePipeline(context, [makeRain /*makeBloomPass, effects[effectName]*/]);
+	const effectName = config.effect in effects ? config.effect : "plain";
+	const pipeline = makePipeline(context, [makeRain, /*makeBloomPass,*/ effects[effectName]]);
 
 	await Promise.all(pipeline.map((step) => step.ready));
 
 	let frame = 0;
+	let start = NaN;
 
 	const renderLoop = (now) => {
+		if (isNaN(start)) {
+			start = now;
+		}
 		const canvasSize = getCanvasSize(canvas);
 		if (canvasSize[0] !== canvasConfig.size[0] || canvasSize[1] !== canvasConfig.size[1]) {
 			canvasConfig.size = canvasSize;
@@ -44,7 +68,7 @@ export default async (canvas, config) => {
 			pipeline.forEach((step) => step.setSize(...canvasSize));
 		}
 
-		device.queue.writeBuffer(timeBuffer, 0, timeLayout.build([now / 1000, frame]));
+		device.queue.writeBuffer(timeBuffer, 0, timeLayout.build([(now - start) / 1000, frame]));
 		frame++;
 
 		const encoder = device.createCommandEncoder();

@@ -1,5 +1,5 @@
 import std140 from "./std140.js";
-import { createRenderTargetTexture, loadTexture, loadShaderModule, makeUniformBuffer, makePass } from "./utils.js";
+import { makePassFBO, loadTexture, loadShaderModule, makeUniformBuffer, makePass } from "./utils.js";
 
 const { mat4, vec3 } = glMatrix;
 
@@ -114,18 +114,18 @@ export default (context, getInputs) => {
 
 	const presentationFormat = canvasContext.getPreferredFormat(adapter);
 
-	let rainComputePipeline;
-	let rainRenderPipeline;
+	let computePipeline;
+	let renderPipeline;
 	let computeBindGroup;
 	let renderBindGroup;
-	let renderTargetTexture;
+	let output;
 
 	const ready = (async () => {
-		const [msdfTexture, rainShaderModule] = await Promise.all(assets);
+		const [msdfTexture, rainShader] = await Promise.all(assets);
 
-		rainComputePipeline = device.createComputePipeline({
+		computePipeline = device.createComputePipeline({
 			compute: {
-				module: rainShaderModule,
+				module: rainShader,
 				entryPoint: "computeMain",
 			},
 		});
@@ -136,13 +136,13 @@ export default (context, getInputs) => {
 			dstFactor: "one",
 		};
 
-		rainRenderPipeline = device.createRenderPipeline({
+		renderPipeline = device.createRenderPipeline({
 			vertex: {
-				module: rainShaderModule,
+				module: rainShader,
 				entryPoint: "vertMain",
 			},
 			fragment: {
-				module: rainShaderModule,
+				module: rainShader,
 				entryPoint: "fragMain",
 				targets: [
 					{
@@ -157,7 +157,7 @@ export default (context, getInputs) => {
 		});
 
 		computeBindGroup = device.createBindGroup({
-			layout: rainComputePipeline.getBindGroupLayout(0),
+			layout: computePipeline.getBindGroupLayout(0),
 			entries: [configBuffer, timeBuffer, cellsBuffer]
 				.map((resource) => (resource instanceof GPUBuffer ? { buffer: resource } : resource))
 				.map((resource, binding) => ({
@@ -167,7 +167,7 @@ export default (context, getInputs) => {
 		});
 
 		renderBindGroup = device.createBindGroup({
-			layout: rainRenderPipeline.getBindGroupLayout(0),
+			layout: renderPipeline.getBindGroupLayout(0),
 			entries: [configBuffer, timeBuffer, sceneBuffer, linearSampler, msdfTexture.createView(), cellsBuffer]
 				.map((resource) => (resource instanceof GPUBuffer ? { buffer: resource } : resource))
 				.map((resource, binding) => ({
@@ -185,27 +185,28 @@ export default (context, getInputs) => {
 		device.queue.writeBuffer(sceneBuffer, 0, sceneLayout.build([screenSize, camera, transform]));
 
 		// Update
-		renderTargetTexture = createRenderTargetTexture(device, width, height, presentationFormat);
+		output?.destroy();
+		output = makePassFBO(device, width, height, presentationFormat);
 	};
+
+	const getOutputs = () => ({
+		primary: output,
+	});
 
 	const execute = (encoder) => {
 		const computePass = encoder.beginComputePass();
-		computePass.setPipeline(rainComputePipeline);
+		computePass.setPipeline(computePipeline);
 		computePass.setBindGroup(0, computeBindGroup);
 		computePass.dispatch(Math.ceil(gridSize[0] / 32), gridSize[1], 1);
 		computePass.endPass();
 
-		renderPassConfig.colorAttachments[0].view = renderTargetTexture.createView();
+		renderPassConfig.colorAttachments[0].view = output.createView();
 		const renderPass = encoder.beginRenderPass(renderPassConfig);
-		renderPass.setPipeline(rainRenderPipeline);
+		renderPass.setPipeline(renderPipeline);
 		renderPass.setBindGroup(0, renderBindGroup);
 		renderPass.draw(numVerticesPerQuad * numQuads, 1, 0, 0);
 		renderPass.endPass();
 	};
-
-	const getOutputs = () => ({
-		primary: renderTargetTexture,
-	});
 
 	return makePass(ready, setSize, getOutputs, execute);
 };
