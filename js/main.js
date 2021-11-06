@@ -9,10 +9,11 @@ document.addEventListener("touchmove", (e) => e.preventDefault(), {
 });
 
 document.body.onload = () => {
-	const config = makeConfig(window.location.search);
-	if (navigator.gpu != null) {
-		initWebGPU(canvas, config);
-	} else {
+	const urlParams = Object.fromEntries(new URLSearchParams(window.location.search).entries());
+	const config = makeConfig(urlParams);
+	if (navigator.gpu == null || ["webgl", "regl"].includes(urlParams.renderer?.toLowerCase())) {
 		initREGL(canvas, config);
+	} else {
+		initWebGPU(canvas, config);
 	}
 };

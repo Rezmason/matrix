@@ -186,18 +186,18 @@ paramMapping.dropLength = paramMapping.raindropLength;
 paramMapping.angle = paramMapping.slant;
 paramMapping.colors = paramMapping.stripeColors;
 
-export default (searchString) => {
-	const urlParams = Object.fromEntries(
-		Array.from(new URLSearchParams(searchString).entries())
+export default (urlParams) => {
+	const validParams = Object.fromEntries(
+		Array.from(Object.entries(urlParams))
 			.filter(([key]) => key in paramMapping)
 			.map(([key, value]) => [paramMapping[key].key, paramMapping[key].parser(value)])
 			.filter(([_, value]) => value != null)
 	);
 
-	const version = urlParams.version in versions ? versions[urlParams.version] : versions.classic;
+	const version = validParams.version in versions ? versions[validParams.version] : versions.classic;
 
 	return {
 		...version,
-		...urlParams,
+		...validParams,
 	};
 };
