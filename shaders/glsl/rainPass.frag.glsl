@@ -79,7 +79,7 @@ void main() {
 	float alpha = clamp(sigDist/fwidth(sigDist) + 0.5, 0.0, 1.0);
 
 	if (showComputationTexture) {
-		gl_FragColor = vec4(glyph.rgb * alpha, 1.0);
+		gl_FragColor = vec4(glyph.rgb - alpha, 1.0);
 	} else {
 		gl_FragColor = vec4(vChannel * brightness * alpha, 1.0);
 	}

@@ -8,6 +8,8 @@ WebGPU
   Try to change post processing to compute shaders once they're easier to support
 
   std140
+    Expand it to add array support
+    Contemplate adding struct support
     Document and share it
 
 

@@ -16,6 +16,7 @@ const cycleStyles = {
 const numVerticesPerQuad = 2 * 3;
 
 const makeConfigBuffer = (device, config, density, gridSize) => {
+	// Various effect-related values
 	const rippleType = config.rippleTypeName in rippleTypes ? rippleTypes[config.rippleTypeName] : -1;
 	const cycleStyle = config.cycleStyleName in cycleStyles ? cycleStyles[config.cycleStyleName] : 0;
 	const slantVec = [Math.cos(config.slant), Math.sin(config.slant)];
@@ -178,7 +179,7 @@ export default (context, getInputs) => {
 	})();
 
 	const setSize = (width, height) => {
-		// Update scene buffer
+		// Update scene buffer: camera and transform math for the volumetric mode
 		const aspectRatio = width / height;
 		mat4.perspectiveZO(camera, (Math.PI / 180) * 90, aspectRatio, 0.0001, 1000);
 		const screenSize = aspectRatio > 1 ? [1, aspectRatio] : [1 / aspectRatio, 1];
@@ -194,6 +195,8 @@ export default (context, getInputs) => {
 	});
 
 	const execute = (encoder) => {
+		// We render the code into an FBO using MSDFs: https://github.com/Chlumsky/msdfgen
+
 		const computePass = encoder.beginComputePass();
 		computePass.setPipeline(computePipeline);
 		computePass.setBindGroup(0, computeBindGroup);

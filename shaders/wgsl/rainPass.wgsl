@@ -1,5 +1,8 @@
+// This shader module is the star of the show.
+// It is where the cell states update and the symbols get drawn to the screen.
+
 [[block]] struct Config {
-	// common
+	// common properties used for compute and rendering
 	animationSpeed : f32;
 	glyphSequenceLength : i32;
 	glyphTextureColumns : i32;
@@ -8,7 +11,7 @@
 	gridSize : vec2<f32>;
 	showComputationTexture : i32;
 
-	// compute
+	// compute-specific properties
 	brightnessThreshold : f32;
 	brightnessOverride : f32;
 	brightnessDecay : f32;
@@ -25,7 +28,7 @@
 	cycleStyle : i32;
 	rippleType : i32;
 
-	// render
+	// render-specific properties
 	forwardSpeed : f32;
 	glyphVerticalSpacing : f32;
 	glyphEdgeCrop : f32;
@@ -36,17 +39,20 @@
 	volumetric : i32;
 };
 
+// The properties that change over time get their own buffer.
 [[block]] struct Time {
 	seconds : f32;
 	frames : i32;
 };
 
+// The properties related to the size of the canvas get their own buffer.
 [[block]] struct Scene {
 	screenSize : vec2<f32>;
 	camera : mat4x4<f32>;
 	transform : mat4x4<f32>;
 };
 
+// The array of cells that the compute shader updates, and the fragment shader draws.
 [[block]] struct CellData {
 	cells: array<vec4<f32>>;
 };
@@ -55,10 +61,10 @@
 [[group(0), binding(0)]] var<uniform> config : Config;
 [[group(0), binding(1)]] var<uniform> time : Time;
 
-// Compute bindings
+// Compute-specific bindings
 [[group(0), binding(2)]] var<storage, read_write> cells_RW : CellData;
 
-// Render bindings
+// Render-specific bindings
 [[group(0), binding(2)]] var<uniform> scene : Scene;
 [[group(0), binding(3)]] var linearSampler : sampler;
 [[group(0), binding(4)]] var msdfTexture : texture_2d<f32>;
@@ -112,9 +118,7 @@ fn wobble(x : f32) -> f32 {
 	return x + 0.3 * sin(SQRT_2 * x) + 0.2 * sin(SQRT_5 * x);
 }
 
-// Compute shader
-
-// Core functions
+// Compute shader core functions
 
 // Rain time is the shader's key underlying concept.
 // It's why glyphs that share a column are lit simultaneously, and are brighter toward the bottom.
@@ -142,7 +146,7 @@ fn getCycleSpeed(rainTime : f32, brightness : f32) -> f32 {
 	return config.animationSpeed * config.cycleSpeed * localCycleSpeed;
 }
 
-// Additional effects
+// Compute shader additional effects
 
 fn applySunShowerBrightness(brightness : f32, screenPos : vec2<f32>) -> f32 {
 	if (brightness >= -4.0) {
@@ -197,7 +201,7 @@ fn applyCursorEffect(effect : f32, brightness : f32) -> f32 {
 	return effect;
 }
 
-// Main function
+// Compute shader main functions
 
 fn computeResult (isFirstFrame : bool, previousResult : vec4<f32>, glyphPos : vec2<f32>, screenPos : vec2<f32>) -> vec4<f32> {
 
@@ -263,6 +267,7 @@ fn computeResult (isFirstFrame : bool, previousResult : vec4<f32>, glyphPos : ve
 
 [[stage(compute), workgroup_size(32, 1, 1)]] fn computeMain(input : ComputeInput) {
 
+	// Resolve the invocation ID to a single cell
 	var row = i32(input.id.y);
 	var column = i32(input.id.x);
 
@@ -272,6 +277,7 @@ fn computeResult (isFirstFrame : bool, previousResult : vec4<f32>, glyphPos : ve
 
 	var i = row * i32(config.gridSize.x) + column;
 
+	// Update the cell
 	var isFirstFrame = time.frames == 0;
 	var glyphPos = vec2<f32>(f32(column), f32(row));
 	var screenPos = glyphPos / config.gridSize;
@@ -348,7 +354,7 @@ fn computeResult (isFirstFrame : bool, previousResult : vec4<f32>, glyphPos : ve
 	);
 }
 
-// Fragment shader
+// Fragment shader core functions
 
 fn median3(i : vec3<f32>) -> f32 {
 	return max(min(i.r, i.g), min(max(i.r, i.g), i.b));
@@ -360,6 +366,8 @@ fn getSymbolUV(glyphCycle : f32) -> vec2<f32> {
 	var symbolY = symbol / config.glyphTextureColumns;
 	return vec2<f32>(f32(symbolX), f32(symbolY));
 }
+
+// Fragment shader
 
 [[stage(fragment)]] fn fragMain(input : VertOutput) -> FragOutput {
 
@@ -423,7 +431,7 @@ fn getSymbolUV(glyphCycle : f32) -> vec2<f32> {
 	var output : FragOutput;
 
 	if (bool(config.showComputationTexture)) {
-		output.color = vec4<f32>(glyph.rgb * alpha, 1.0);
+		output.color = vec4<f32>(glyph.rgb - alpha, 1.0);
 	} else {
 		output.color = vec4<f32>(input.channel * brightness * alpha, 1.0);
 	}
