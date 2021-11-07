@@ -3,13 +3,16 @@ TODO:
 WebGPU
   blur pass
 
+  Cleanup
+    Maybe buffer layouts and buffers can be consolidated somehow
+
   Update links in issues
 
   Try to change post processing to compute shaders once they're easier to support
 
-  std140
-    Expand it to add array support
-    Contemplate adding struct support
+  buffer-stuffer (was "std140")
+    Resolve the memory positions of the fields in the parse layouts
+    Resolve each layout into a Proxy around an ArrayBuffer
     Document and share it
 
 

@@ -1,5 +1,5 @@
 import std140 from "./std140.js";
-import { makePassFBO, loadTexture, loadShaderModule, makeUniformBuffer, makePass } from "./utils.js";
+import { makePassFBO, loadTexture, loadShader, makeUniformBuffer, makePass } from "./utils.js";
 
 const { mat4, vec3 } = glMatrix;
 
@@ -72,7 +72,7 @@ const makeConfigBuffer = (device, config, density, gridSize) => {
 export default (context, getInputs) => {
 	const { config, adapter, device, canvasContext, timeBuffer } = context;
 
-	const assets = [loadTexture(device, config.glyphTexURL), loadShaderModule(device, "shaders/wgsl/rainPass.wgsl")];
+	const assets = [loadTexture(device, config.glyphTexURL), loadShader(device, "shaders/wgsl/rainPass.wgsl")];
 
 	// The volumetric mode multiplies the number of columns
 	// to reach the desired density, and then overlaps them
@@ -126,7 +126,7 @@ export default (context, getInputs) => {
 
 		computePipeline = device.createComputePipeline({
 			compute: {
-				module: rainShader,
+				module: rainShader.module,
 				entryPoint: "computeMain",
 			},
 		});
@@ -139,11 +139,11 @@ export default (context, getInputs) => {
 
 		renderPipeline = device.createRenderPipeline({
 			vertex: {
-				module: rainShader,
+				module: rainShader.module,
 				entryPoint: "vertMain",
 			},
 			fragment: {
-				module: rainShader,
+				module: rainShader.module,
 				entryPoint: "fragMain",
 				targets: [
 					{

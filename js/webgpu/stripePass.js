@@ -1,5 +1,5 @@
 import std140 from "./std140.js";
-import { loadShaderModule, make1DTexture, makeUniformBuffer, makePassFBO, makePass } from "./utils.js";
+import { loadShader, make1DTexture, makeUniformBuffer, makePassFBO, makePass } from "./utils.js";
 
 // Multiplies the rendered rain and bloom by a 1D gradient texture
 // generated from the passed-in color sequence
@@ -73,18 +73,18 @@ export default (context, getInputs) => {
 	let renderPipeline;
 	let output;
 
-	const assets = [loadShaderModule(device, "shaders/wgsl/stripePass.wgsl")];
+	const assets = [loadShader(device, "shaders/wgsl/stripePass.wgsl")];
 
 	const ready = (async () => {
-		const [rainShader] = await Promise.all(assets);
+		const [stripeShader] = await Promise.all(assets);
 
 		renderPipeline = device.createRenderPipeline({
 			vertex: {
-				module: rainShader,
+				module: stripeShader.module,
 				entryPoint: "vertMain",
 			},
 			fragment: {
-				module: rainShader,
+				module: stripeShader.module,
 				entryPoint: "fragMain",
 				targets: [
 					{

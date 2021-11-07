@@ -35,10 +35,13 @@ const makePassFBO = (device, width, height, format = "rgba8unorm") =>
 		// TODO: whittle these down
 	});
 
-const loadShaderModule = async (device, url) => {
+const loadShader = async (device, url) => {
 	const response = await fetch(url);
 	const code = await response.text();
-	return device.createShaderModule({ code });
+	return {
+		code,
+		module: device.createShaderModule({ code }),
+	};
 };
 
 const makeUniformBuffer = (device, structLayout, values = null) => {
@@ -77,4 +80,4 @@ const makePass = (ready, setSize, getOutputs, execute) => ({
 const makePipeline = (context, steps) =>
 	steps.filter((f) => f != null).reduce((pipeline, f, i) => [...pipeline, f(context, i == 0 ? null : pipeline[i - 1].getOutputs)], []);
 
-export { getCanvasSize, makePassFBO, make1DTexture, loadTexture, loadShaderModule, makeUniformBuffer, makePass, makePipeline };
+export { getCanvasSize, makePassFBO, make1DTexture, loadTexture, loadShader, makeUniformBuffer, makePass, makePipeline };

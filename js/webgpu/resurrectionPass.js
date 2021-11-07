@@ -1,5 +1,5 @@
 import std140 from "./std140.js";
-import { loadShaderModule, makeUniformBuffer, makePassFBO, makePass } from "./utils.js";
+import { loadShader, makeUniformBuffer, makePassFBO, makePass } from "./utils.js";
 
 // Matrix Resurrections isn't in theaters yet,
 // and this version of the effect is still a WIP.
@@ -38,18 +38,18 @@ export default (context, getInputs) => {
 	let renderPipeline;
 	let output;
 
-	const assets = [loadShaderModule(device, "shaders/wgsl/resurrectionPass.wgsl")];
+	const assets = [loadShader(device, "shaders/wgsl/resurrectionPass.wgsl")];
 
 	const ready = (async () => {
-		const [rainShader] = await Promise.all(assets);
+		const [resurrectionShader] = await Promise.all(assets);
 
 		renderPipeline = device.createRenderPipeline({
 			vertex: {
-				module: rainShader,
+				module: resurrectionShader.module,
 				entryPoint: "vertMain",
 			},
 			fragment: {
-				module: rainShader,
+				module: resurrectionShader.module,
 				entryPoint: "fragMain",
 				targets: [
 					{

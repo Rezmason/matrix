@@ -1,5 +1,5 @@
 import std140 from "./std140.js";
-import { loadShaderModule, makeUniformBuffer, makePassFBO, makePass } from "./utils.js";
+import { loadShader, makeUniformBuffer, makePassFBO, makePass } from "./utils.js";
 
 // Maps the brightness of the rendered rain and bloom to colors
 // in a linear gradient buffer generated from the passed-in color sequence
@@ -106,18 +106,18 @@ export default (context, getInputs) => {
 	let renderPipeline;
 	let output;
 
-	const assets = [loadShaderModule(device, "shaders/wgsl/palettePass.wgsl")];
+	const assets = [loadShader(device, "shaders/wgsl/palettePass.wgsl")];
 
 	const ready = (async () => {
-		const [rainShader] = await Promise.all(assets);
+		const [paletteShader] = await Promise.all(assets);
 
 		renderPipeline = device.createRenderPipeline({
 			vertex: {
-				module: rainShader,
+				module: paletteShader.module,
 				entryPoint: "vertMain",
 			},
 			fragment: {
-				module: rainShader,
+				module: paletteShader.module,
 				entryPoint: "fragMain",
 				targets: [
 					{

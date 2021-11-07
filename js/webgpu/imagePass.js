@@ -1,5 +1,5 @@
 import std140 from "./std140.js";
-import { loadTexture, loadShaderModule, makeUniformBuffer, makePassFBO, makePass } from "./utils.js";
+import { loadTexture, loadShader, makeUniformBuffer, makePassFBO, makePass } from "./utils.js";
 
 // Multiplies the rendered rain and bloom by a loaded in image
 
@@ -35,20 +35,20 @@ export default (context, getInputs) => {
 	let backgroundTex;
 
 	const bgURL = "bgURL" in config ? config.bgURL : defaultBGURL;
-	const assets = [loadTexture(device, bgURL), loadShaderModule(device, "shaders/wgsl/imagePass.wgsl")];
+	const assets = [loadTexture(device, bgURL), loadShader(device, "shaders/wgsl/imagePass.wgsl")];
 
 	const ready = (async () => {
-		const [bgTex, rainShader] = await Promise.all(assets);
+		const [bgTex, imageShader] = await Promise.all(assets);
 
 		backgroundTex = bgTex;
 
 		renderPipeline = device.createRenderPipeline({
 			vertex: {
-				module: rainShader,
+				module: imageShader.module,
 				entryPoint: "vertMain",
 			},
 			fragment: {
-				module: rainShader,
+				module: imageShader.module,
 				entryPoint: "fragMain",
 				targets: [
 					{

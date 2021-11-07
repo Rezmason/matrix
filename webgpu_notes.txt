@@ -42,7 +42,8 @@ Bind groups let you bind a bunch of resources at once
 Render bundles let you reissue commands
 
 You can only use up to FOUR bind groups on your laptop's device!
-Here's an annoying gotcha: uniform buffers are like classic UBOs, and have esoteric ("std140") layout requirements!
+Here's an annoying gotcha: uniform buffers have layout requirements listed in the WGSL spec
+	https://gpuweb.github.io/gpuweb/wgsl/#structure-layout-rules
 
 Texture lookup in vertex shader
 	You can only sample textures in fragment stages
