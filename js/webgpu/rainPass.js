@@ -46,10 +46,8 @@ export default (context, getInputs) => {
 	// rather than a single quad for our geometry
 	const numQuads = config.volumetric ? numCells : 1;
 
-	// TODO: uniforms should be updated to provide this too
-
 	const cellsBuffer = device.createBuffer({
-		size: numCells * 4 * Float32Array.BYTES_PER_ELEMENT,
+		size: numCells * uniforms.byteSizeOf("vec4<f32>"),
 		usage: GPUBufferUsage.STORAGE,
 	});
 

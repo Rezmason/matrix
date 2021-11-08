@@ -3,17 +3,18 @@ TODO:
 WebGPU
   blur pass
 
-  Cleanup
-    Maybe buffer layouts and buffers can be consolidated somehow
-
   Update links in issues
 
   Try to change post processing to compute shaders once they're easier to support
 
-  gpu-uniforms (was "std140")
-    Resolve the memory positions of the fields in the parse layouts
-    Resolve each layout into a Proxy around an ArrayBuffer and three mapped typedarrays
-    Document and share it
+  gpu-uniforms
+    Is this an adequate name for it? Can't it be useful for non-uniform-related things?
+    Resolve the remaining to-dos
+    Try and drive use it for the palette color buffer
+    Test it
+    Demo it to others
+    Make improvements
+    License it and put it somewhere else
 
 
 Write an explanation of the rain pass (and include images)

@@ -8,7 +8,6 @@ const numVerticesPerQuad = 2 * 3;
 
 export default (context, getInputs) => {
 	const { config, adapter, device, canvasContext } = context;
-	const ditherMagnitude = 0.05;
 
 	const linearSampler = device.createSampler({
 		magFilter: "linear",

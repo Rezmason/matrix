@@ -17,7 +17,7 @@ const colorToRGB = ([hue, saturation, lightness]) => {
 
 const numVerticesPerQuad = 2 * 3;
 
-const makePalette = (device, entries) => {
+const makePalette = (device, paletteUniforms, entries) => {
 	const PALETTE_SIZE = 512;
 	const paletteColors = Array(PALETTE_SIZE);
 
@@ -79,12 +79,6 @@ const makePalette = (device, entries) => {
 
 export default (context, getInputs) => {
 	const { config, adapter, device, canvasContext, timeBuffer } = context;
-	const ditherMagnitude = 0.05;
-
-	const configUniforms = uniforms.read(`struct Config { ditherMagnitude : f32; backgroundColor: vec3<f32>; };`).Config;
-	const configBuffer = makeUniformBuffer(device, configUniforms, { ditherMagnitude, backgroundColor: config.backgroundColor });
-
-	const paletteBuffer = makePalette(device, config.paletteEntries);
 
 	const linearSampler = device.createSampler({
 		magFilter: "linear",
@@ -104,6 +98,8 @@ export default (context, getInputs) => {
 	const presentationFormat = canvasContext.getPreferredFormat(adapter);
 
 	let renderPipeline;
+	let configBuffer;
+	let paletteBuffer;
 	let output;
 
 	const assets = [loadShader(device, "shaders/wgsl/palettePass.wgsl")];
@@ -126,6 +122,13 @@ export default (context, getInputs) => {
 				],
 			},
 		});
+
+		const paletteShaderUniforms = uniforms.read(paletteShader.code);
+		const configUniforms = paletteShaderUniforms.Config;
+		configBuffer = makeUniformBuffer(device, configUniforms, { ditherMagnitude: 0.05, backgroundColor: config.backgroundColor });
+
+		const paletteUniforms = paletteShaderUniforms.Palette;
+		paletteBuffer = makePalette(device, paletteUniforms, config.paletteEntries);
 	})();
 
 	const setSize = (width, height) => {

@@ -39,10 +39,6 @@ const numVerticesPerQuad = 2 * 3;
 
 export default (context, getInputs) => {
 	const { config, adapter, device, canvasContext, timeBuffer } = context;
-	const ditherMagnitude = 0.05;
-
-	const configUniforms = uniforms.read(`struct Config { ditherMagnitude : f32; backgroundColor: vec3<f32>; };`).Config;
-	const configBuffer = makeUniformBuffer(device, configUniforms, { ditherMagnitude, backgroundColor: config.backgroundColor });
 
 	// Expand and convert stripe colors into 1D texture data
 	const stripeColors =
@@ -71,6 +67,7 @@ export default (context, getInputs) => {
 	const presentationFormat = canvasContext.getPreferredFormat(adapter);
 
 	let renderPipeline;
+	let configBuffer;
 	let output;
 
 	const assets = [loadShader(device, "shaders/wgsl/stripePass.wgsl")];
@@ -93,6 +90,9 @@ export default (context, getInputs) => {
 				],
 			},
 		});
+
+		const configUniforms = uniforms.read(stripeShader.code).Config;
+		configBuffer = makeUniformBuffer(device, configUniforms, { ditherMagnitude: 0.05, backgroundColor: config.backgroundColor });
 	})();
 
 	const setSize = (width, height) => {

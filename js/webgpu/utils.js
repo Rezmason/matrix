@@ -32,7 +32,6 @@ const makePassFBO = (device, width, height, format = "rgba8unorm") =>
 		size: [width, height, 1],
 		format,
 		usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
-		// TODO: whittle these down
 	});
 
 const loadShader = async (device, url) => {
