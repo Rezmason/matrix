@@ -52,7 +52,14 @@ export default (context, getInputs) => {
 	});
 
 	const transform = mat4.create();
-	mat4.translate(transform, transform, vec3.fromValues(0, 0, -1));
+	if (config.effect === "none") {
+		mat4.rotateX(transform, transform, (Math.PI * 1) / 8);
+		mat4.rotateY(transform, transform, (Math.PI * 1) / 4);
+		mat4.translate(transform, transform, vec3.fromValues(0, 0, -1));
+		mat4.scale(transform, transform, vec3.fromValues(1, 1, 2));
+	} else {
+		mat4.translate(transform, transform, vec3.fromValues(0, 0, -1));
+	}
 	const camera = mat4.create();
 
 	const linearSampler = device.createSampler({
@@ -130,7 +137,15 @@ export default (context, getInputs) => {
 	const setSize = (width, height) => {
 		// Update scene buffer: camera and transform math for the volumetric mode
 		const aspectRatio = width / height;
-		mat4.perspectiveZO(camera, (Math.PI / 180) * 90, aspectRatio, 0.0001, 1000);
+		if (config.effect === "none") {
+			if (aspectRatio > 1) {
+				mat4.orthoZO(camera, -1.5 * aspectRatio, 1.5 * aspectRatio, -1.5, 1.5, -1000, 1000);
+			} else {
+				mat4.orthoZO(camera, -1.5, 1.5, -1.5 / aspectRatio, 1.5 / aspectRatio, -1000, 1000);
+			}
+		} else {
+			mat4.perspectiveZO(camera, (Math.PI / 180) * 90, aspectRatio, 0.0001, 1000);
+		}
 		const screenSize = aspectRatio > 1 ? [1, aspectRatio] : [1 / aspectRatio, 1];
 		device.queue.writeBuffer(sceneBuffer, 0, sceneUniforms.write({ screenSize, camera, transform }));
 

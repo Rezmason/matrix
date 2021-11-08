@@ -156,7 +156,14 @@ export default (regl, config) => {
 	const screenSize = [1, 1];
 	const { mat4, vec3 } = glMatrix;
 	const transform = mat4.create();
-	mat4.translate(transform, transform, vec3.fromValues(0, 0, -1));
+	if (config.effect === "none") {
+		mat4.rotateX(transform, transform, (Math.PI * 1) / 8);
+		mat4.rotateY(transform, transform, (Math.PI * 1) / 4);
+		mat4.translate(transform, transform, vec3.fromValues(0, 0, -1));
+		mat4.scale(transform, transform, vec3.fromValues(1, 1, 2));
+	} else {
+		mat4.translate(transform, transform, vec3.fromValues(0, 0, -1));
+	}
 	const camera = mat4.create();
 
 	return makePass(
@@ -175,7 +182,15 @@ export default (regl, config) => {
 		(w, h) => {
 			output.resize(w, h);
 			const aspectRatio = w / h;
-			glMatrix.mat4.perspective(camera, (Math.PI / 180) * 90, aspectRatio, 0.0001, 1000);
+			if (config.effect === "none") {
+				if (aspectRatio > 1) {
+					mat4.ortho(camera, -1.5 * aspectRatio, 1.5 * aspectRatio, -1.5, 1.5, -1000, 1000);
+				} else {
+					mat4.ortho(camera, -1.5, 1.5, -1.5 / aspectRatio, 1.5 / aspectRatio, -1000, 1000);
+				}
+			} else {
+				mat4.perspective(camera, (Math.PI / 180) * 90, aspectRatio, 0.0001, 1000);
+			}
 			[screenSize[0], screenSize[1]] = aspectRatio > 1 ? [1, aspectRatio] : [1 / aspectRatio, 1];
 		},
 		[msdf.loaded, rainPassCompute.loaded, rainPassVert.loaded, rainPassFrag.loaded]
