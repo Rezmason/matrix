@@ -1,4 +1,4 @@
-import std140 from "./std140.js";
+import uniforms from "/lib/gpu-uniforms.js";
 import { loadTexture, loadShader, makeUniformBuffer, makePassFBO, makePass } from "./utils.js";
 
 // Multiplies the rendered rain and bloom by a loaded in image
@@ -9,9 +9,6 @@ const numVerticesPerQuad = 2 * 3;
 export default (context, getInputs) => {
 	const { config, adapter, device, canvasContext } = context;
 	const ditherMagnitude = 0.05;
-
-	const configLayout = std140(["f32", "vec3<f32>"]);
-	const configBuffer = makeUniformBuffer(device, configLayout, [ditherMagnitude, config.backgroundColor]);
 
 	const linearSampler = device.createSampler({
 		magFilter: "linear",

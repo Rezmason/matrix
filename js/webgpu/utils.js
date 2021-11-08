@@ -44,14 +44,14 @@ const loadShader = async (device, url) => {
 	};
 };
 
-const makeUniformBuffer = (device, structLayout, values = null) => {
+const makeUniformBuffer = (device, uniforms, data = null) => {
 	const buffer = device.createBuffer({
-		size: structLayout.size,
+		size: uniforms.minSize,
 		usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-		mappedAtCreation: values != null,
+		mappedAtCreation: data != null,
 	});
-	if (values != null) {
-		structLayout.build(values, buffer.getMappedRange());
+	if (data != null) {
+		uniforms.write(data, buffer.getMappedRange());
 		buffer.unmap();
 	}
 	return buffer;

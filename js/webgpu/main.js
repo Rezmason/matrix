@@ -1,4 +1,4 @@
-import std140 from "./std140.js";
+import uniforms from "/lib/gpu-uniforms.js";
 import { getCanvasSize, makeUniformBuffer, makePipeline } from "./utils.js";
 
 import makeRain from "./rainPass.js";
@@ -38,8 +38,8 @@ export default async (canvas, config) => {
 			GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST,
 	};
 
-	const timeLayout = std140(["f32", "i32"]);
-	const timeBuffer = makeUniformBuffer(device, timeLayout);
+	const timeUniforms = uniforms.read(`[[block]] struct Time { seconds : f32; frames : i32; };`).Time;
+	const timeBuffer = makeUniformBuffer(device, timeUniforms);
 
 	const context = {
 		config,
@@ -54,7 +54,7 @@ export default async (canvas, config) => {
 
 	await Promise.all(pipeline.map((step) => step.ready));
 
-	let frame = 0;
+	let frames = 0;
 	let start = NaN;
 
 	const renderLoop = (now) => {
@@ -68,8 +68,8 @@ export default async (canvas, config) => {
 			pipeline.forEach((step) => step.setSize(...canvasSize));
 		}
 
-		device.queue.writeBuffer(timeBuffer, 0, timeLayout.build([(now - start) / 1000, frame]));
-		frame++;
+		device.queue.writeBuffer(timeBuffer, 0, timeUniforms.write({ seconds: (now - start) / 1000, frames }));
+		frames++;
 
 		const encoder = device.createCommandEncoder();
 		pipeline.forEach((step) => step.execute(encoder));

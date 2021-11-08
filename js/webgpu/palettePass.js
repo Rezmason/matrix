@@ -1,4 +1,4 @@
-import std140 from "./std140.js";
+import uniforms from "/lib/gpu-uniforms.js";
 import { loadShader, makeUniformBuffer, makePassFBO, makePass } from "./utils.js";
 
 // Maps the brightness of the rendered rain and bloom to colors
@@ -53,7 +53,7 @@ const makePalette = (device, entries) => {
 		}
 	});
 
-	// TODO: support arrays in std140
+	// TODO: try using gpu-uniforms
 
 	const paletteBuffer = device.createBuffer({
 		size: (3 + 1) * PALETTE_SIZE * Float32Array.BYTES_PER_ELEMENT,
@@ -81,8 +81,8 @@ export default (context, getInputs) => {
 	const { config, adapter, device, canvasContext, timeBuffer } = context;
 	const ditherMagnitude = 0.05;
 
-	const configLayout = std140(["f32", "vec3<f32>"]);
-	const configBuffer = makeUniformBuffer(device, configLayout, [ditherMagnitude, config.backgroundColor]);
+	const configUniforms = uniforms.read(`struct Config { ditherMagnitude : f32; backgroundColor: vec3<f32>; };`).Config;
+	const configBuffer = makeUniformBuffer(device, configUniforms, { ditherMagnitude, backgroundColor: config.backgroundColor });
 
 	const paletteBuffer = makePalette(device, config.paletteEntries);
 

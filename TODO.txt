@@ -10,9 +10,9 @@ WebGPU
 
   Try to change post processing to compute shaders once they're easier to support
 
-  buffer-stuffer (was "std140")
+  gpu-uniforms (was "std140")
     Resolve the memory positions of the fields in the parse layouts
-    Resolve each layout into a Proxy around an ArrayBuffer
+    Resolve each layout into a Proxy around an ArrayBuffer and three mapped typedarrays
     Document and share it
 
 

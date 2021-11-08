@@ -1,4 +1,4 @@
-import std140 from "./std140.js";
+import uniforms from "/lib/gpu-uniforms.js";
 import { loadShader, makeUniformBuffer, makePassFBO, makePass } from "./utils.js";
 
 // Matrix Resurrections isn't in theaters yet,
@@ -15,8 +15,8 @@ export default (context, getInputs) => {
 	const { config, adapter, device, canvasContext, timeBuffer } = context;
 	const ditherMagnitude = 0.05;
 
-	const configLayout = std140(["f32", "vec3<f32>"]);
-	const configBuffer = makeUniformBuffer(device, configLayout, [ditherMagnitude, config.backgroundColor]);
+	const configUniforms = uniforms.read(`struct Config { ditherMagnitude : f32; backgroundColor: vec3<f32>; };`).Config;
+	const configBuffer = makeUniformBuffer(device, configUniforms, { ditherMagnitude, backgroundColor: config.backgroundColor });
 
 	const linearSampler = device.createSampler({
 		magFilter: "linear",

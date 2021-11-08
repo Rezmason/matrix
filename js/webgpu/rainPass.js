@@ -1,4 +1,4 @@
-import std140 from "./std140.js";
+import uniforms from "/lib/gpu-uniforms.js";
 import { makePassFBO, loadTexture, loadShader, makeUniformBuffer, makePass } from "./utils.js";
 
 const { mat4, vec3 } = glMatrix;
@@ -15,58 +15,20 @@ const cycleStyles = {
 
 const numVerticesPerQuad = 2 * 3;
 
-const makeConfigBuffer = (device, config, density, gridSize) => {
-	// Various effect-related values
-	const rippleType = config.rippleTypeName in rippleTypes ? rippleTypes[config.rippleTypeName] : -1;
-	const cycleStyle = config.cycleStyleName in cycleStyles ? cycleStyles[config.cycleStyleName] : 0;
-	const slantVec = [Math.cos(config.slant), Math.sin(config.slant)];
-	const slantScale = 1 / (Math.abs(Math.sin(2 * config.slant)) * (Math.sqrt(2) - 1) + 1);
-	const showComputationTexture = config.effect === "none";
-
-	const configData = [
-		// common
-		{ name: "animationSpeed", type: "f32", value: config.animationSpeed },
-		{ name: "glyphSequenceLength", type: "i32", value: config.glyphSequenceLength },
-		{ name: "glyphTextureColumns", type: "i32", value: config.glyphTextureColumns },
-		{ name: "glyphHeightToWidth", type: "f32", value: config.glyphHeightToWidth },
-		{ name: "resurrectingCodeRatio", type: "f32", value: config.resurrectingCodeRatio },
-		{ name: "gridSize", type: "vec2<f32>", value: gridSize },
-		{ name: "showComputationTexture", type: "i32", value: showComputationTexture },
-
-		// compute
-		{ name: "brightnessThreshold", type: "f32", value: config.brightnessThreshold },
-		{ name: "brightnessOverride", type: "f32", value: config.brightnessOverride },
-		{ name: "brightnessDecay", type: "f32", value: config.brightnessDecay },
-		{ name: "cursorEffectThreshold", type: "f32", value: config.cursorEffectThreshold },
-		{ name: "cycleSpeed", type: "f32", value: config.cycleSpeed },
-		{ name: "cycleFrameSkip", type: "i32", value: config.cycleFrameSkip },
-		{ name: "fallSpeed", type: "f32", value: config.fallSpeed },
-		{ name: "hasSun", type: "i32", value: config.hasSun },
-		{ name: "hasThunder", type: "i32", value: config.hasThunder },
-		{ name: "raindropLength", type: "f32", value: config.raindropLength },
-		{ name: "rippleScale", type: "f32", value: config.rippleScale },
-		{ name: "rippleSpeed", type: "f32", value: config.rippleSpeed },
-		{ name: "rippleThickness", type: "f32", value: config.rippleThickness },
-		{ name: "cycleStyle", type: "i32", value: cycleStyle },
-		{ name: "rippleType", type: "i32", value: rippleType },
-
-		// render
-		{ name: "forwardSpeed", type: "f32", value: config.forwardSpeed },
-		{ name: "glyphVerticalSpacing", type: "f32", value: config.glyphVerticalSpacing },
-		{ name: "glyphEdgeCrop", type: "f32", value: config.glyphEdgeCrop },
-		{ name: "isPolar", type: "i32", value: config.isPolar },
-		{ name: "density", type: "f32", value: density },
-		{ name: "slantScale", type: "f32", value: slantScale },
-		{ name: "slantVec", type: "vec2<f32>", value: slantVec },
-		{ name: "volumetric", type: "i32", value: config.volumetric },
-	];
+const makeConfigBuffer = (device, configUniforms, config, density, gridSize) => {
+	const configData = {
+		...config,
+		gridSize,
+		density,
+		showComputationTexture: config.effect === "none",
+		cycleStyle: config.cycleStyleName in cycleStyles ? cycleStyles[config.cycleStyleName] : 0,
+		rippleType: config.rippleTypeName in rippleTypes ? rippleTypes[config.rippleTypeName] : -1,
+		slantScale: 1 / (Math.abs(Math.sin(2 * config.slant)) * (Math.sqrt(2) - 1) + 1),
+		slantVec: [Math.cos(config.slant), Math.sin(config.slant)],
+	};
 	console.table(configData);
 
-	return makeUniformBuffer(
-		device,
-		std140(configData.map((field) => field.type)),
-		configData.map((field) => field.value)
-	);
+	return makeUniformBuffer(device, configUniforms, configData);
 };
 
 export default (context, getInputs) => {
@@ -84,13 +46,10 @@ export default (context, getInputs) => {
 	// rather than a single quad for our geometry
 	const numQuads = config.volumetric ? numCells : 1;
 
-	const configBuffer = makeConfigBuffer(device, config, density, gridSize);
-
-	const sceneLayout = std140(["vec2<f32>", "mat4x4<f32>", "mat4x4<f32>"]);
-	const sceneBuffer = makeUniformBuffer(device, sceneLayout);
+	// TODO: uniforms should be updated to provide this too
 
 	const cellsBuffer = device.createBuffer({
-		size: numCells * std140(["vec4<f32>"]).size,
+		size: numCells * 4 * Float32Array.BYTES_PER_ELEMENT,
 		usage: GPUBufferUsage.STORAGE,
 	});
 
@@ -115,6 +74,9 @@ export default (context, getInputs) => {
 
 	const presentationFormat = canvasContext.getPreferredFormat(adapter);
 
+	let configBuffer;
+	let sceneUniforms;
+	let sceneBuffer;
 	let computePipeline;
 	let renderPipeline;
 	let computeBindGroup;
@@ -123,6 +85,12 @@ export default (context, getInputs) => {
 
 	const ready = (async () => {
 		const [msdfTexture, rainShader] = await Promise.all(assets);
+
+		const rainShaderUniforms = uniforms.read(rainShader.code);
+		configBuffer = makeConfigBuffer(device, rainShaderUniforms.Config, config, density, gridSize);
+
+		sceneUniforms = rainShaderUniforms.Scene;
+		sceneBuffer = makeUniformBuffer(device, sceneUniforms);
 
 		computePipeline = device.createComputePipeline({
 			compute: {
@@ -183,7 +151,7 @@ export default (context, getInputs) => {
 		const aspectRatio = width / height;
 		mat4.perspectiveZO(camera, (Math.PI / 180) * 90, aspectRatio, 0.0001, 1000);
 		const screenSize = aspectRatio > 1 ? [1, aspectRatio] : [1 / aspectRatio, 1];
-		device.queue.writeBuffer(sceneBuffer, 0, sceneLayout.build([screenSize, camera, transform]));
+		device.queue.writeBuffer(sceneBuffer, 0, sceneUniforms.write({ screenSize, camera, transform }));
 
 		// Update
 		output?.destroy();
