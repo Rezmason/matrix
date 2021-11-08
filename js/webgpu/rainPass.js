@@ -26,7 +26,7 @@ const makeConfigBuffer = (device, configUniforms, config, density, gridSize) => 
 		slantScale: 1 / (Math.abs(Math.sin(2 * config.slant)) * (Math.sqrt(2) - 1) + 1),
 		slantVec: [Math.cos(config.slant), Math.sin(config.slant)],
 	};
-	console.table(configData);
+	// console.table(configData);
 
 	return makeUniformBuffer(device, configUniforms, configData);
 };

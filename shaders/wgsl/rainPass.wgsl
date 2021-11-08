@@ -225,11 +225,7 @@ fn computeResult (isFirstFrame : bool, previousResult : vec4<f32>, glyphPos : ve
 	var previousCycle = previousResult.g;
 	var resetGlyph = isFirstFrame; // || previousBrightness <= 0.0; // TODO: loop
 	if (resetGlyph) {
-		if (bool(config.showComputationTexture)) {
-			previousCycle = 0.0;
-		} else {
-			previousCycle = randomFloat(screenPos);
-		}
+		previousCycle = select(randomFloat(screenPos), 0.0, bool(config.showComputationTexture));
 	}
 	var localCycleSpeed = getCycleSpeed(rainTime, brightness);
 	var cycle = previousCycle;
@@ -291,10 +287,7 @@ fn computeResult (isFirstFrame : bool, previousResult : vec4<f32>, glyphPos : ve
 
 	var volumetric = bool(config.volumetric);
 
-	var quadGridSize = vec2<f32>(1.0);
-	if (volumetric) {
-		quadGridSize = config.gridSize;
-	}
+	var quadGridSize = select(vec2<f32>(1.0), config.gridSize, volumetric);
 
 	// Convert the vertex index into its quad's position and its corner in its quad
 	var i = i32(input.index);

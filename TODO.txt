@@ -9,8 +9,9 @@ WebGPU
 
   gpu-uniforms
     Is this an adequate name for it? Can't it be useful for non-uniform-related things?
+      gpu-buffer maybe?
     Resolve the remaining to-dos
-    Try and drive use it for the palette color buffer
+    Try and use it for the palette color buffer
     Test it
     Demo it to others
     Make improvements

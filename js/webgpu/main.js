@@ -27,7 +27,7 @@ export default async (canvas, config) => {
 	const canvasContext = canvas.getContext("webgpu");
 	const presentationFormat = canvasContext.getPreferredFormat(adapter);
 
-	console.table(device.limits);
+	// console.table(device.limits);
 
 	const canvasConfig = {
 		device,
