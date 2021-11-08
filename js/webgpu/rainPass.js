@@ -1,5 +1,5 @@
 import uniforms from "/lib/gpu-uniforms.js";
-import { makePassFBO, loadTexture, loadShader, makeUniformBuffer, makePass } from "./utils.js";
+import { makePassFBO, loadTexture, loadShader, makeUniformBuffer, makeBindGroup, makePass } from "./utils.js";
 
 const { mat4, vec3 } = glMatrix;
 
@@ -123,25 +123,8 @@ export default (context, getInputs) => {
 			},
 		});
 
-		computeBindGroup = device.createBindGroup({
-			layout: computePipeline.getBindGroupLayout(0),
-			entries: [configBuffer, timeBuffer, cellsBuffer]
-				.map((resource) => (resource instanceof GPUBuffer ? { buffer: resource } : resource))
-				.map((resource, binding) => ({
-					binding,
-					resource,
-				})),
-		});
-
-		renderBindGroup = device.createBindGroup({
-			layout: renderPipeline.getBindGroupLayout(0),
-			entries: [configBuffer, timeBuffer, sceneBuffer, linearSampler, msdfTexture.createView(), cellsBuffer]
-				.map((resource) => (resource instanceof GPUBuffer ? { buffer: resource } : resource))
-				.map((resource, binding) => ({
-					binding,
-					resource,
-				})),
-		});
+		computeBindGroup = makeBindGroup(device, computePipeline, 0, [configBuffer, timeBuffer, cellsBuffer]);
+		renderBindGroup = makeBindGroup(device, renderPipeline, 0, [configBuffer, timeBuffer, sceneBuffer, linearSampler, msdfTexture.createView(), cellsBuffer]);
 	})();
 
 	const setSize = (width, height) => {

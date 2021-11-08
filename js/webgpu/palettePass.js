@@ -1,5 +1,5 @@
 import uniforms from "/lib/gpu-uniforms.js";
-import { loadShader, makeUniformBuffer, makePassFBO, makePass } from "./utils.js";
+import { loadShader, makeUniformBuffer, makeBindGroup, makePassFBO, makePass } from "./utils.js";
 
 // Maps the brightness of the rendered rain and bloom to colors
 // in a linear gradient buffer generated from the passed-in color sequence
@@ -144,15 +144,14 @@ export default (context, getInputs) => {
 		const inputs = getInputs();
 		const tex = inputs.primary;
 		const bloomTex = inputs.primary; // TODO: bloom
-		const renderBindGroup = device.createBindGroup({
-			layout: renderPipeline.getBindGroupLayout(0),
-			entries: [configBuffer, paletteBuffer, timeBuffer, linearSampler, tex.createView(), bloomTex.createView()]
-				.map((resource) => (resource instanceof GPUBuffer ? { buffer: resource } : resource))
-				.map((resource, binding) => ({
-					binding,
-					resource,
-				})),
-		});
+		const renderBindGroup = makeBindGroup(device, renderPipeline, 0, [
+			configBuffer,
+			paletteBuffer,
+			timeBuffer,
+			linearSampler,
+			tex.createView(),
+			bloomTex.createView(),
+		]);
 
 		renderPassConfig.colorAttachments[0].view = output.createView();
 		const renderPass = encoder.beginRenderPass(renderPassConfig);

@@ -1,5 +1,5 @@
 import uniforms from "/lib/gpu-uniforms.js";
-import { loadTexture, loadShader, makeUniformBuffer, makePassFBO, makePass } from "./utils.js";
+import { loadTexture, loadShader, makeUniformBuffer, makeBindGroup, makePassFBO, makePass } from "./utils.js";
 
 // Multiplies the rendered rain and bloom by a loaded in image
 
@@ -68,16 +68,7 @@ export default (context, getInputs) => {
 		const inputs = getInputs();
 		const tex = inputs.primary;
 		const bloomTex = inputs.primary; // TODO: bloom
-		const renderBindGroup = device.createBindGroup({
-			layout: renderPipeline.getBindGroupLayout(0),
-			entries: [linearSampler, tex.createView(), bloomTex.createView(), backgroundTex.createView()]
-				.map((resource) => (resource instanceof GPUBuffer ? { buffer: resource } : resource))
-				.map((resource, binding) => ({
-					binding,
-					resource,
-				})),
-		});
-
+		const renderBindGroup = makeBindGroup(device, renderPipeline, 0, [linearSampler, tex.createView(), bloomTex.createView(), backgroundTex.createView()]);
 		renderPassConfig.colorAttachments[0].view = output.createView();
 		const renderPass = encoder.beginRenderPass(renderPassConfig);
 		renderPass.setPipeline(renderPipeline);

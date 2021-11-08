@@ -73,15 +73,7 @@ export default (context, getInputs) => {
 		const inputs = getInputs();
 		const tex = inputs.primary;
 		const bloomTex = inputs.primary; // TODO: bloom
-		const renderBindGroup = device.createBindGroup({
-			layout: renderPipeline.getBindGroupLayout(0),
-			entries: [configBuffer, timeBuffer, linearSampler, tex.createView(), bloomTex.createView()]
-				.map((resource) => (resource instanceof GPUBuffer ? { buffer: resource } : resource))
-				.map((resource, binding) => ({
-					binding,
-					resource,
-				})),
-		});
+		const renderBindGroup = makeBindGroup(device, renderPipeline, 0, [configBuffer, timeBuffer, linearSampler, tex.createView(), bloomTex.createView()]);
 
 		renderPassConfig.colorAttachments[0].view = output.createView();
 		const renderPass = encoder.beginRenderPass(renderPassConfig);

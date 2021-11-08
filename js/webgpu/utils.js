@@ -69,6 +69,17 @@ const make1DTexture = (device, rgbas) => {
 	return texture;
 };
 
+const makeBindGroup = (device, pipeline, index, entries) =>
+	device.createBindGroup({
+		layout: pipeline.getBindGroupLayout(index),
+		entries: entries
+			.map((resource) => (resource instanceof GPUBuffer ? { buffer: resource } : resource))
+			.map((resource, binding) => ({
+				binding,
+				resource,
+			})),
+	});
+
 const makePass = (ready, setSize, getOutputs, execute) => ({
 	ready: ready ?? Promise.resolve(),
 	setSize: setSize ?? (() => {}),
@@ -79,4 +90,4 @@ const makePass = (ready, setSize, getOutputs, execute) => ({
 const makePipeline = (context, steps) =>
 	steps.filter((f) => f != null).reduce((pipeline, f, i) => [...pipeline, f(context, i == 0 ? null : pipeline[i - 1].getOutputs)], []);
 
-export { getCanvasSize, makePassFBO, make1DTexture, loadTexture, loadShader, makeUniformBuffer, makePass, makePipeline };
+export { getCanvasSize, makePassFBO, make1DTexture, loadTexture, loadShader, makeUniformBuffer, makePass, makePipeline, makeBindGroup };
