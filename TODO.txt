@@ -7,14 +7,15 @@ WebGPU
 
   Try to change post processing to compute shaders once they're easier to support
 
-  gpu-uniforms
+  gpu-uniforms, working title
     Is this an adequate name for it? Can't it be useful for non-uniform-related things?
       gpu-buffer maybe?
-    Resolve the remaining to-dos
+    Get all the units to be the same
     Try and use it for the palette color buffer
     Test it
     Demo it to others
     Make improvements
+    Capture expected requirements down the road, make roadmap
     License it and put it somewhere else
 
 
