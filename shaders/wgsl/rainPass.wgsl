@@ -253,9 +253,9 @@ fn computeResult (isFirstFrame : bool, previousResult : vec4<f32>, glyphPos : ve
 
 	var result = vec4<f32>(brightness, cycle, depth, effect);
 
-	// Better use of the blue channel, for demonstrating how the glyph cycle works
+	// Better use of the alpha channel, for demonstrating how the glyph cycle works
 	if (bool(config.showComputationTexture)) {
-		result.b = min(1.0, localCycleSpeed);
+		result.a = min(1.0, localCycleSpeed);
 	}
 
 	return result;
@@ -311,7 +311,7 @@ fn computeResult (isFirstFrame : bool, previousResult : vec4<f32>, glyphPos : ve
 
 	// Calculate the quad's depth
 	var quadDepth = 0.0;
-	if (volumetric && !bool(config.showComputationTexture)) {
+	if (volumetric) {
 		quadDepth = fract(vGlyph.b + time.seconds * config.animationSpeed * config.forwardSpeed);
 		vGlyph.b = quadDepth;
 	}
@@ -424,7 +424,7 @@ fn getSymbolUV(glyphCycle : f32) -> vec2<f32> {
 	var output : FragOutput;
 
 	if (bool(config.showComputationTexture)) {
-		output.color = vec4<f32>(glyph.rgb - alpha, 1.0);
+		output.color = vec4<f32>(glyph.r - alpha, glyph.g * alpha, glyph.a - alpha, 1.0);
 	} else {
 		output.color = vec4<f32>(input.channel * brightness * alpha, 1.0);
 	}

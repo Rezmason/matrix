@@ -179,9 +179,9 @@ vec4 computeResult(bool isFirstFrame, vec4 previousResult, vec2 glyphPos, vec2 s
 
 	vec4 result = vec4(brightness, cycle, depth, effect);
 
-	// Better use of the blue channel, for demonstrating how the glyph cycle works
+	// Better use of the alpha channel, for demonstrating how the glyph cycle works
 	if (showComputationTexture) {
-		result.b = min(1., localCycleSpeed);
+		result.a = min(1., localCycleSpeed);
 	}
 
 	return result;

@@ -9,7 +9,6 @@ uniform mat4 camera, transform;
 uniform vec2 screenSize;
 uniform float time, animationSpeed, forwardSpeed;
 uniform bool volumetric;
-uniform bool showComputationTexture;
 uniform float resurrectingCodeRatio;
 varying vec2 vUV;
 varying vec3 vChannel;
@@ -28,7 +27,7 @@ void main() {
 
 	// Calculate the world space position
 	float quadDepth = 0.0;
-	if (volumetric && !showComputationTexture) {
+	if (volumetric) {
 		quadDepth = fract(vGlyph.b + time * animationSpeed * forwardSpeed);
 		vGlyph.b = quadDepth;
 	}
