@@ -79,7 +79,11 @@ void main() {
 	float alpha = clamp(sigDist/fwidth(sigDist) + 0.5, 0.0, 1.0);
 
 	if (showComputationTexture) {
-		gl_FragColor = vec4(glyph.r - alpha, glyph.g * alpha, glyph.a - alpha, 1.0);
+		vec4 debugColor = vec4(glyph.r - alpha, glyph.g * alpha, glyph.a - alpha, 1.0);
+		if (volumetric) {
+			debugColor.g = debugColor.g * 0.9 + 0.1;
+		}
+		gl_FragColor = debugColor;
 	} else {
 		gl_FragColor = vec4(vChannel * brightness * alpha, 1.0);
 	}

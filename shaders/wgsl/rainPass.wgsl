@@ -425,6 +425,9 @@ fn getSymbolUV(glyphCycle : f32) -> vec2<f32> {
 
 	if (bool(config.showComputationTexture)) {
 		output.color = vec4<f32>(glyph.r - alpha, glyph.g * alpha, glyph.a - alpha, 1.0);
+		if (volumetric) {
+			output.color.g = output.color.g * 0.9 + 0.1;
+		}
 	} else {
 		output.color = vec4<f32>(input.channel * brightness * alpha, 1.0);
 	}
