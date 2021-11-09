@@ -40,7 +40,7 @@ export default async (canvas, config) => {
 	// All this takes place in a full screen quad.
 	const fullScreenQuad = makeFullScreenQuad(regl);
 	const effectName = config.effect in effects ? config.effect : "plain";
-	const pipeline = makePipeline([makeRain, makeBloomPass, effects[effectName]], (p) => p.outputs, regl, config);
+	const pipeline = makePipeline({ regl, config }, [makeRain, makeBloomPass, effects[effectName]]);
 	const screenUniforms = { tex: pipeline[pipeline.length - 1].outputs.primary };
 	const drawToScreen = regl({ uniforms: screenUniforms });
 	await Promise.all(pipeline.map((step) => step.ready));
@@ -50,12 +50,12 @@ export default async (canvas, config) => {
 			dimensions.width = viewportWidth;
 			dimensions.height = viewportHeight;
 			for (const step of pipeline) {
-				step.resize(viewportWidth, viewportHeight);
+				step.setSize(viewportWidth, viewportHeight);
 			}
 		}
 		fullScreenQuad(() => {
 			for (const step of pipeline) {
-				step.render();
+				step.execute();
 			}
 			drawToScreen();
 		});

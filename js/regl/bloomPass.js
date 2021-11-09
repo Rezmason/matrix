@@ -9,7 +9,7 @@ const levelStrengths = Array(pyramidHeight)
 	.map((_, index) => Math.pow(index / (pyramidHeight * 2) + 0.5, 1 / 3).toPrecision(5))
 	.reverse();
 
-export default (regl, config, inputs) => {
+export default ({ regl, config }, inputs) => {
 	const { bloomStrength, bloomSize, highPassThreshold } = config;
 	const enabled = bloomSize > 0 && bloomStrength > 0;
 
@@ -80,6 +80,14 @@ export default (regl, config, inputs) => {
 			primary: inputs.primary,
 			bloom: output,
 		},
+		Promise.all([highPassFrag.loaded, blurFrag.loaded]),
+		(w, h) => {
+			// The blur pyramids can be lower resolution than the screen.
+			resizePyramid(highPassPyramid, w, h, bloomSize);
+			resizePyramid(hBlurPyramid, w, h, bloomSize);
+			resizePyramid(vBlurPyramid, w, h, bloomSize);
+			output.resize(w, h);
+		},
 		() => {
 			for (let i = 0; i < pyramidHeight; i++) {
 				const highPassFBO = highPassPyramid[i];
@@ -91,14 +99,6 @@ export default (regl, config, inputs) => {
 			}
 
 			sumPyramid();
-		},
-		(w, h) => {
-			// The blur pyramids can be lower resolution than the screen.
-			resizePyramid(highPassPyramid, w, h, bloomSize);
-			resizePyramid(hBlurPyramid, w, h, bloomSize);
-			resizePyramid(vBlurPyramid, w, h, bloomSize);
-			output.resize(w, h);
-		},
-		[highPassFrag.loaded, blurFrag.loaded]
+		}
 	);
 };

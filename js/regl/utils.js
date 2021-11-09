@@ -129,28 +129,15 @@ const make1DTexture = (regl, data) =>
 		min: "linear",
 	});
 
-const makePass = (outputs, render, resize, ready) => {
-	if (render == null) {
-		render = () => {};
-	}
-	if (resize == null) {
-		resize = (w, h) => Object.values(outputs).forEach((output) => output.resize(w, h));
-	}
-	if (ready == null) {
-		ready = Promise.resolve();
-	} else if (ready instanceof Array) {
-		ready = Promise.all(ready);
-	}
-	return {
-		outputs,
-		render,
-		resize,
-		ready,
-	};
-};
+const makePass = (outputs, ready, setSize, execute) => ({
+	outputs: outputs ?? {},
+	ready: ready ?? Promise.resolve(),
+	setSize: setSize ?? (() => {}),
+	execute: execute ?? (() => {}),
+});
 
-const makePipeline = (steps, getInputs, ...params) =>
-	steps.filter((f) => f != null).reduce((pipeline, f, i) => [...pipeline, f(...params, i == 0 ? null : getInputs(pipeline[i - 1]))], []);
+const makePipeline = (context, steps) =>
+	steps.filter((f) => f != null).reduce((pipeline, f, i) => [...pipeline, f(context, i == 0 ? null : pipeline[i - 1].outputs)], []);
 
 export {
 	makePassTexture,

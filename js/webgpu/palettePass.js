@@ -161,5 +161,5 @@ export default (context, getInputs) => {
 		renderPass.endPass();
 	};
 
-	return makePass(ready, setSize, getOutputs, execute);
+	return makePass(getOutputs, ready, setSize, execute);
 };

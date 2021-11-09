@@ -62,7 +62,7 @@ const makePalette = (regl, entries) => {
 // won't persist across subsequent frames. This is a safe trick
 // in screen space.
 
-export default (regl, config, inputs) => {
+export default ({ regl, config }, inputs) => {
 	const output = makePassFBO(regl, config.useHalfFloat);
 	const palette = makePalette(regl, config.paletteEntries);
 	const { backgroundColor } = config;
@@ -86,8 +86,8 @@ export default (regl, config, inputs) => {
 		{
 			primary: output,
 		},
-		() => render({ frag: palettePassFrag.text() }),
-		null,
-		palettePassFrag.loaded
+		palettePassFrag.loaded,
+		(w, h) => output.resize(w, h),
+		() => render({ frag: palettePassFrag.text() })
 	);
 };

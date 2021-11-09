@@ -80,10 +80,10 @@ const makeBindGroup = (device, pipeline, index, entries) =>
 			})),
 	});
 
-const makePass = (ready, setSize, getOutputs, execute) => ({
+const makePass = (getOutputs, ready, setSize, execute) => ({
+	getOutputs: getOutputs ?? (() => ({})),
 	ready: ready ?? Promise.resolve(),
 	setSize: setSize ?? (() => {}),
-	getOutputs: getOutputs ?? (() => ({})),
 	execute: execute ?? (() => {}),
 });
 

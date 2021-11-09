@@ -19,7 +19,7 @@ const blVert = [1, 0];
 const brVert = [1, 1];
 const quadVertices = [tlVert, trVert, brVert, tlVert, brVert, blVert];
 
-export default (regl, config) => {
+export default ({ regl, config }) => {
 	// The volumetric mode multiplies the number of columns
 	// to reach the desired density, and then overlaps them
 	const volumetric = config.volumetric;
@@ -170,15 +170,7 @@ export default (regl, config) => {
 		{
 			primary: output,
 		},
-		() => {
-			compute({ frag: rainPassCompute.text() });
-			regl.clear({
-				depth: 1,
-				color: [0, 0, 0, 1],
-				framebuffer: output,
-			});
-			render({ camera, transform, screenSize, vert: rainPassVert.text(), frag: rainPassFrag.text() });
-		},
+		Promise.all([msdf.loaded, rainPassCompute.loaded, rainPassVert.loaded, rainPassFrag.loaded]),
 		(w, h) => {
 			output.resize(w, h);
 			const aspectRatio = w / h;
@@ -193,6 +185,14 @@ export default (regl, config) => {
 			}
 			[screenSize[0], screenSize[1]] = aspectRatio > 1 ? [1, aspectRatio] : [1 / aspectRatio, 1];
 		},
-		[msdf.loaded, rainPassCompute.loaded, rainPassVert.loaded, rainPassFrag.loaded]
+		() => {
+			compute({ frag: rainPassCompute.text() });
+			regl.clear({
+				depth: 1,
+				color: [0, 0, 0, 1],
+				framebuffer: output,
+			});
+			render({ camera, transform, screenSize, vert: rainPassVert.text(), frag: rainPassFrag.text() });
+		}
 	);
 };

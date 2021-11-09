@@ -28,7 +28,7 @@ const prideStripeColors = [
 	[0.8, 0, 1],
 ].flat();
 
-export default (regl, config, inputs) => {
+export default ({ regl, config }, inputs) => {
 	const output = makePassFBO(regl, config.useHalfFloat);
 
 	const { backgroundColor } = config;
@@ -61,8 +61,8 @@ export default (regl, config, inputs) => {
 		{
 			primary: output,
 		},
-		() => render({ frag: stripePassFrag.text() }),
-		null,
-		stripePassFrag.loaded
+		stripePassFrag.loaded,
+		(w, h) => output.resize(w, h),
+		() => render({ frag: stripePassFrag.text() })
 	);
 };
