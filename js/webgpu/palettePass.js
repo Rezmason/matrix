@@ -1,4 +1,4 @@
-import uniforms from "/lib/gpu-uniforms.js";
+import { structs } from "/lib/gpu-buffer.js";
 import { loadShader, makeUniformBuffer, makeBindGroup, makePassFBO, makePass } from "./utils.js";
 
 // Maps the brightness of the rendered rain and bloom to colors
@@ -123,7 +123,7 @@ export default (context, getInputs) => {
 			},
 		});
 
-		const paletteShaderUniforms = uniforms.read(paletteShader.code);
+		const paletteShaderUniforms = structs.from(paletteShader.code);
 		const configUniforms = paletteShaderUniforms.Config;
 		configBuffer = makeUniformBuffer(device, configUniforms, { ditherMagnitude: 0.05, backgroundColor: config.backgroundColor });
 

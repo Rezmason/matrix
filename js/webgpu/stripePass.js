@@ -1,4 +1,4 @@
-import uniforms from "/lib/gpu-uniforms.js";
+import { structs } from "/lib/gpu-buffer.js";
 import { loadShader, make1DTexture, makeUniformBuffer, makeBindGroup, makePassFBO, makePass } from "./utils.js";
 
 // Multiplies the rendered rain and bloom by a 1D gradient texture
@@ -91,7 +91,7 @@ export default (context, getInputs) => {
 			},
 		});
 
-		const configUniforms = uniforms.read(stripeShader.code).Config;
+		const configUniforms = structs.from(stripeShader.code).Config;
 		configBuffer = makeUniformBuffer(device, configUniforms, { ditherMagnitude: 0.05, backgroundColor: config.backgroundColor });
 	})();
 

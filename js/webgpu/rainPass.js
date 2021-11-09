@@ -1,4 +1,4 @@
-import uniforms from "/lib/gpu-uniforms.js";
+import { structs, byteSizeOf } from "/lib/gpu-buffer.js";
 import { makePassFBO, loadTexture, loadShader, makeUniformBuffer, makeBindGroup, makePass } from "./utils.js";
 
 const { mat4, vec3 } = glMatrix;
@@ -47,7 +47,7 @@ export default (context, getInputs) => {
 	const numQuads = config.volumetric ? numCells : 1;
 
 	const cellsBuffer = device.createBuffer({
-		size: numCells * uniforms.byteSizeOf("vec4<f32>"),
+		size: numCells * byteSizeOf("vec4<f32>"),
 		usage: GPUBufferUsage.STORAGE,
 	});
 
@@ -91,7 +91,7 @@ export default (context, getInputs) => {
 	const ready = (async () => {
 		const [msdfTexture, rainShader] = await Promise.all(assets);
 
-		const rainShaderUniforms = uniforms.read(rainShader.code);
+		const rainShaderUniforms = structs.from(rainShader.code);
 		configBuffer = makeConfigBuffer(device, rainShaderUniforms.Config, config, density, gridSize);
 
 		sceneUniforms = rainShaderUniforms.Scene;
@@ -147,7 +147,7 @@ export default (context, getInputs) => {
 			mat4.perspectiveZO(camera, (Math.PI / 180) * 90, aspectRatio, 0.0001, 1000);
 		}
 		const screenSize = aspectRatio > 1 ? [1, aspectRatio] : [1 / aspectRatio, 1];
-		device.queue.writeBuffer(sceneBuffer, 0, sceneUniforms.write({ screenSize, camera, transform }));
+		device.queue.writeBuffer(sceneBuffer, 0, sceneUniforms.toBuffer({ screenSize, camera, transform }));
 
 		// Update
 		output?.destroy();

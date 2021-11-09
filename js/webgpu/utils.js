@@ -50,7 +50,7 @@ const makeUniformBuffer = (device, uniforms, data = null) => {
 		mappedAtCreation: data != null,
 	});
 	if (data != null) {
-		uniforms.write(data, buffer.getMappedRange());
+		uniforms.toBuffer(data, buffer.getMappedRange());
 		buffer.unmap();
 	}
 	return buffer;

@@ -1,23 +1,17 @@
 TODO:
 
+gpu-buffer, working title
+  Try and use it for the palette color buffer
+  Test it
+  Demo it to others
+  Make improvements
+  Capture expected requirements down the road, make roadmap
+  License it and put it somewhere else
+
 WebGPU
   blur pass
-
   Update links in issues
-
   Try to change post processing to compute shaders once they're easier to support
-
-  gpu-uniforms, working title
-    Is this an adequate name for it? Can't it be useful for non-uniform-related things?
-      gpu-buffer maybe?
-    Get all the units to be the same
-    Try and use it for the palette color buffer
-    Test it
-    Demo it to others
-    Make improvements
-    Capture expected requirements down the road, make roadmap
-    License it and put it somewhere else
-
 
 Write an explanation of the rain pass (and include images)
   Compute

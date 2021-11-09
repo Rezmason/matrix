@@ -1,5 +1,4 @@
-import uniforms from "/lib/gpu-uniforms.js";
-import { loadTexture, loadShader, makeUniformBuffer, makeBindGroup, makePassFBO, makePass } from "./utils.js";
+import { loadTexture, loadShader, makeBindGroup, makePassFBO, makePass } from "./utils.js";
 
 // Multiplies the rendered rain and bloom by a loaded in image
 

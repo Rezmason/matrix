@@ -1,4 +1,4 @@
-import uniforms from "/lib/gpu-uniforms.js";
+import { structs } from "/lib/gpu-buffer.js";
 import { getCanvasSize, makeUniformBuffer, makePipeline } from "./utils.js";
 
 import makeRain from "./rainPass.js";
@@ -38,7 +38,7 @@ export default async (canvas, config) => {
 			GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST,
 	};
 
-	const timeUniforms = uniforms.read(`[[block]] struct Time { seconds : f32; frames : i32; };`).Time;
+	const timeUniforms = structs.from(`[[block]] struct Time { seconds : f32; frames : i32; };`).Time;
 	const timeBuffer = makeUniformBuffer(device, timeUniforms);
 
 	const context = {
@@ -68,7 +68,7 @@ export default async (canvas, config) => {
 			pipeline.forEach((step) => step.setSize(...canvasSize));
 		}
 
-		device.queue.writeBuffer(timeBuffer, 0, timeUniforms.write({ seconds: (now - start) / 1000, frames }));
+		device.queue.writeBuffer(timeBuffer, 0, timeUniforms.toBuffer({ seconds: (now - start) / 1000, frames }));
 		frames++;
 
 		const encoder = device.createCommandEncoder();

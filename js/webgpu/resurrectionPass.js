@@ -1,4 +1,4 @@
-import uniforms from "/lib/gpu-uniforms.js";
+import { structs } from "/lib/gpu-buffer.js";
 import { loadShader, makeUniformBuffer, makePassFBO, makePass } from "./utils.js";
 
 // Matrix Resurrections isn't in theaters yet,
@@ -56,7 +56,7 @@ export default (context, getInputs) => {
 			},
 		});
 
-		const configUniforms = uniforms.read(resurrectionShader.code).Config;
+		const configUniforms = structs.from(resurrectionShader.code).Config;
 		configBuffer = makeUniformBuffer(device, configUniforms, { ditherMagnitude: 0.05, backgroundColor: config.backgroundColor });
 	})();
 
