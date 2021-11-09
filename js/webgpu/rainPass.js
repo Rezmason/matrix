@@ -74,6 +74,11 @@ export default (context, getInputs) => {
 				loadValue: { r: 0, g: 0, b: 0, a: 1 },
 				storeOp: "store",
 			},
+			{
+				view: null,
+				loadValue: { r: 0, g: 0, b: 0, a: 1 },
+				storeOp: "store",
+			},
 		],
 	};
 
@@ -87,6 +92,7 @@ export default (context, getInputs) => {
 	let computeBindGroup;
 	let renderBindGroup;
 	let output;
+	let highPassOutput;
 
 	const ready = (async () => {
 		const [msdfTexture, rainShader] = await Promise.all(assets);
@@ -126,6 +132,13 @@ export default (context, getInputs) => {
 							alpha: additiveBlendComponent,
 						},
 					},
+					{
+						format: presentationFormat,
+						blend: {
+							color: additiveBlendComponent,
+							alpha: additiveBlendComponent,
+						},
+					},
 				],
 			},
 		});
@@ -152,10 +165,14 @@ export default (context, getInputs) => {
 		// Update
 		output?.destroy();
 		output = makePassFBO(device, width, height, presentationFormat);
+
+		highPassOutput?.destroy();
+		highPassOutput = makePassFBO(device, width, height, presentationFormat);
 	};
 
 	const getOutputs = () => ({
 		primary: output,
+		highPass: highPassOutput,
 	});
 
 	const execute = (encoder) => {
@@ -168,6 +185,7 @@ export default (context, getInputs) => {
 		computePass.endPass();
 
 		renderPassConfig.colorAttachments[0].view = output.createView();
+		renderPassConfig.colorAttachments[1].view = highPassOutput.createView();
 		const renderPass = encoder.beginRenderPass(renderPassConfig);
 		renderPass.setPipeline(renderPipeline);
 		renderPass.setBindGroup(0, renderBindGroup);
