@@ -38,7 +38,7 @@ const numVerticesPerQuad = 2 * 3;
 // in screen space.
 
 export default (context, getInputs) => {
-	const { config, adapter, device, canvasContext, timeBuffer } = context;
+	const { config, device, timeBuffer, canvasFormat } = context;
 
 	// Expand and convert stripe colors into 1D texture data
 	const stripeColors =
@@ -64,8 +64,6 @@ export default (context, getInputs) => {
 		],
 	};
 
-	const presentationFormat = canvasContext.getPreferredFormat(adapter);
-
 	let renderPipeline;
 	let configBuffer;
 	let output;
@@ -85,7 +83,7 @@ export default (context, getInputs) => {
 				entryPoint: "fragMain",
 				targets: [
 					{
-						format: presentationFormat,
+						format: canvasFormat,
 					},
 				],
 			},
@@ -97,7 +95,7 @@ export default (context, getInputs) => {
 
 	const setSize = (width, height) => {
 		output?.destroy();
-		output = makePassFBO(device, width, height, presentationFormat);
+		output = makePassFBO(device, width, height, canvasFormat);
 	};
 
 	const getOutputs = () => ({
@@ -107,7 +105,7 @@ export default (context, getInputs) => {
 	const execute = (encoder) => {
 		const inputs = getInputs();
 		const tex = inputs.primary;
-		const bloomTex = inputs.primary; // TODO: bloom
+		const bloomTex = inputs.bloom; // TODO: bloom
 		const renderBindGroup = makeBindGroup(device, renderPipeline, 0, [
 			configBuffer,
 			timeBuffer,

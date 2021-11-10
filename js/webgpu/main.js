@@ -2,7 +2,7 @@ import { structs } from "/lib/gpu-buffer.js";
 import { getCanvasSize, makeUniformBuffer, makePipeline } from "./utils.js";
 
 import makeRain from "./rainPass.js";
-// import makeBloomPass from "./bloomPass.js";
+import makeBloomPass from "./bloomPass.js";
 import makePalettePass from "./palettePass.js";
 import makeStripePass from "./stripePass.js";
 import makeImagePass from "./imagePass.js";
@@ -25,13 +25,13 @@ export default async (canvas, config) => {
 	const adapter = await navigator.gpu.requestAdapter();
 	const device = await adapter.requestDevice();
 	const canvasContext = canvas.getContext("webgpu");
-	const presentationFormat = canvasContext.getPreferredFormat(adapter);
+	const canvasFormat = canvasContext.getPreferredFormat(adapter);
 
 	// console.table(device.limits);
 
 	const canvasConfig = {
 		device,
-		format: presentationFormat,
+		format: canvasFormat,
 		size: [NaN, NaN],
 		usage:
 			// GPUTextureUsage.STORAGE_BINDING |
@@ -47,10 +47,11 @@ export default async (canvas, config) => {
 		device,
 		canvasContext,
 		timeBuffer,
+		canvasFormat,
 	};
 
 	const effectName = config.effect in effects ? config.effect : "plain";
-	const pipeline = makePipeline(context, [makeRain, /*makeBloomPass,*/ effects[effectName]]);
+	const pipeline = makePipeline(context, [makeRain, makeBloomPass, effects[effectName]]);
 
 	await Promise.all(pipeline.map((step) => step.ready));
 

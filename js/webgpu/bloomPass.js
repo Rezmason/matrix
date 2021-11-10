@@ -1,3 +1,13 @@
+import { structs } from "/lib/gpu-buffer.js";
+import { loadShader, makeUniformBuffer, makeBindGroup, makePassFBO, makePass } from "./utils.js";
+
+export default (context, getInputs) => {
+	const { config, device, canvasFormat } = context;
+	const fbo = makePassFBO(device, 1, 1, canvasFormat);
+	return makePass(() => ({ ...getInputs(), bloom: fbo }));
+};
+
+/*
 import { loadText, makePassFBO, makePass } from "./utils.js";
 
 // The bloom pass is basically an added high-pass blur.
@@ -112,3 +122,4 @@ export default ({ regl, config }, inputs) => {
 		}
 	);
 };
+*/

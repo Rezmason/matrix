@@ -32,7 +32,7 @@ const makeConfigBuffer = (device, configUniforms, config, density, gridSize) => 
 };
 
 export default (context, getInputs) => {
-	const { config, adapter, device, canvasContext, timeBuffer } = context;
+	const { config, device, timeBuffer, canvasFormat } = context;
 
 	const assets = [loadTexture(device, config.glyphTexURL), loadShader(device, "shaders/wgsl/rainPass.wgsl")];
 
@@ -82,8 +82,6 @@ export default (context, getInputs) => {
 		],
 	};
 
-	const presentationFormat = canvasContext.getPreferredFormat(adapter);
-
 	let configBuffer;
 	let sceneUniforms;
 	let sceneBuffer;
@@ -126,14 +124,14 @@ export default (context, getInputs) => {
 				entryPoint: "fragMain",
 				targets: [
 					{
-						format: presentationFormat,
+						format: canvasFormat,
 						blend: {
 							color: additiveBlendComponent,
 							alpha: additiveBlendComponent,
 						},
 					},
 					{
-						format: presentationFormat,
+						format: canvasFormat,
 						blend: {
 							color: additiveBlendComponent,
 							alpha: additiveBlendComponent,
@@ -164,10 +162,10 @@ export default (context, getInputs) => {
 
 		// Update
 		output?.destroy();
-		output = makePassFBO(device, width, height, presentationFormat);
+		output = makePassFBO(device, width, height, canvasFormat);
 
 		highPassOutput?.destroy();
-		highPassOutput = makePassFBO(device, width, height, presentationFormat);
+		highPassOutput = makePassFBO(device, width, height, canvasFormat);
 	};
 
 	const getOutputs = () => ({

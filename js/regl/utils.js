@@ -10,13 +10,6 @@ const makePassTexture = (regl, halfFloat) =>
 
 const makePassFBO = (regl, halfFloat) => regl.framebuffer({ color: makePassTexture(regl, halfFloat) });
 
-// A pyramid is just an array of FBOs, where each FBO is half the width
-// and half the height of the FBO below it.
-const makePyramid = (regl, height, halfFloat) =>
-	Array(height)
-		.fill()
-		.map((_) => makePassFBO(regl, halfFloat));
-
 const makeDoubleBuffer = (regl, props) => {
 	const state = Array(2)
 		.fill()
@@ -31,9 +24,6 @@ const makeDoubleBuffer = (regl, props) => {
 		back: ({ tick }) => state[(tick + 1) % 2],
 	};
 };
-
-const resizePyramid = (pyramid, vw, vh, scale) =>
-	pyramid.forEach((fbo, index) => fbo.resize(Math.floor((vw * scale) / 2 ** index), Math.floor((vh * scale) / 2 ** index)));
 
 const loadImage = (regl, url) => {
 	let texture = regl.texture([[0]]);
@@ -139,16 +129,4 @@ const makePass = (outputs, ready, setSize, execute) => ({
 const makePipeline = (context, steps) =>
 	steps.filter((f) => f != null).reduce((pipeline, f, i) => [...pipeline, f(context, i == 0 ? null : pipeline[i - 1].outputs)], []);
 
-export {
-	makePassTexture,
-	makePassFBO,
-	makeDoubleBuffer,
-	makePyramid,
-	resizePyramid,
-	loadImage,
-	loadText,
-	makeFullScreenQuad,
-	make1DTexture,
-	makePass,
-	makePipeline,
-};
+export { makePassTexture, makePassFBO, makeDoubleBuffer, loadImage, loadText, makeFullScreenQuad, make1DTexture, makePass, makePipeline };

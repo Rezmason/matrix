@@ -6,7 +6,7 @@ const defaultBGURL = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/
 const numVerticesPerQuad = 2 * 3;
 
 export default (context, getInputs) => {
-	const { config, adapter, device, canvasContext } = context;
+	const { config, device, canvasFormat } = context;
 
 	const linearSampler = device.createSampler({
 		magFilter: "linear",
@@ -22,8 +22,6 @@ export default (context, getInputs) => {
 			},
 		],
 	};
-
-	const presentationFormat = canvasContext.getPreferredFormat(adapter);
 
 	let renderPipeline;
 	let output;
@@ -47,7 +45,7 @@ export default (context, getInputs) => {
 				entryPoint: "fragMain",
 				targets: [
 					{
-						format: presentationFormat,
+						format: canvasFormat,
 					},
 				],
 			},
@@ -56,7 +54,7 @@ export default (context, getInputs) => {
 
 	const setSize = (width, height) => {
 		output?.destroy();
-		output = makePassFBO(device, width, height, presentationFormat);
+		output = makePassFBO(device, width, height, canvasFormat);
 	};
 
 	const getOutputs = () => ({
@@ -66,7 +64,7 @@ export default (context, getInputs) => {
 	const execute = (encoder) => {
 		const inputs = getInputs();
 		const tex = inputs.primary;
-		const bloomTex = inputs.primary; // TODO: bloom
+		const bloomTex = inputs.bloom; // TODO: bloom
 		const renderBindGroup = makeBindGroup(device, renderPipeline, 0, [linearSampler, tex.createView(), bloomTex.createView(), backgroundTex.createView()]);
 		renderPassConfig.colorAttachments[0].view = output.createView();
 		const renderPass = encoder.beginRenderPass(renderPassConfig);
