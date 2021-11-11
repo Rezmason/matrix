@@ -7,6 +7,7 @@ import makePalettePass from "./palettePass.js";
 import makeStripePass from "./stripePass.js";
 import makeImagePass from "./imagePass.js";
 import makeResurrectionPass from "./resurrectionPass.js";
+import makeEndPass from "./endPass.js";
 
 const effects = {
 	none: null,
@@ -51,7 +52,7 @@ export default async (canvas, config) => {
 	};
 
 	const effectName = config.effect in effects ? config.effect : "plain";
-	const pipeline = makePipeline(context, [makeRain, makeBloomPass, effects[effectName]]);
+	const pipeline = makePipeline(context, [makeRain, makeBloomPass, effects[effectName], makeEndPass]);
 
 	await Promise.all(pipeline.map((step) => step.ready));
 
@@ -74,7 +75,8 @@ export default async (canvas, config) => {
 
 		const encoder = device.createCommandEncoder();
 		pipeline.forEach((step) => step.execute(encoder));
-		encoder.copyTextureToTexture({ texture: pipeline[pipeline.length - 1].getOutputs().primary }, { texture: canvasContext.getCurrentTexture() }, canvasSize);
+		// Eventually, when WebGPU allows it, we'll remove the endPass and just copy from our pipeline's output to the canvas texture.
+		// encoder.copyTextureToTexture({ texture: pipeline[pipeline.length - 1].getOutputs().primary }, { texture: canvasContext.getCurrentTexture() }, canvasSize);
 		device.queue.submit([encoder.finish()]);
 		requestAnimationFrame(renderLoop);
 	};

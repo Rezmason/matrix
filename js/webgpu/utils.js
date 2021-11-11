@@ -27,7 +27,7 @@ const loadTexture = async (device, url) => {
 	return texture;
 };
 
-const makePassFBO = (device, width, height, format = "rgba8unorm") =>
+const makePassFBO = (device, width, height, format = "bgra8unorm") =>
 	device.createTexture({
 		size: [width, height, 1],
 		format,
