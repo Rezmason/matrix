@@ -1,5 +1,12 @@
 TODO:
 
+WebGPU
+  Switch post processing to compute shaders
+    Do one final render pass that draws the compute shader output to the canvas texture
+      This is a temporary requirement until the canvas context can be configured to generate storage textures
+  blur pass
+  Update links in issues
+
 gpu-buffer, working title
   Try and use it for the palette color buffer
   Test it
@@ -7,11 +14,6 @@ gpu-buffer, working title
   Make improvements
   Capture expected requirements down the road, make roadmap
   License it and put it somewhere else
-
-WebGPU
-  blur pass
-  Update links in issues
-  Try to change post processing to compute shaders once they're easier to support
 
 Write an explanation of the rain pass (and include images)
   Compute
@@ -28,6 +30,7 @@ Resurrection
 
 Audio
   Synthesize raindrop sound
+    https://www.instagram.com/tv/CWGodRcoq7T/?utm_medium=copy_link
   Use WebAudio to mess with it
 
 Idea: Build a UI

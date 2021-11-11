@@ -30,6 +30,10 @@ export default (context, getInputs) => {
 	const bgURL = "bgURL" in config ? config.bgURL : defaultBGURL;
 	const assets = [loadTexture(device, bgURL), loadShader(device, "shaders/wgsl/imagePass.wgsl")];
 
+	const getOutputs = () => ({
+		primary: output,
+	});
+
 	const ready = (async () => {
 		const [bgTex, imageShader] = await Promise.all(assets);
 
@@ -56,10 +60,6 @@ export default (context, getInputs) => {
 		output?.destroy();
 		output = makePassFBO(device, width, height, canvasFormat);
 	};
-
-	const getOutputs = () => ({
-		primary: output,
-	});
 
 	const execute = (encoder) => {
 		const inputs = getInputs();

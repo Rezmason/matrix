@@ -92,6 +92,11 @@ export default (context, getInputs) => {
 	let output;
 	let highPassOutput;
 
+	const getOutputs = () => ({
+		primary: output,
+		highPass: highPassOutput,
+	});
+
 	const ready = (async () => {
 		const [msdfTexture, rainShader] = await Promise.all(assets);
 
@@ -167,11 +172,6 @@ export default (context, getInputs) => {
 		highPassOutput?.destroy();
 		highPassOutput = makePassFBO(device, width, height, canvasFormat);
 	};
-
-	const getOutputs = () => ({
-		primary: output,
-		highPass: highPassOutput,
-	});
 
 	const execute = (encoder) => {
 		// We render the code into an FBO using MSDFs: https://github.com/Chlumsky/msdfgen

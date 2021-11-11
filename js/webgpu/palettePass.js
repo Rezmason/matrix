@@ -100,6 +100,10 @@ export default (context, getInputs) => {
 	let paletteBuffer;
 	let output;
 
+	const getOutputs = () => ({
+		primary: output,
+	});
+
 	const assets = [loadShader(device, "shaders/wgsl/palettePass.wgsl")];
 
 	const ready = (async () => {
@@ -133,10 +137,6 @@ export default (context, getInputs) => {
 		output?.destroy();
 		output = makePassFBO(device, width, height, canvasFormat);
 	};
-
-	const getOutputs = () => ({
-		primary: output,
-	});
 
 	const execute = (encoder) => {
 		const inputs = getInputs();
