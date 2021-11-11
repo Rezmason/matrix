@@ -1,5 +1,5 @@
 import { structs, byteSizeOf } from "/lib/gpu-buffer.js";
-import { makePassFBO, loadTexture, loadShader, makeUniformBuffer, makeBindGroup, makePass } from "./utils.js";
+import { makeRenderTarget, loadTexture, loadShader, makeUniformBuffer, makeBindGroup, makePass } from "./utils.js";
 
 const { mat4, vec3 } = glMatrix;
 
@@ -167,14 +167,14 @@ export default (context, getInputs) => {
 
 		// Update
 		output?.destroy();
-		output = makePassFBO(device, width, height, canvasFormat);
+		output = makeRenderTarget(device, width, height, canvasFormat);
 
 		highPassOutput?.destroy();
-		highPassOutput = makePassFBO(device, width, height, canvasFormat);
+		highPassOutput = makeRenderTarget(device, width, height, canvasFormat);
 	};
 
 	const execute = (encoder) => {
-		// We render the code into an FBO using MSDFs: https://github.com/Chlumsky/msdfgen
+		// We render the code into an Target using MSDFs: https://github.com/Chlumsky/msdfgen
 
 		const computePass = encoder.beginComputePass();
 		computePass.setPipeline(computePipeline);

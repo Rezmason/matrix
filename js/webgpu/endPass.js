@@ -1,4 +1,4 @@
-import { loadShader, makeBindGroup, makePassFBO, makePass } from "./utils.js";
+import { loadShader, makeBindGroup, makePass } from "./utils.js";
 
 const numVerticesPerQuad = 2 * 3;
 

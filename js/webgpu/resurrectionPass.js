@@ -1,5 +1,5 @@
 import { structs } from "/lib/gpu-buffer.js";
-import { loadShader, makeUniformBuffer, makePassFBO, makePass } from "./utils.js";
+import { loadShader, makeUniformBuffer, makeRenderTarget, makePass } from "./utils.js";
 
 // Matrix Resurrections isn't in theaters yet,
 // and this version of the effect is still a WIP.
@@ -60,7 +60,7 @@ export default (context, getInputs) => {
 
 	const setSize = (width, height) => {
 		output?.destroy();
-		output = makePassFBO(device, width, height, canvasFormat);
+		output = makeRenderTarget(device, width, height, canvasFormat);
 	};
 
 	const getOutputs = () => ({

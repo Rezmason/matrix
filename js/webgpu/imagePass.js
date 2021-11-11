@@ -1,4 +1,4 @@
-import { loadTexture, loadShader, makeBindGroup, makePassFBO, makePass } from "./utils.js";
+import { loadTexture, loadShader, makeBindGroup, makeRenderTarget, makePass } from "./utils.js";
 
 // Multiplies the rendered rain and bloom by a loaded in image
 
@@ -58,7 +58,7 @@ export default (context, getInputs) => {
 
 	const setSize = (width, height) => {
 		output?.destroy();
-		output = makePassFBO(device, width, height, canvasFormat);
+		output = makeRenderTarget(device, width, height, canvasFormat);
 	};
 
 	const execute = (encoder) => {

@@ -27,11 +27,18 @@ const loadTexture = async (device, url) => {
 	return texture;
 };
 
-const makePassFBO = (device, width, height, format = "bgra8unorm") =>
+const makeRenderTarget = (device, width, height, format) =>
 	device.createTexture({
 		size: [width, height, 1],
 		format,
 		usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+	});
+
+const makeComputeTarget = (device, width, height) =>
+	device.createTexture({
+		size: [width, height, 1],
+		format: "rgba8unorm",
+		usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.STORAGE_BINDING,
 	});
 
 const loadShader = async (device, url) => {
@@ -90,4 +97,4 @@ const makePass = (getOutputs, ready, setSize, execute) => ({
 const makePipeline = (context, steps) =>
 	steps.filter((f) => f != null).reduce((pipeline, f, i) => [...pipeline, f(context, i == 0 ? null : pipeline[i - 1].getOutputs)], []);
 
-export { getCanvasSize, makePassFBO, make1DTexture, loadTexture, loadShader, makeUniformBuffer, makePass, makePipeline, makeBindGroup };
+export { getCanvasSize, makeRenderTarget, makeComputeTarget, make1DTexture, loadTexture, loadShader, makeUniformBuffer, makePass, makePipeline, makeBindGroup };

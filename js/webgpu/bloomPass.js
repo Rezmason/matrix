@@ -1,5 +1,5 @@
 import { structs } from "/lib/gpu-buffer.js";
-import { loadShader, makeUniformBuffer, makeBindGroup, makePassFBO, makePass } from "./utils.js";
+import { loadShader, makeUniformBuffer, makeBindGroup, makeRenderTarget, makePass } from "./utils.js";
 
 // The bloom pass is basically an added blur of the high-pass rendered output.
 // The blur approximation is the sum of a pyramid of downscaled textures.
@@ -17,7 +17,7 @@ export default (context, getInputs) => {
 
 	// If there's no bloom to apply, return a no-op pass with an empty bloom texture
 	if (!enabled) {
-		const emptyTexture = makePassFBO(device, 1, 1, canvasFormat);
+		const emptyTexture = makeRenderTarget(device, 1, 1, canvasFormat);
 		const getOutputs = () => ({ ...getInputs(), bloom: emptyTexture });
 		return makePass(getOutputs);
 	}
@@ -26,8 +26,8 @@ export default (context, getInputs) => {
 
 	// TODO: generate sum shader code
 
-	const fbo = makePassFBO(device, 1, 1, canvasFormat);
-	const getOutputs = () => ({ ...getInputs(), bloom: fbo }); // TODO
+	const renderTarget = makeRenderTarget(device, 1, 1, canvasFormat);
+	const getOutputs = () => ({ ...getInputs(), bloom: renderTarget }); // TODO
 
 	let blurRenderPipeline;
 	let sumRenderPipeline;
@@ -69,23 +69,23 @@ export default (context, getInputs) => {
 
 /*
 
-// A pyramid is just an array of FBOs, where each FBO is half the width
-// and half the height of the FBO below it.
+// A pyramid is just an array of Targets, where each Target is half the width
+// and half the height of the Target below it.
 const makePyramid = (regl, height, halfFloat) =>
 	Array(height)
 		.fill()
-		.map((_) => makePassFBO(regl, halfFloat));
+		.map((_) => makeRenderTarget(regl, halfFloat));
 
 const resizePyramid = (pyramid, vw, vh, scale) =>
 	pyramid.forEach((fbo, index) => fbo.resize(Math.floor((vw * scale) / 2 ** index), Math.floor((vh * scale) / 2 ** index)));
 
 export default ({ regl, config }, inputs) => {
 
-	// Build three pyramids of FBOs, one for each step in the process
+	// Build three pyramids of Targets, one for each step in the process
 	const highPassPyramid = makePyramid(regl, pyramidHeight, config.useHalfFloat);
 	const hBlurPyramid = makePyramid(regl, pyramidHeight, config.useHalfFloat);
 	const vBlurPyramid = makePyramid(regl, pyramidHeight, config.useHalfFloat);
-	const output = makePassFBO(regl, config.useHalfFloat);
+	const output = makeRenderTarget(regl, config.useHalfFloat);
 
 	// The high pass restricts the blur to bright things in our input texture.
 	const highPassFrag = loadText("shaders/glsl/highPass.frag.glsl");
@@ -99,7 +99,7 @@ export default ({ regl, config }, inputs) => {
 	});
 
 	// A 2D gaussian blur is just a 1D blur done horizontally, then done vertically.
-	// The FBO pyramid's levels represent separate levels of detail;
+	// The Target pyramid's levels represent separate levels of detail;
 	// by blurring them all, this basic blur approximates a more complex gaussian:
 	// https://web.archive.org/web/20191124072602/https://software.intel.com/en-us/articles/compute-shader-hdr-and-bloom
 
@@ -150,12 +150,12 @@ export default ({ regl, config }, inputs) => {
 		},
 		() => {
 			for (let i = 0; i < pyramidHeight; i++) {
-				const highPassFBO = highPassPyramid[i];
-				const hBlurFBO = hBlurPyramid[i];
-				const vBlurFBO = vBlurPyramid[i];
-				highPass({ fbo: highPassFBO, frag: highPassFrag.text(), tex: inputs.primary });
-				blur({ fbo: hBlurFBO, frag: blurFrag.text(), tex: highPassFBO, direction: [1, 0] });
-				blur({ fbo: vBlurFBO, frag: blurFrag.text(), tex: hBlurFBO, direction: [0, 1] });
+				const highPassTarget = highPassPyramid[i];
+				const hBlurTarget = hBlurPyramid[i];
+				const vBlurTarget = vBlurPyramid[i];
+				highPass({ fbo: highPassTarget, frag: highPassFrag.text(), tex: inputs.primary });
+				blur({ fbo: hBlurTarget, frag: blurFrag.text(), tex: highPassTarget, direction: [1, 0] });
+				blur({ fbo: vBlurTarget, frag: blurFrag.text(), tex: hBlurTarget, direction: [0, 1] });
 			}
 
 			sumPyramid();

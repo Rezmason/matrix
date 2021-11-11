@@ -1,5 +1,5 @@
 import { structs } from "/lib/gpu-buffer.js";
-import { loadShader, makeUniformBuffer, makeBindGroup, makePassFBO, makePass } from "./utils.js";
+import { loadShader, makeUniformBuffer, makeBindGroup, makeRenderTarget, makePass } from "./utils.js";
 
 // Maps the brightness of the rendered rain and bloom to colors
 // in a linear gradient buffer generated from the passed-in color sequence
@@ -135,7 +135,7 @@ export default (context, getInputs) => {
 
 	const setSize = (width, height) => {
 		output?.destroy();
-		output = makePassFBO(device, width, height, canvasFormat);
+		output = makeRenderTarget(device, width, height, canvasFormat);
 	};
 
 	const execute = (encoder) => {

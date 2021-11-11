@@ -7,6 +7,7 @@ import makePalettePass from "./palettePass.js";
 import makeStripePass from "./stripePass.js";
 import makeImagePass from "./imagePass.js";
 import makeResurrectionPass from "./resurrectionPass.js";
+import makePostProcessingPass from "./postProcessingPass.js";
 import makeEndPass from "./endPass.js";
 
 const effects = {
@@ -52,7 +53,7 @@ export default async (canvas, config) => {
 	};
 
 	const effectName = config.effect in effects ? config.effect : "plain";
-	const pipeline = makePipeline(context, [makeRain, makeBloomPass, effects[effectName], makeEndPass]);
+	const pipeline = makePipeline(context, [makeRain, makeBloomPass, effects[effectName], makePostProcessingPass, makeEndPass]);
 
 	await Promise.all(pipeline.map((step) => step.ready));
 

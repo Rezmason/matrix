@@ -1,5 +1,5 @@
 import { structs } from "/lib/gpu-buffer.js";
-import { loadShader, make1DTexture, makeUniformBuffer, makeBindGroup, makePassFBO, makePass } from "./utils.js";
+import { loadShader, make1DTexture, makeUniformBuffer, makeBindGroup, makeRenderTarget, makePass } from "./utils.js";
 
 // Multiplies the rendered rain and bloom by a 1D gradient texture
 // generated from the passed-in color sequence
@@ -96,7 +96,7 @@ export default (context, getInputs) => {
 
 	const setSize = (width, height) => {
 		output?.destroy();
-		output = makePassFBO(device, width, height, canvasFormat);
+		output = makeRenderTarget(device, width, height, canvasFormat);
 	};
 
 	const getOutputs = () => ({
