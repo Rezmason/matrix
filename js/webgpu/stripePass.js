@@ -18,7 +18,7 @@ const transPrideStripeColors = [
 	[1.0, 0.5, 0.8],
 	[0.3, 1.0, 1.0],
 	[0.3, 1.0, 1.0],
-];
+].flat();
 
 const prideStripeColors = [
 	[1, 0, 0],
@@ -27,7 +27,7 @@ const prideStripeColors = [
 	[0, 1, 0],
 	[0, 0, 1],
 	[0.8, 0, 1],
-];
+].flat();
 
 const numVerticesPerQuad = 2 * 3;
 
@@ -41,13 +41,14 @@ export default (context, getInputs) => {
 	const { config, device, timeBuffer, canvasFormat } = context;
 
 	// Expand and convert stripe colors into 1D texture data
-	const stripeColors =
+	const input =
 		"stripeColors" in config ? config.stripeColors.split(",").map(parseFloat) : config.effect === "pride" ? prideStripeColors : transPrideStripeColors;
 
-	const stripeTexture = make1DTexture(
-		device,
-		stripeColors.map((color) => [...color, 1])
-	);
+	const stripeColors = Array(Math.floor(input.length / 3))
+		.fill()
+		.map((_, index) => [...input.slice(index * 3, (index + 1) * 3), 1]);
+
+	const stripeTexture = make1DTexture(device, stripeColors);
 
 	const linearSampler = device.createSampler({
 		magFilter: "linear",
