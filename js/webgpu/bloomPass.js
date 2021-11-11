@@ -1,16 +1,7 @@
 import { structs } from "/lib/gpu-buffer.js";
 import { loadShader, makeUniformBuffer, makeBindGroup, makePassFBO, makePass } from "./utils.js";
 
-export default (context, getInputs) => {
-	const { config, device, canvasFormat } = context;
-	const fbo = makePassFBO(device, 1, 1, canvasFormat);
-	return makePass(() => ({ ...getInputs(), bloom: fbo }));
-};
-
-/*
-import { loadText, makePassFBO, makePass } from "./utils.js";
-
-// The bloom pass is basically an added high-pass blur.
+// The bloom pass is basically an added blur of the high-pass rendered output.
 // The blur approximation is the sum of a pyramid of downscaled textures.
 
 const pyramidHeight = 5;
@@ -18,6 +9,65 @@ const levelStrengths = Array(pyramidHeight)
 	.fill()
 	.map((_, index) => Math.pow(index / (pyramidHeight * 2) + 0.5, 1 / 3).toPrecision(5))
 	.reverse();
+
+export default (context, getInputs) => {
+	const { config, device, canvasFormat } = context;
+
+	const enabled = config.bloomSize > 0 && config.bloomStrength > 0;
+
+	// If there's no bloom to apply, return a no-op pass with an empty bloom texture
+	if (!enabled) {
+		const emptyTexture = makePassFBO(device, 1, 1, canvasFormat);
+		const getOutputs = () => ({ ...getInputs(), bloom: emptyTexture });
+		return makePass(getOutputs);
+	}
+
+	const assets = [loadShader(device, "shaders/wgsl/blur1D.wgsl")];
+
+	// TODO: generate sum shader code
+
+	const fbo = makePassFBO(device, 1, 1, canvasFormat);
+	const getOutputs = () => ({ ...getInputs(), bloom: fbo }); // TODO
+
+	let blurRenderPipeline;
+	let sumRenderPipeline;
+
+	const ready = (async () => {
+		const [blurShader] = await Promise.all(assets);
+		// TODO: create sum shader
+		// TODO: create config buffer
+
+		// TODO: create blur render pipeline
+		// TODO: create sum render pipeline
+	})();
+
+	const setSize = (width, height) => {
+		// TODO: destroy output
+		// TODO: create output
+		// TODO: destroy pyramid textures
+		// TODO: create new pyramid textures
+		// TODO: create new pyramid bindings
+		// TODO: create new pyramid renderPassConfigs
+	};
+
+	const execute = (encoder) => {
+		const inputs = getInputs();
+
+		// TODO: set pipeline to blur pipeline
+		// TODO: bind config/source buffer group
+		// TODO: for every level,
+		//		horizontally blur inputs.primary to horizontal blur output
+		//		vertically blur the horizontal blur output to vertical blur output
+
+		// TODO: set pipeline to the sum pipeline
+		// TODO: set bind group (vertical blur outputs)
+		// TODO: sum vertical blur into output
+	};
+
+	return makePass(getOutputs, ready, setSize, execute);
+};
+
+/*
 
 // A pyramid is just an array of FBOs, where each FBO is half the width
 // and half the height of the FBO below it.
@@ -30,16 +80,6 @@ const resizePyramid = (pyramid, vw, vh, scale) =>
 	pyramid.forEach((fbo, index) => fbo.resize(Math.floor((vw * scale) / 2 ** index), Math.floor((vh * scale) / 2 ** index)));
 
 export default ({ regl, config }, inputs) => {
-	const { bloomStrength, bloomSize, highPassThreshold } = config;
-	const enabled = bloomSize > 0 && bloomStrength > 0;
-
-	// If there's no bloom to apply, return a no-op pass with an empty bloom texture
-	if (!enabled) {
-		return makePass({
-			primary: inputs.primary,
-			bloom: makePassFBO(regl),
-		});
-	}
 
 	// Build three pyramids of FBOs, one for each step in the process
 	const highPassPyramid = makePyramid(regl, pyramidHeight, config.useHalfFloat);
