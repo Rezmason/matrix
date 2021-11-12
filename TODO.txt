@@ -5,13 +5,7 @@ WebGPU
   Update links in issues
   Get rid of end pass once it's possible to copy a bgra8unorm to a canvas texture
 
-gpu-buffer, working title
-  Try and use it for the palette color buffer
-  Test it
-  Demo it to others
-  Make improvements
-  Capture expected requirements down the road, make roadmap
-  License it and put it somewhere else
+Support looping
 
 Write an explanation of the rain pass (and include images)
   Compute
@@ -19,7 +13,13 @@ Write an explanation of the rain pass (and include images)
   Fullscreen quad and spacial mapping
   MSDFs
 
-Support looping
+gpu-buffer, working title
+  Try and use it for the palette color buffer
+  Test it
+  Demo it to others
+  Make improvements
+  Capture expected requirements down the road, make roadmap
+  License it and put it somewhere else
 
 Resurrection
   Modified glyph order?
