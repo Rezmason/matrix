@@ -1,34 +1,24 @@
-import { loadTexture, loadShader, makeBindGroup, makeRenderTarget, makePass } from "./utils.js";
+import { makeComputeTarget, loadTexture, loadShader, makeUniformBuffer, makeBindGroup, makePass } from "./utils.js";
 
 // Multiplies the rendered rain and bloom by a loaded in image
 
 const defaultBGURL = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Flammarion_Colored.jpg/917px-Flammarion_Colored.jpg";
-const numVerticesPerQuad = 2 * 3;
 
 export default (context, getInputs) => {
-	const { config, device, canvasFormat } = context;
+	const { config, device } = context;
+
+	const bgURL = "bgURL" in config ? config.bgURL : defaultBGURL;
+	const assets = [loadTexture(device, bgURL), loadShader(device, "shaders/wgsl/imagePass.wgsl")];
 
 	const linearSampler = device.createSampler({
 		magFilter: "linear",
 		minFilter: "linear",
 	});
 
-	const renderPassConfig = {
-		colorAttachments: [
-			{
-				view: null,
-				loadValue: { r: 0, g: 0, b: 0, a: 1 },
-				storeOp: "store",
-			},
-		],
-	};
-
-	let renderPipeline;
+	let computePipeline;
 	let output;
+	let screenSize;
 	let backgroundTex;
-
-	const bgURL = "bgURL" in config ? config.bgURL : defaultBGURL;
-	const assets = [loadTexture(device, bgURL), loadShader(device, "shaders/wgsl/imagePass.wgsl")];
 
 	const getOutputs = () => ({
 		primary: output,
@@ -39,39 +29,36 @@ export default (context, getInputs) => {
 
 		backgroundTex = bgTex;
 
-		renderPipeline = device.createRenderPipeline({
-			vertex: {
+		computePipeline = device.createComputePipeline({
+			compute: {
 				module: imageShader.module,
-				entryPoint: "vertMain",
-			},
-			fragment: {
-				module: imageShader.module,
-				entryPoint: "fragMain",
-				targets: [
-					{
-						format: canvasFormat,
-					},
-				],
+				entryPoint: "computeMain",
 			},
 		});
 	})();
 
 	const setSize = (width, height) => {
 		output?.destroy();
-		output = makeRenderTarget(device, width, height, canvasFormat);
+		output = makeComputeTarget(device, width, height);
+		screenSize = [width, height];
 	};
 
 	const execute = (encoder) => {
 		const inputs = getInputs();
 		const tex = inputs.primary;
-		const bloomTex = inputs.bloom; // TODO: bloom
-		const renderBindGroup = makeBindGroup(device, renderPipeline, 0, [linearSampler, tex.createView(), bloomTex.createView(), backgroundTex.createView()]);
-		renderPassConfig.colorAttachments[0].view = output.createView();
-		const renderPass = encoder.beginRenderPass(renderPassConfig);
-		renderPass.setPipeline(renderPipeline);
-		renderPass.setBindGroup(0, renderBindGroup);
-		renderPass.draw(numVerticesPerQuad, 1, 0, 0);
-		renderPass.endPass();
+		const bloomTex = inputs.bloom;
+		const computePass = encoder.beginComputePass();
+		computePass.setPipeline(computePipeline);
+		const computeBindGroup = makeBindGroup(device, computePipeline, 0, [
+			linearSampler,
+			tex.createView(),
+			bloomTex.createView(),
+			backgroundTex.createView(),
+			output.createView(),
+		]);
+		computePass.setBindGroup(0, computeBindGroup);
+		computePass.dispatch(Math.ceil(screenSize[0] / 32), screenSize[1], 1);
+		computePass.endPass();
 	};
 
 	return makePass(getOutputs, ready, setSize, execute);

@@ -14,10 +14,10 @@
 [[group(0), binding(3)]] var tex : texture_2d<f32>;
 [[group(0), binding(4)]] var bloomTex : texture_2d<f32>;
 [[group(0), binding(5)]] var stripeTexture : texture_2d<f32>;
+[[group(0), binding(6)]] var outputTex : texture_storage_2d<rgba8unorm, write>;
 
-struct VertOutput {
-	[[builtin(position)]] Position : vec4<f32>;
-	[[location(0)]] uv : vec2<f32>;
+struct ComputeInput {
+	[[builtin(global_invocation_id)]] id : vec3<u32>;
 };
 
 let PI : f32 = 3.14159265359;
@@ -31,25 +31,26 @@ fn randomFloat( uv : vec2<f32> ) -> f32 {
 	return fract(sin(sn) * c);
 }
 
-[[stage(vertex)]] fn vertMain([[builtin(vertex_index)]] index : u32) -> VertOutput {
-	var uv = vec2<f32>(f32(index % 2u), f32((index + 1u) % 6u / 3u));
-	var position = vec4<f32>(uv * 2.0 - 1.0, 1.0, 1.0);
-	return VertOutput(position, uv);
-}
+[[stage(compute), workgroup_size(32, 1, 1)]] fn computeMain(input : ComputeInput) {
 
-[[stage(fragment)]] fn fragMain(input : VertOutput) -> [[location(0)]] vec4<f32> {
+	// Resolve the invocation ID to a single cell
+	var coord = vec2<i32>(input.id.xy);
+	var screenSize = textureDimensions(tex);
 
-	var uv = input.uv;
-	uv.y = 1.0 - uv.y;
+	if (coord.x >= screenSize.x) {
+		return;
+	}
 
-	var color = textureSample( stripeTexture, linearSampler, uv ).rgb;
+	var uv = vec2<f32>(coord) / vec2<f32>(screenSize);
+
+	var color = textureSampleLevel( stripeTexture, linearSampler, uv, 0.0 ).rgb;
 
 	// Combine the texture and bloom
-	var brightness = min(1.0, textureSample( tex, linearSampler, uv ).r * 2.0);
-	brightness = brightness + textureSample( bloomTex, linearSampler, uv ).r;
+	var brightness = min(1.0, textureSampleLevel( tex, linearSampler, uv, 0.0 ).r * 2.0);
+	brightness = brightness + textureSampleLevel( bloomTex, linearSampler, uv, 0.0 ).r;
 
 	// Dither: subtract a random value from the brightness
 	brightness = brightness - randomFloat( uv + vec2<f32>(time.seconds) ) * config.ditherMagnitude;
 
-	return vec4<f32>(color * brightness + config.backgroundColor, 1.0);
+	textureStore(outputTex, coord, vec4<f32>(color * brightness + config.backgroundColor, 1.0));
 }

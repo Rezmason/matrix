@@ -13,10 +13,10 @@
 [[group(0), binding(2)]] var linearSampler : sampler;
 [[group(0), binding(3)]] var tex : texture_2d<f32>;
 [[group(0), binding(4)]] var bloomTex : texture_2d<f32>;
+[[group(0), binding(5)]] var outputTex : texture_storage_2d<rgba8unorm, write>;
 
-struct VertOutput {
-	[[builtin(position)]] Position : vec4<f32>;
-	[[location(0)]] uv : vec2<f32>;
+struct ComputeInput {
+	[[builtin(global_invocation_id)]] id : vec3<u32>;
 };
 
 let PI : f32 = 3.14159265359;
@@ -55,36 +55,36 @@ fn hslToRgb(h : f32, s : f32, l : f32) -> vec3<f32> {
 	);
 }
 
-[[stage(vertex)]] fn vertMain([[builtin(vertex_index)]] index : u32) -> VertOutput {
-	var uv = vec2<f32>(f32(index % 2u), f32((index + 1u) % 6u / 3u));
-	var position = vec4<f32>(uv * 2.0 - 1.0, 1.0, 1.0);
-	return VertOutput(position, uv);
-}
+[[stage(compute), workgroup_size(32, 1, 1)]] fn computeMain(input : ComputeInput) {
 
-[[stage(fragment)]] fn fragMain(input : VertOutput) -> [[location(0)]] vec4<f32> {
+	// Resolve the invocation ID to a single cell
+	var coord = vec2<i32>(input.id.xy);
+	var screenSize = textureDimensions(tex);
 
-	var uv = input.uv;
-	uv.y = 1.0 - uv.y;
+	if (coord.x >= screenSize.x) {
+		return;
+	}
 
+	var uv = vec2<f32>(coord) / vec2<f32>(screenSize);
 
 	// Mix the texture and bloom based on distance from center,
 	// to approximate a lens blur
 	var brightness = mix(
-		textureSample( tex, linearSampler, uv ).rgb,
-		textureSample( bloomTex, linearSampler, uv ).rgb,
-		(0.7 - length(input.uv - 0.5))
+		textureSampleLevel( tex, linearSampler, uv, 0.0 ).rgb,
+		textureSampleLevel( bloomTex, linearSampler, uv, 0.0 ).rgb,
+		(0.7 - length(uv - 0.5))
 	) * 1.25;
 
 	// Dither: subtract a random value from the brightness
 	brightness = brightness - randomFloat( uv + vec2<f32>(time.seconds) ) * config.ditherMagnitude;
 
 	// Calculate a hue based on distance from center
-	var hue = 0.35 + (length(input.uv - vec2<f32>(0.5, 1.0)) * -0.4 + 0.2);
+	var hue = 0.35 + (length(uv - vec2<f32>(0.5, 1.0)) * -0.4 + 0.2);
 
 	// Convert HSL to RGB
 	var rgb = hslToRgb(hue, 0.8, max(0., brightness.r)) * vec3<f32>(0.8, 1.0, 0.7);
 
 	// Calculate a separate RGB for upward-flowing glyphs
 	var resurrectionRGB = hslToRgb(0.13, 1.0, max(0., brightness.g) * 0.9);
-	return vec4<f32>(rgb + resurrectionRGB + config.backgroundColor, 1.0);
+	textureStore(outputTex, coord, vec4<f32>(rgb + resurrectionRGB + config.backgroundColor, 1.0));
 }

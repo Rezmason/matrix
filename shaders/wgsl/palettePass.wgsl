@@ -18,10 +18,10 @@
 [[group(0), binding(3)]] var linearSampler : sampler;
 [[group(0), binding(4)]] var tex : texture_2d<f32>;
 [[group(0), binding(5)]] var bloomTex : texture_2d<f32>;
+[[group(0), binding(6)]] var outputTex : texture_storage_2d<rgba8unorm, write>;
 
-struct VertOutput {
-	[[builtin(position)]] Position : vec4<f32>;
-	[[location(0)]] uv : vec2<f32>;
+struct ComputeInput {
+	[[builtin(global_invocation_id)]] id : vec3<u32>;
 };
 
 let PI : f32 = 3.14159265359;
@@ -35,18 +35,20 @@ fn randomFloat( uv : vec2<f32> ) -> f32 {
 	return fract(sin(sn) * c);
 }
 
-[[stage(vertex)]] fn vertMain([[builtin(vertex_index)]] index : u32) -> VertOutput {
-	var uv = vec2<f32>(f32(index % 2u), f32((index + 1u) % 6u / 3u));
-	var position = vec4<f32>(uv * 2.0 - 1.0, 1.0, 1.0);
-	return VertOutput(position, uv);
-}
 
-[[stage(fragment)]] fn fragMain(input : VertOutput) -> [[location(0)]] vec4<f32> {
+[[stage(compute), workgroup_size(32, 1, 1)]] fn computeMain(input : ComputeInput) {
 
-	var uv = input.uv;
-	uv.y = 1.0 - uv.y;
+	// Resolve the invocation ID to a single cell
+	var coord = vec2<i32>(input.id.xy);
+	var screenSize = textureDimensions(tex);
 
-	var brightnessRGB = textureSample( tex, linearSampler, uv ) + textureSample( bloomTex, linearSampler, uv );
+	if (coord.x >= screenSize.x) {
+		return;
+	}
+
+	var uv = vec2<f32>(coord) / vec2<f32>(screenSize);
+
+	var brightnessRGB = textureSampleLevel( tex, linearSampler, uv, 0.0 ) + textureSampleLevel( bloomTex, linearSampler, uv, 0.0 );
 
 	// Combine the texture and bloom
 	var brightness = brightnessRGB.r + brightnessRGB.g + brightnessRGB.b;
@@ -57,5 +59,6 @@ fn randomFloat( uv : vec2<f32> ) -> f32 {
 	var paletteIndex = clamp(i32(brightness * 512.0), 0, 511);
 
 	// Map the brightness to a position in the palette texture
-	return vec4<f32>(palette.colors[paletteIndex] + config.backgroundColor, 1.0);
+	textureStore(outputTex, coord, vec4<f32>(palette.colors[paletteIndex] + config.backgroundColor, 1.0));
 }
+

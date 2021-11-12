@@ -1,5 +1,5 @@
 import { structs } from "/lib/gpu-buffer.js";
-import { loadShader, makeUniformBuffer, makeRenderTarget, makePass } from "./utils.js";
+import { loadShader, makeUniformBuffer, makeComputeTarget, makeBindGroup, makePass } from "./utils.js";
 
 // Matrix Resurrections isn't in theaters yet,
 // and this version of the effect is still a WIP.
@@ -12,45 +12,27 @@ import { loadShader, makeUniformBuffer, makeRenderTarget, makePass } from "./uti
 const numVerticesPerQuad = 2 * 3;
 
 export default (context, getInputs) => {
-	const { config, device, timeBuffer, canvasFormat } = context;
+	const { config, device, timeBuffer } = context;
 
 	const linearSampler = device.createSampler({
 		magFilter: "linear",
 		minFilter: "linear",
 	});
 
-	const renderPassConfig = {
-		colorAttachments: [
-			{
-				view: null,
-				loadValue: { r: 0, g: 0, b: 0, a: 1 },
-				storeOp: "store",
-			},
-		],
-	};
-
-	let renderPipeline;
+	let computePipeline;
 	let configBuffer;
 	let output;
+	let screenSize;
 
 	const assets = [loadShader(device, "shaders/wgsl/resurrectionPass.wgsl")];
 
 	const ready = (async () => {
 		const [resurrectionShader] = await Promise.all(assets);
 
-		renderPipeline = device.createRenderPipeline({
-			vertex: {
+		computePipeline = device.createComputePipeline({
+			compute: {
 				module: resurrectionShader.module,
-				entryPoint: "vertMain",
-			},
-			fragment: {
-				module: resurrectionShader.module,
-				entryPoint: "fragMain",
-				targets: [
-					{
-						format: canvasFormat,
-					},
-				],
+				entryPoint: "computeMain",
 			},
 		});
 
@@ -60,7 +42,8 @@ export default (context, getInputs) => {
 
 	const setSize = (width, height) => {
 		output?.destroy();
-		output = makeRenderTarget(device, width, height, canvasFormat);
+		output = makeComputeTarget(device, width, height);
+		screenSize = [width, height];
 	};
 
 	const getOutputs = () => ({
@@ -70,15 +53,20 @@ export default (context, getInputs) => {
 	const execute = (encoder) => {
 		const inputs = getInputs();
 		const tex = inputs.primary;
-		const bloomTex = inputs.bloom; // TODO: bloom
-		const renderBindGroup = makeBindGroup(device, renderPipeline, 0, [configBuffer, timeBuffer, linearSampler, tex.createView(), bloomTex.createView()]);
-
-		renderPassConfig.colorAttachments[0].view = output.createView();
-		const renderPass = encoder.beginRenderPass(renderPassConfig);
-		renderPass.setPipeline(renderPipeline);
-		renderPass.setBindGroup(0, renderBindGroup);
-		renderPass.draw(numVerticesPerQuad, 1, 0, 0);
-		renderPass.endPass();
+		const bloomTex = inputs.bloom;
+		const computePass = encoder.beginComputePass();
+		computePass.setPipeline(computePipeline);
+		const computeBindGroup = makeBindGroup(device, computePipeline, 0, [
+			configBuffer,
+			timeBuffer,
+			linearSampler,
+			tex.createView(),
+			bloomTex.createView(),
+			output.createView(),
+		]);
+		computePass.setBindGroup(0, computeBindGroup);
+		computePass.dispatch(Math.ceil(screenSize[0] / 32), screenSize[1], 1);
+		computePass.endPass();
 	};
 
 	return makePass(getOutputs, ready, setSize, execute);

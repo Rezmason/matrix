@@ -1,5 +1,5 @@
 import { structs } from "/lib/gpu-buffer.js";
-import { loadShader, make1DTexture, makeUniformBuffer, makeBindGroup, makeRenderTarget, makePass } from "./utils.js";
+import { loadShader, make1DTexture, makeUniformBuffer, makeBindGroup, makeComputeTarget, makePass } from "./utils.js";
 
 // Multiplies the rendered rain and bloom by a 1D gradient texture
 // generated from the passed-in color sequence
@@ -38,7 +38,7 @@ const numVerticesPerQuad = 2 * 3;
 // in screen space.
 
 export default (context, getInputs) => {
-	const { config, device, timeBuffer, canvasFormat } = context;
+	const { config, device, timeBuffer } = context;
 
 	// Expand and convert stripe colors into 1D texture data
 	const input =
@@ -55,38 +55,20 @@ export default (context, getInputs) => {
 		minFilter: "linear",
 	});
 
-	const renderPassConfig = {
-		colorAttachments: [
-			{
-				view: null,
-				loadValue: { r: 0, g: 0, b: 0, a: 1 },
-				storeOp: "store",
-			},
-		],
-	};
-
-	let renderPipeline;
+	let computePipeline;
 	let configBuffer;
 	let output;
+	let screenSize;
 
 	const assets = [loadShader(device, "shaders/wgsl/stripePass.wgsl")];
 
 	const ready = (async () => {
 		const [stripeShader] = await Promise.all(assets);
 
-		renderPipeline = device.createRenderPipeline({
-			vertex: {
+		computePipeline = device.createComputePipeline({
+			compute: {
 				module: stripeShader.module,
-				entryPoint: "vertMain",
-			},
-			fragment: {
-				module: stripeShader.module,
-				entryPoint: "fragMain",
-				targets: [
-					{
-						format: canvasFormat,
-					},
-				],
+				entryPoint: "computeMain",
 			},
 		});
 
@@ -96,7 +78,8 @@ export default (context, getInputs) => {
 
 	const setSize = (width, height) => {
 		output?.destroy();
-		output = makeRenderTarget(device, width, height, canvasFormat);
+		output = makeComputeTarget(device, width, height);
+		screenSize = [width, height];
 	};
 
 	const getOutputs = () => ({
@@ -106,22 +89,21 @@ export default (context, getInputs) => {
 	const execute = (encoder) => {
 		const inputs = getInputs();
 		const tex = inputs.primary;
-		const bloomTex = inputs.bloom; // TODO: bloom
-		const renderBindGroup = makeBindGroup(device, renderPipeline, 0, [
+		const bloomTex = inputs.bloom;
+		const computePass = encoder.beginComputePass();
+		computePass.setPipeline(computePipeline);
+		const computeBindGroup = makeBindGroup(device, computePipeline, 0, [
 			configBuffer,
 			timeBuffer,
 			linearSampler,
 			tex.createView(),
 			bloomTex.createView(),
 			stripeTexture.createView(),
+			output.createView(),
 		]);
-
-		renderPassConfig.colorAttachments[0].view = output.createView();
-		const renderPass = encoder.beginRenderPass(renderPassConfig);
-		renderPass.setPipeline(renderPipeline);
-		renderPass.setBindGroup(0, renderBindGroup);
-		renderPass.draw(numVerticesPerQuad, 1, 0, 0);
-		renderPass.endPass();
+		computePass.setBindGroup(0, computeBindGroup);
+		computePass.dispatch(Math.ceil(screenSize[0] / 32), screenSize[1], 1);
+		computePass.endPass();
 	};
 
 	return makePass(getOutputs, ready, setSize, execute);

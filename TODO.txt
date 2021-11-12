@@ -1,7 +1,6 @@
 TODO:
 
 WebGPU
-  Switch post processing to compute shaders
   blur pass
   Update links in issues
   Get rid of end pass once it's possible to copy a bgra8unorm to a canvas texture

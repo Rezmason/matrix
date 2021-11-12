@@ -1,5 +1,5 @@
 import { structs } from "/lib/gpu-buffer.js";
-import { loadShader, makeUniformBuffer, makeBindGroup, makeRenderTarget, makePass } from "./utils.js";
+import { loadShader, makeUniformBuffer, makeBindGroup, makeComputeTarget, makePass } from "./utils.js";
 
 // Maps the brightness of the rendered rain and bloom to colors
 // in a linear gradient buffer generated from the passed-in color sequence
@@ -14,8 +14,6 @@ const colorToRGB = ([hue, saturation, lightness]) => {
 	};
 	return [f(0), f(8), f(4)];
 };
-
-const numVerticesPerQuad = 2 * 3;
 
 const makePalette = (device, paletteUniforms, entries) => {
 	const PALETTE_SIZE = 512;
@@ -78,27 +76,18 @@ const makePalette = (device, paletteUniforms, entries) => {
 // in screen space.
 
 export default (context, getInputs) => {
-	const { config, device, timeBuffer, canvasFormat } = context;
+	const { config, device, timeBuffer } = context;
 
 	const linearSampler = device.createSampler({
 		magFilter: "linear",
 		minFilter: "linear",
 	});
 
-	const renderPassConfig = {
-		colorAttachments: [
-			{
-				view: null,
-				loadValue: { r: 0, g: 0, b: 0, a: 1 },
-				storeOp: "store",
-			},
-		],
-	};
-
-	let renderPipeline;
+	let computePipeline;
 	let configBuffer;
 	let paletteBuffer;
 	let output;
+	let screenSize;
 
 	const getOutputs = () => ({
 		primary: output,
@@ -109,19 +98,10 @@ export default (context, getInputs) => {
 	const ready = (async () => {
 		const [paletteShader] = await Promise.all(assets);
 
-		renderPipeline = device.createRenderPipeline({
-			vertex: {
+		computePipeline = device.createComputePipeline({
+			compute: {
 				module: paletteShader.module,
-				entryPoint: "vertMain",
-			},
-			fragment: {
-				module: paletteShader.module,
-				entryPoint: "fragMain",
-				targets: [
-					{
-						format: canvasFormat,
-					},
-				],
+				entryPoint: "computeMain",
 			},
 		});
 
@@ -135,28 +115,28 @@ export default (context, getInputs) => {
 
 	const setSize = (width, height) => {
 		output?.destroy();
-		output = makeRenderTarget(device, width, height, canvasFormat);
+		output = makeComputeTarget(device, width, height);
+		screenSize = [width, height];
 	};
 
 	const execute = (encoder) => {
 		const inputs = getInputs();
 		const tex = inputs.primary;
-		const bloomTex = inputs.bloom; // TODO: bloom
-		const renderBindGroup = makeBindGroup(device, renderPipeline, 0, [
+		const bloomTex = inputs.bloom;
+		const computePass = encoder.beginComputePass();
+		computePass.setPipeline(computePipeline);
+		const computeBindGroup = makeBindGroup(device, computePipeline, 0, [
 			configBuffer,
 			paletteBuffer,
 			timeBuffer,
 			linearSampler,
 			tex.createView(),
 			bloomTex.createView(),
+			output.createView(),
 		]);
-
-		renderPassConfig.colorAttachments[0].view = output.createView();
-		const renderPass = encoder.beginRenderPass(renderPassConfig);
-		renderPass.setPipeline(renderPipeline);
-		renderPass.setBindGroup(0, renderBindGroup);
-		renderPass.draw(numVerticesPerQuad, 1, 0, 0);
-		renderPass.endPass();
+		computePass.setBindGroup(0, computeBindGroup);
+		computePass.dispatch(Math.ceil(screenSize[0] / 32), screenSize[1], 1);
+		computePass.endPass();
 	};
 
 	return makePass(getOutputs, ready, setSize, execute);

@@ -1,5 +1,5 @@
 import { structs } from "/lib/gpu-buffer.js";
-import { loadShader, makeUniformBuffer, makeBindGroup, makeRenderTarget, makePass } from "./utils.js";
+import { loadShader, makeUniformBuffer, makeBindGroup, makeComputeTarget, makePass } from "./utils.js";
 
 // The bloom pass is basically an added blur of the high-pass rendered output.
 // The blur approximation is the sum of a pyramid of downscaled textures.
@@ -11,13 +11,13 @@ const levelStrengths = Array(pyramidHeight)
 	.reverse();
 
 export default (context, getInputs) => {
-	const { config, device, canvasFormat } = context;
+	const { config, device } = context;
 
-	const enabled = config.bloomSize > 0 && config.bloomStrength > 0;
+	const enabled = false; // config.bloomSize > 0 && config.bloomStrength > 0;
 
 	// If there's no bloom to apply, return a no-op pass with an empty bloom texture
 	if (!enabled) {
-		const emptyTexture = makeRenderTarget(device, 1, 1, canvasFormat);
+		const emptyTexture = makeComputeTarget(device, 1, 1);
 		const getOutputs = () => ({ ...getInputs(), bloom: emptyTexture });
 		return makePass(getOutputs);
 	}
@@ -26,11 +26,11 @@ export default (context, getInputs) => {
 
 	// TODO: generate sum shader code
 
-	const renderTarget = makeRenderTarget(device, 1, 1, canvasFormat);
-	const getOutputs = () => ({ ...getInputs(), bloom: renderTarget }); // TODO
+	const computeTarget = makeComputeTarget(device, 1, 1);
+	const getOutputs = () => ({ ...getInputs(), bloom: computeTarget }); // TODO
 
-	let blurRenderPipeline;
-	let sumRenderPipeline;
+	let blurPipeline;
+	let sumPipeline;
 
 	const ready = (async () => {
 		const [blurShader] = await Promise.all(assets);
@@ -74,7 +74,7 @@ export default (context, getInputs) => {
 const makePyramid = (regl, height, halfFloat) =>
 	Array(height)
 		.fill()
-		.map((_) => makeRenderTarget(regl, halfFloat));
+		.map((_) => makePassFBO(regl, halfFloat));
 
 const resizePyramid = (pyramid, vw, vh, scale) =>
 	pyramid.forEach((fbo, index) => fbo.resize(Math.floor((vw * scale) / 2 ** index), Math.floor((vh * scale) / 2 ** index)));
@@ -85,7 +85,7 @@ export default ({ regl, config }, inputs) => {
 	const highPassPyramid = makePyramid(regl, pyramidHeight, config.useHalfFloat);
 	const hBlurPyramid = makePyramid(regl, pyramidHeight, config.useHalfFloat);
 	const vBlurPyramid = makePyramid(regl, pyramidHeight, config.useHalfFloat);
-	const output = makeRenderTarget(regl, config.useHalfFloat);
+	const output = makePassFBO(regl, config.useHalfFloat);
 
 	// The high pass restricts the blur to bright things in our input texture.
 	const highPassFrag = loadText("shaders/glsl/highPass.frag.glsl");
