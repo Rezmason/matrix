@@ -79,7 +79,7 @@ fn hslToRgb(h : f32, s : f32, l : f32) -> vec3<f32> {
 	brightness = brightness - randomFloat( uv + vec2<f32>(time.seconds) ) * config.ditherMagnitude;
 
 	// Calculate a hue based on distance from center
-	var hue = 0.35 + (length(uv - vec2<f32>(0.5, 1.0)) * -0.4 + 0.2);
+	var hue = 0.35 + (length(vec2<f32>(uv.x, 1.0 - uv.y) - vec2<f32>(0.5, 1.0)) * -0.4 + 0.2);
 
 	// Convert HSL to RGB
 	var rgb = hslToRgb(hue, 0.8, max(0., brightness.r)) * vec3<f32>(0.8, 1.0, 0.7);
