@@ -57,7 +57,7 @@ fn hslToRgb(h : f32, s : f32, l : f32) -> vec3<f32> {
 
 [[stage(compute), workgroup_size(32, 1, 1)]] fn computeMain(input : ComputeInput) {
 
-	// Resolve the invocation ID to a single cell
+	// Resolve the invocation ID to a texel coordinate
 	var coord = vec2<i32>(input.id.xy);
 	var screenSize = textureDimensions(tex);
 

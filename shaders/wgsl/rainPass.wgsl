@@ -265,7 +265,7 @@ fn computeResult (isFirstFrame : bool, previousResult : vec4<f32>, glyphPos : ve
 
 [[stage(compute), workgroup_size(32, 1, 1)]] fn computeMain(input : ComputeInput) {
 
-	// Resolve the invocation ID to a single cell
+	// Resolve the invocation ID to a cell coordinate
 	var row = i32(input.id.y);
 	var column = i32(input.id.x);
 

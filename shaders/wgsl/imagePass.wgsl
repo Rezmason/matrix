@@ -10,7 +10,7 @@ struct ComputeInput {
 
 [[stage(compute), workgroup_size(32, 1, 1)]] fn computeMain(input : ComputeInput) {
 
-	// Resolve the invocation ID to a single cell
+	// Resolve the invocation ID to a texel coordinate
 	var coord = vec2<i32>(input.id.xy);
 	var screenSize = textureDimensions(tex);
 
