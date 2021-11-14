@@ -26,6 +26,7 @@ const defaults = {
 	animationSpeed: 1, // The global rate that all animations progress
 	forwardSpeed: 0.25, // The speed volumetric rain approaches the eye
 	bloomStrength: 1, // The intensity of the bloom
+	newBloomStrength: 1, // WGSL's bloom intensity has different math. TODO: investigate
 	bloomSize: 0.6, // The amount the bloom calculation is scaled
 	highPassThreshold: 0.1, // The minimum brightness that is still blurred
 	cycleSpeed: 1, // The speed glyphs change
@@ -70,6 +71,7 @@ const versions = {
 		...defaults,
 		...fonts.matrixcode,
 		bloomStrength: 0.75,
+		newBloomStrength: 1.5,
 		highPassThreshold: 0.0,
 		cycleSpeed: 0.2,
 		cycleFrameSkip: 8,
@@ -111,6 +113,7 @@ const versions = {
 		...defaults,
 		...fonts.coptic,
 		bloomStrength: 1,
+		newBloomStrength: 1,
 		highPassThreshold: 0,
 		cycleSpeed: 0.1,
 		brightnessDecay: 0.05,
