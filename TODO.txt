@@ -1,7 +1,7 @@
 TODO:
 
 WebGPU
-  Update links in issues
+  Get everything to load properly from gh pages
   Get rid of end pass once it's possible to copy a bgra8unorm to a canvas texture
   Switch to rgba32float somehow?
     Why isn't this straightforward?
