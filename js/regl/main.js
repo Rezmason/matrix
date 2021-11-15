@@ -22,7 +22,18 @@ const effects = {
 
 const dimensions = { width: 1, height: 1 };
 
+const loadJS = (src) =>
+	new Promise((resolve, reject) => {
+		const tag = document.createElement("script");
+		tag.onload = resolve;
+		tag.onerror = reject;
+		tag.src = src;
+		document.body.appendChild(tag);
+	});
+
 export default async (canvas, config) => {
+	await Promise.all([loadJS("lib/regl.js"), loadJS("lib/gl-matrix.js")]);
+
 	const resize = () => {
 		canvas.width = Math.ceil(canvas.clientWidth * config.resolution);
 		canvas.height = Math.ceil(canvas.clientHeight * config.resolution);

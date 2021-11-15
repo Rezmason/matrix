@@ -1,8 +1,6 @@
 import { structs, byteSizeOf } from "../../lib/gpu-buffer.js";
 import { makeRenderTarget, loadTexture, loadShader, makeUniformBuffer, makeBindGroup, makePass } from "./utils.js";
 
-const { mat4, vec3 } = glMatrix;
-
 const rippleTypes = {
 	box: 0,
 	circle: 1,
@@ -32,6 +30,8 @@ const makeConfigBuffer = (device, configUniforms, config, density, gridSize) => 
 };
 
 export default ({ config, device, timeBuffer, canvasFormat }) => {
+	const { mat4, vec3 } = glMatrix;
+
 	const assets = [loadTexture(device, config.glyphTexURL), loadShader(device, "shaders/wgsl/rainPass.wgsl")];
 
 	// The volumetric mode multiplies the number of columns

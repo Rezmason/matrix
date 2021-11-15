@@ -9,6 +9,15 @@ import makeImagePass from "./imagePass.js";
 import makeResurrectionPass from "./resurrectionPass.js";
 import makeEndPass from "./endPass.js";
 
+const loadJS = (src) =>
+	new Promise((resolve, reject) => {
+		const tag = document.createElement("script");
+		tag.onload = resolve;
+		tag.onerror = reject;
+		tag.src = src;
+		document.body.appendChild(tag);
+	});
+
 const effects = {
 	none: null,
 	plain: makePalettePass,
@@ -23,6 +32,8 @@ const effects = {
 };
 
 export default async (canvas, config) => {
+	await loadJS("lib/gl-matrix.js");
+
 	const adapter = await navigator.gpu.requestAdapter();
 	const device = await adapter.requestDevice();
 	const canvasContext = canvas.getContext("webgpu");
