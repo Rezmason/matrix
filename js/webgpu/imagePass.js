@@ -1,4 +1,4 @@
-import { makeComputeTarget, loadTexture, loadShader, makeUniformBuffer, makeBindGroup, makePass } from "./utils.js";
+import { makeComputeTarget, loadTexture, loadShader, makeBindGroup, makePass } from "./utils.js";
 
 // Multiplies the rendered rain and bloom by a loaded in image
 

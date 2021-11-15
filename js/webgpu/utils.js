@@ -27,16 +27,18 @@ const loadTexture = async (device, url) => {
 	return texture;
 };
 
-const makeRenderTarget = (device, width, height, format) =>
+const makeRenderTarget = (device, width, height, format, mipLevelCount = 1) =>
 	device.createTexture({
 		size: [width, height, 1],
+		mipLevelCount,
 		format,
 		usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
 	});
 
-const makeComputeTarget = (device, width, height) =>
+const makeComputeTarget = (device, width, height, mipLevelCount = 1) =>
 	device.createTexture({
 		size: [width, height, 1],
+		mipLevelCount,
 		format: "rgba8unorm",
 		usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.STORAGE_BINDING,
 	});
@@ -76,6 +78,13 @@ const make1DTexture = (device, rgbas) => {
 	return texture;
 };
 
+const makePyramidView = (texture, level) =>
+	texture.createView({
+		baseMipLevel: level,
+		mipLevelCount: 1,
+		dimension: "2d",
+	});
+
 const makeBindGroup = (device, pipeline, index, entries) =>
 	device.createBindGroup({
 		layout: pipeline.getBindGroupLayout(index),
@@ -97,4 +106,16 @@ const makePass = (getOutputs, ready, setSize, execute) => ({
 const makePipeline = (context, steps) =>
 	steps.filter((f) => f != null).reduce((pipeline, f, i) => [...pipeline, f(context, i == 0 ? null : pipeline[i - 1].getOutputs)], []);
 
-export { getCanvasSize, makeRenderTarget, makeComputeTarget, make1DTexture, loadTexture, loadShader, makeUniformBuffer, makePass, makePipeline, makeBindGroup };
+export {
+	getCanvasSize,
+	makeRenderTarget,
+	makeComputeTarget,
+	make1DTexture,
+	makePyramidView,
+	loadTexture,
+	loadShader,
+	makeUniformBuffer,
+	makePass,
+	makePipeline,
+	makeBindGroup,
+};

@@ -103,7 +103,7 @@ export default ({ regl, config }, inputs) => {
 				const highPassFBO = highPassPyramid[i];
 				const hBlurFBO = hBlurPyramid[i];
 				const vBlurFBO = vBlurPyramid[i];
-				highPass({ fbo: highPassFBO, frag: highPassFrag.text(), tex: inputs.primary });
+				highPass({ fbo: highPassFBO, frag: highPassFrag.text(), tex: i === 0 ? inputs.primary : highPassPyramid[i - 1] });
 				blur({ fbo: hBlurFBO, frag: blurFrag.text(), tex: highPassFBO, direction: [1, 0] });
 				blur({ fbo: vBlurFBO, frag: blurFrag.text(), tex: hBlurFBO, direction: [0, 1] });
 			}

@@ -1,18 +1,13 @@
 TODO:
 
 WebGPU
-
-  Figure out texture pyramid stuff
-    Idea: use mip levels to store stuff
-      Multiple draw calls, if level N must downsample level N - 1
-    Does every level HAVE to be downsampled from the previous level? Or can they all be downsampled from a single source?
-      What about in my case in particular? I'm blurring everything anyway.
-
-  blur pass
-  Switch to rgba32float somehow?
-    Why isn't this straightforward?
+  Rename setSize to rebuild — it is the function that receives inputs as well as screen size
+  Create and store the bloom bind groups on resize
+  Make sure everything is properly commented
   Update links in issues
   Get rid of end pass once it's possible to copy a bgra8unorm to a canvas texture
+  Switch to rgba32float somehow?
+    Why isn't this straightforward?
 
 Support looping
 
