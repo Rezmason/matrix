@@ -68,7 +68,6 @@ export default ({ config, device }) => {
 	})();
 
 	const build = (screenSize, inputs) => {
-
 		// Since the bloom is blurry, we downscale everything
 		scaledScreenSize = screenSize.map((x) => Math.floor(x * bloomSize));
 
@@ -108,11 +107,7 @@ export default ({ config, device }) => {
 
 		computePass.setPipeline(blurPipeline);
 		for (let i = 0; i < pyramidHeight; i++) {
-			const dispatchSize = [
-				Math.ceil(Math.floor(scaledScreenSize[0] * 2 ** -i) / 32),
-				Math.floor(Math.floor(scaledScreenSize[1] * 2 ** -i)),
-				1
-			];
+			const dispatchSize = [Math.ceil(Math.floor(scaledScreenSize[0] * 2 ** -i) / 32), Math.floor(Math.floor(scaledScreenSize[1] * 2 ** -i)), 1];
 			computePass.setBindGroup(0, hBlurBindGroups[i]);
 			computePass.dispatch(...dispatchSize);
 			computePass.setBindGroup(0, vBlurBindGroups[i]);
