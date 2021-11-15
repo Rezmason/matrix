@@ -11,7 +11,7 @@ import { loadShader, makeUniformBuffer, makeComputeTarget, makeBindGroup, makePa
 
 const numVerticesPerQuad = 2 * 3;
 
-export default (context, getInputs) => {
+export default (context) => {
 	const { config, device, timeBuffer } = context;
 
 	const linearSampler = device.createSampler({
@@ -21,12 +21,13 @@ export default (context, getInputs) => {
 
 	let computePipeline;
 	let configBuffer;
+	let computeBindGroup;
 	let output;
 	let screenSize;
 
 	const assets = [loadShader(device, "shaders/wgsl/resurrectionPass.wgsl")];
 
-	const ready = (async () => {
+	const loaded = (async () => {
 		const [resurrectionShader] = await Promise.all(assets);
 
 		computePipeline = device.createComputePipeline({
@@ -40,34 +41,32 @@ export default (context, getInputs) => {
 		configBuffer = makeUniformBuffer(device, configUniforms, { ditherMagnitude: 0.05, backgroundColor: config.backgroundColor });
 	})();
 
-	const setSize = (width, height) => {
+	const build = (size, inputs) => {
 		output?.destroy();
-		output = makeComputeTarget(device, width, height);
-		screenSize = [width, height];
-	};
+		output = makeComputeTarget(device, size);
+		screenSize = size;
 
-	const getOutputs = () => ({
-		primary: output,
-	});
-
-	const execute = (encoder) => {
-		const inputs = getInputs();
-		const tex = inputs.primary;
-		const bloomTex = inputs.bloom;
-		const computePass = encoder.beginComputePass();
-		computePass.setPipeline(computePipeline);
-		const computeBindGroup = makeBindGroup(device, computePipeline, 0, [
+		computeBindGroup = makeBindGroup(device, computePipeline, 0, [
 			configBuffer,
 			timeBuffer,
 			linearSampler,
-			tex.createView(),
-			bloomTex.createView(),
+			inputs.primary.createView(),
+			inputs.bloom.createView(),
 			output.createView(),
 		]);
+
+		return {
+			primary: output,
+		};
+	};
+
+	const run = (encoder) => {
+		const computePass = encoder.beginComputePass();
+		computePass.setPipeline(computePipeline);
 		computePass.setBindGroup(0, computeBindGroup);
 		computePass.dispatch(Math.ceil(screenSize[0] / 32), screenSize[1], 1);
 		computePass.endPass();
 	};
 
-	return makePass(getOutputs, ready, setSize, execute);
+	return makePass(loaded, build, run);
 };

@@ -54,7 +54,7 @@ export default async (canvas, config) => {
 	const effectName = config.effect in effects ? config.effect : "plain";
 	const pipeline = makePipeline(context, [makeRain, makeBloomPass, effects[effectName], makeEndPass]);
 
-	await Promise.all(pipeline.map((step) => step.ready));
+	await Promise.all(pipeline.map((step) => step.loaded));
 
 	let frames = 0;
 	let start = NaN;
@@ -67,14 +67,14 @@ export default async (canvas, config) => {
 		if (canvasSize[0] !== canvasConfig.size[0] || canvasSize[1] !== canvasConfig.size[1]) {
 			canvasConfig.size = canvasSize;
 			canvasContext.configure(canvasConfig);
-			pipeline.forEach((step) => step.setSize(...canvasSize));
+			pipeline.reduce((outputs, step) => step.build(canvasSize, outputs), null);
 		}
 
 		device.queue.writeBuffer(timeBuffer, 0, timeUniforms.toBuffer({ seconds: (now - start) / 1000, frames }));
 		frames++;
 
 		const encoder = device.createCommandEncoder();
-		pipeline.forEach((step) => step.execute(encoder));
+		pipeline.forEach((step) => step.run(encoder));
 		// Eventually, when WebGPU allows it, we'll remove the endPass and just copy from our pipeline's output to the canvas texture.
 		// encoder.copyTextureToTexture({ texture: pipeline[pipeline.length - 1].getOutputs().primary }, { texture: canvasContext.getCurrentTexture() }, canvasSize);
 		device.queue.submit([encoder.finish()]);

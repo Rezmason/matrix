@@ -2,7 +2,7 @@ import { loadShader, makeBindGroup, makePass } from "./utils.js";
 
 const numVerticesPerQuad = 2 * 3;
 
-export default (context, getInputs) => {
+export default (context) => {
 	const { config, device, canvasFormat, canvasContext } = context;
 
 	const linearSampler = device.createSampler({
@@ -21,10 +21,11 @@ export default (context, getInputs) => {
 	};
 
 	let renderPipeline;
+	let renderBindGroup;
 
 	const assets = [loadShader(device, "shaders/wgsl/endPass.wgsl")];
 
-	const ready = (async () => {
+	const loaded = (async () => {
 		const [imageShader] = await Promise.all(assets);
 
 		renderPipeline = device.createRenderPipeline({
@@ -44,10 +45,12 @@ export default (context, getInputs) => {
 		});
 	})();
 
-	const execute = (encoder) => {
-		const inputs = getInputs();
-		const tex = inputs.primary;
-		const renderBindGroup = makeBindGroup(device, renderPipeline, 0, [linearSampler, tex.createView()]);
+	const build = (size, inputs) => {
+		renderBindGroup = makeBindGroup(device, renderPipeline, 0, [linearSampler, inputs.primary.createView()]);
+		return null;
+	};
+
+	const run = (encoder) => {
 		renderPassConfig.colorAttachments[0].view = canvasContext.getCurrentTexture().createView();
 		const renderPass = encoder.beginRenderPass(renderPassConfig);
 		renderPass.setPipeline(renderPipeline);
@@ -56,5 +59,5 @@ export default (context, getInputs) => {
 		renderPass.endPass();
 	};
 
-	return makePass(null, ready, null, execute);
+	return makePass(loaded, build, run);
 };

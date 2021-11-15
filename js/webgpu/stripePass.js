@@ -57,12 +57,14 @@ export default (context, getInputs) => {
 
 	let computePipeline;
 	let configBuffer;
+	let tex;
+	let bloomTex;
 	let output;
 	let screenSize;
 
 	const assets = [loadShader(device, "shaders/wgsl/stripePass.wgsl")];
 
-	const ready = (async () => {
+	const loaded = (async () => {
 		const [stripeShader] = await Promise.all(assets);
 
 		computePipeline = device.createComputePipeline({
@@ -76,20 +78,20 @@ export default (context, getInputs) => {
 		configBuffer = makeUniformBuffer(device, configUniforms, { ditherMagnitude: 0.05, backgroundColor: config.backgroundColor });
 	})();
 
-	const setSize = (width, height) => {
+	const build = (size, inputs) => {
 		output?.destroy();
-		output = makeComputeTarget(device, width, height);
-		screenSize = [width, height];
+		output = makeComputeTarget(device, size);
+		screenSize = size;
+
+		tex = inputs.primary;
+		bloomTex = inputs.bloom;
+
+		return {
+			primary: output,
+		};
 	};
 
-	const getOutputs = () => ({
-		primary: output,
-	});
-
-	const execute = (encoder) => {
-		const inputs = getInputs();
-		const tex = inputs.primary;
-		const bloomTex = inputs.bloom;
+	const run = (encoder) => {
 		const computePass = encoder.beginComputePass();
 		computePass.setPipeline(computePipeline);
 		const computeBindGroup = makeBindGroup(device, computePipeline, 0, [
@@ -106,5 +108,5 @@ export default (context, getInputs) => {
 		computePass.endPass();
 	};
 
-	return makePass(getOutputs, ready, setSize, execute);
+	return makePass(loaded, build, run);
 };

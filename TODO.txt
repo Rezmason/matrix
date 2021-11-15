@@ -1,8 +1,6 @@
 TODO:
 
 WebGPU
-  Rename setSize to rebuild — it is the function that receives inputs as well as screen size
-  Create and store the bloom bind groups on resize
   Make sure everything is properly commented
   Update links in issues
   Get rid of end pass once it's possible to copy a bgra8unorm to a canvas texture

@@ -31,7 +31,7 @@ const makeConfigBuffer = (device, configUniforms, config, density, gridSize) => 
 	return makeUniformBuffer(device, configUniforms, configData);
 };
 
-export default (context, getInputs) => {
+export default (context) => {
 	const { config, device, timeBuffer, canvasFormat } = context;
 
 	const assets = [loadTexture(device, config.glyphTexURL), loadShader(device, "shaders/wgsl/rainPass.wgsl")];
@@ -92,12 +92,7 @@ export default (context, getInputs) => {
 	let output;
 	let highPassOutput;
 
-	const getOutputs = () => ({
-		primary: output,
-		highPass: highPassOutput,
-	});
-
-	const ready = (async () => {
+	const loaded = (async () => {
 		const [msdfTexture, rainShader] = await Promise.all(assets);
 
 		const rainShaderUniforms = structs.from(rainShader.code);
@@ -150,9 +145,9 @@ export default (context, getInputs) => {
 		renderBindGroup = makeBindGroup(device, renderPipeline, 0, [configBuffer, timeBuffer, sceneBuffer, linearSampler, msdfTexture.createView(), cellsBuffer]);
 	})();
 
-	const setSize = (width, height) => {
+	const build = (size) => {
 		// Update scene buffer: camera and transform math for the volumetric mode
-		const aspectRatio = width / height;
+		const aspectRatio = size[0] / size[1];
 		if (config.effect === "none") {
 			if (aspectRatio > 1) {
 				mat4.orthoZO(camera, -1.5 * aspectRatio, 1.5 * aspectRatio, -1.5, 1.5, -1000, 1000);
@@ -167,13 +162,18 @@ export default (context, getInputs) => {
 
 		// Update
 		output?.destroy();
-		output = makeRenderTarget(device, width, height, canvasFormat);
+		output = makeRenderTarget(device, size, canvasFormat);
 
 		highPassOutput?.destroy();
-		highPassOutput = makeRenderTarget(device, width, height, canvasFormat);
+		highPassOutput = makeRenderTarget(device, size, canvasFormat);
+
+		return {
+			primary: output,
+			highPass: highPassOutput,
+		};
 	};
 
-	const execute = (encoder) => {
+	const run = (encoder) => {
 		// We render the code into an Target using MSDFs: https://github.com/Chlumsky/msdfgen
 
 		const computePass = encoder.beginComputePass();
@@ -191,5 +191,5 @@ export default (context, getInputs) => {
 		renderPass.endPass();
 	};
 
-	return makePass(getOutputs, ready, setSize, execute);
+	return makePass(loaded, build, run);
 };

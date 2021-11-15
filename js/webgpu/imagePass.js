@@ -4,7 +4,7 @@ import { makeComputeTarget, loadTexture, loadShader, makeBindGroup, makePass } f
 
 const defaultBGURL = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Flammarion_Colored.jpg/917px-Flammarion_Colored.jpg";
 
-export default (context, getInputs) => {
+export default (context) => {
 	const { config, device } = context;
 
 	const bgURL = "bgURL" in config ? config.bgURL : defaultBGURL;
@@ -19,12 +19,9 @@ export default (context, getInputs) => {
 	let output;
 	let screenSize;
 	let backgroundTex;
+	let computeBindGroup;
 
-	const getOutputs = () => ({
-		primary: output,
-	});
-
-	const ready = (async () => {
+	const loaded = (async () => {
 		const [bgTex, imageShader] = await Promise.all(assets);
 
 		backgroundTex = bgTex;
@@ -37,29 +34,27 @@ export default (context, getInputs) => {
 		});
 	})();
 
-	const setSize = (width, height) => {
+	const build = (size, inputs) => {
 		output?.destroy();
-		output = makeComputeTarget(device, width, height);
-		screenSize = [width, height];
-	};
-
-	const execute = (encoder) => {
-		const inputs = getInputs();
-		const tex = inputs.primary;
-		const bloomTex = inputs.bloom;
-		const computePass = encoder.beginComputePass();
-		computePass.setPipeline(computePipeline);
-		const computeBindGroup = makeBindGroup(device, computePipeline, 0, [
+		output = makeComputeTarget(device, size);
+		screenSize = size;
+		computeBindGroup = makeBindGroup(device, computePipeline, 0, [
 			linearSampler,
-			tex.createView(),
-			bloomTex.createView(),
+			inputs.primary.createView(),
+			inputs.bloom.createView(),
 			backgroundTex.createView(),
 			output.createView(),
 		]);
+		return { primary: output };
+	};
+
+	const run = (encoder) => {
+		const computePass = encoder.beginComputePass();
+		computePass.setPipeline(computePipeline);
 		computePass.setBindGroup(0, computeBindGroup);
 		computePass.dispatch(Math.ceil(screenSize[0] / 32), screenSize[1], 1);
 		computePass.endPass();
 	};
 
-	return makePass(getOutputs, ready, setSize, execute);
+	return makePass(loaded, build, run);
 };
