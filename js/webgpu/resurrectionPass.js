@@ -11,9 +11,7 @@ import { loadShader, makeUniformBuffer, makeComputeTarget, makeBindGroup, makePa
 
 const numVerticesPerQuad = 2 * 3;
 
-export default (context) => {
-	const { config, device, timeBuffer } = context;
-
+export default ({ config, device, timeBuffer }) => {
 	const linearSampler = device.createSampler({
 		magFilter: "linear",
 		minFilter: "linear",

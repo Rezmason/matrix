@@ -31,9 +31,7 @@ const makeConfigBuffer = (device, configUniforms, config, density, gridSize) => 
 	return makeUniformBuffer(device, configUniforms, configData);
 };
 
-export default (context) => {
-	const { config, device, timeBuffer, canvasFormat } = context;
-
+export default ({ config, device, timeBuffer, canvasFormat }) => {
 	const assets = [loadTexture(device, config.glyphTexURL), loadShader(device, "shaders/wgsl/rainPass.wgsl")];
 
 	// The volumetric mode multiplies the number of columns

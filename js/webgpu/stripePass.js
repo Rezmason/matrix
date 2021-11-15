@@ -37,9 +37,7 @@ const numVerticesPerQuad = 2 * 3;
 // won't persist across subsequent frames. This is a safe trick
 // in screen space.
 
-export default (context, getInputs) => {
-	const { config, device, timeBuffer } = context;
-
+export default ({ config, device, timeBuffer }) => {
 	// Expand and convert stripe colors into 1D texture data
 	const input =
 		"stripeColors" in config ? config.stripeColors.split(",").map(parseFloat) : config.effect === "pride" ? prideStripeColors : transPrideStripeColors;

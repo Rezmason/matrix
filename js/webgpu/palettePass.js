@@ -75,9 +75,7 @@ const makePalette = (device, paletteUniforms, entries) => {
 // won't persist across subsequent frames. This is a safe trick
 // in screen space.
 
-export default (context) => {
-	const { config, device, timeBuffer } = context;
-
+export default ({ config, device, timeBuffer }) => {
 	const linearSampler = device.createSampler({
 		magFilter: "linear",
 		minFilter: "linear",

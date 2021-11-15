@@ -1,7 +1,6 @@
 TODO:
 
 WebGPU
-  Make sure everything is properly commented
   Update links in issues
   Get rid of end pass once it's possible to copy a bgra8unorm to a canvas texture
   Switch to rgba32float somehow?

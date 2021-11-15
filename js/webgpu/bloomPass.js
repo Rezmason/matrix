@@ -1,19 +1,20 @@
 import { structs } from "/lib/gpu-buffer.js";
 import { makeComputeTarget, makePyramidView, loadShader, makeUniformBuffer, makeBindGroup, makePass } from "./utils.js";
 
-export default (context) => {
-	const { config, device } = context;
+// The bloom pass is basically an added blur of the rain pass's high-pass output.
+// The blur approximation is the sum of a pyramid of downscaled, blurred textures.
 
+export default ({ config, device }) => {
 	const pyramidHeight = 4;
 	const bloomSize = config.bloomSize;
 	const bloomStrength = config.bloomStrength;
 	const bloomRadius = 2; // Looks better with more, but is more costly
 
-	const enabled = true;
+	const enabled = bloomSize > 0 && bloomStrength > 0;
 
 	// If there's no bloom to apply, return a no-op pass with an empty bloom texture
 	if (!enabled) {
-		const emptyTexture = makeComputeTarget(device, 1, 1);
+		const emptyTexture = makeComputeTarget(device, [1, 1]);
 		return makePass(null, (size, inputs) => ({ ...inputs, bloom: emptyTexture }));
 	}
 
@@ -24,6 +25,8 @@ export default (context) => {
 		minFilter: "linear",
 	});
 
+	// The blur pipeline applies a blur in one direction; it's applied horizontally
+	// to the first image pyramid, and then vertically to the second image pyramid.
 	let blurPipeline;
 	let hBlurPyramid;
 	let vBlurPyramid;
@@ -31,6 +34,8 @@ export default (context) => {
 	let vBlurBuffer;
 	let hBlurBindGroups;
 	let vBlurBindGroups;
+
+	// The combine pipeline blends the last image pyramid's layers into the output.
 	let combinePipeline;
 	let combineBuffer;
 	let combineBindGroup;
@@ -63,6 +68,8 @@ export default (context) => {
 	})();
 
 	const build = (screenSize, inputs) => {
+
+		// Since the bloom is blurry, we downscale everything
 		scaledScreenSize = screenSize.map((x) => Math.floor(x * bloomSize));
 
 		hBlurPyramid?.destroy();
@@ -74,17 +81,18 @@ export default (context) => {
 		output?.destroy();
 		output = makeComputeTarget(device, scaledScreenSize);
 
-		const hBlurPyramidViews = [];
-		const vBlurPyramidViews = [];
 		hBlurBindGroups = [];
 		vBlurBindGroups = [];
 
+		// The first pyramid's level 1 texture is the input texture blurred.
+		// The subsequent levels of the pyramid are the preceding level blurred.
+		let srcView = inputs.highPass.createView();
 		for (let i = 0; i < pyramidHeight; i++) {
-			hBlurPyramidViews[i] = makePyramidView(hBlurPyramid, i);
-			vBlurPyramidViews[i] = makePyramidView(vBlurPyramid, i);
-			const srcView = i === 0 ? inputs.highPass.createView() : hBlurPyramidViews[i - 1];
-			hBlurBindGroups[i] = makeBindGroup(device, blurPipeline, 0, [hBlurBuffer, linearSampler, srcView, hBlurPyramidViews[i]]);
-			vBlurBindGroups[i] = makeBindGroup(device, blurPipeline, 0, [vBlurBuffer, linearSampler, hBlurPyramidViews[i], vBlurPyramidViews[i]]);
+			const hBlurPyramidView = makePyramidView(hBlurPyramid, i);
+			const vBlurPyramidView = makePyramidView(vBlurPyramid, i);
+			hBlurBindGroups[i] = makeBindGroup(device, blurPipeline, 0, [hBlurBuffer, linearSampler, srcView, hBlurPyramidView]);
+			vBlurBindGroups[i] = makeBindGroup(device, blurPipeline, 0, [vBlurBuffer, linearSampler, hBlurPyramidView, vBlurPyramidView]);
+			srcView = hBlurPyramidView;
 		}
 
 		combineBindGroup = makeBindGroup(device, combinePipeline, 0, [combineBuffer, linearSampler, vBlurPyramid.createView(), output.createView()]);
@@ -100,8 +108,11 @@ export default (context) => {
 
 		computePass.setPipeline(blurPipeline);
 		for (let i = 0; i < pyramidHeight; i++) {
-			const downsample = 2 ** -i;
-			const dispatchSize = [Math.ceil(Math.floor(scaledScreenSize[0] * downsample) / 32), Math.floor(Math.floor(scaledScreenSize[1] * downsample)), 1];
+			const dispatchSize = [
+				Math.ceil(Math.floor(scaledScreenSize[0] * 2 ** -i) / 32),
+				Math.floor(Math.floor(scaledScreenSize[1] * 2 ** -i)),
+				1
+			];
 			computePass.setBindGroup(0, hBlurBindGroups[i]);
 			computePass.dispatch(...dispatchSize);
 			computePass.setBindGroup(0, vBlurBindGroups[i]);

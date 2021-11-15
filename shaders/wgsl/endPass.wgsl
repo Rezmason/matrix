@@ -1,4 +1,4 @@
-[[group(0), binding(0)]] var linearSampler : sampler;
+[[group(0), binding(0)]] var nearestSampler : sampler;
 [[group(0), binding(1)]] var tex : texture_2d<f32>;
 
 struct VertOutput {
@@ -15,5 +15,5 @@ struct VertOutput {
 [[stage(fragment)]] fn fragMain(input : VertOutput) -> [[location(0)]] vec4<f32> {
 	var uv = input.uv;
 	uv.y = 1.0 - uv.y;
-	return textureSample( tex, linearSampler, uv );
+	return textureSample( tex, nearestSampler, uv );
 }

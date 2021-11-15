@@ -4,9 +4,7 @@ import { makeComputeTarget, loadTexture, loadShader, makeBindGroup, makePass } f
 
 const defaultBGURL = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Flammarion_Colored.jpg/917px-Flammarion_Colored.jpg";
 
-export default (context) => {
-	const { config, device } = context;
-
+export default ({ config, device }) => {
 	const bgURL = "bgURL" in config ? config.bgURL : defaultBGURL;
 	const assets = [loadTexture(device, bgURL), loadShader(device, "shaders/wgsl/imagePass.wgsl")];
 
