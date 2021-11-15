@@ -1,4 +1,4 @@
-import { structs } from "/lib/gpu-buffer.js";
+import { structs } from "../../lib/gpu-buffer.js";
 import { loadShader, makeUniformBuffer, makeComputeTarget, makeBindGroup, makePass } from "./utils.js";
 
 // Matrix Resurrections isn't in theaters yet,

@@ -1,4 +1,4 @@
-import { structs, byteSizeOf } from "/lib/gpu-buffer.js";
+import { structs, byteSizeOf } from "../../lib/gpu-buffer.js";
 import { makeRenderTarget, loadTexture, loadShader, makeUniformBuffer, makeBindGroup, makePass } from "./utils.js";
 
 const { mat4, vec3 } = glMatrix;

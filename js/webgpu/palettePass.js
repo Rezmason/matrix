@@ -1,4 +1,4 @@
-import { structs } from "/lib/gpu-buffer.js";
+import { structs } from "../../lib/gpu-buffer.js";
 import { loadShader, makeUniformBuffer, makeBindGroup, makeComputeTarget, makePass } from "./utils.js";
 
 // Maps the brightness of the rendered rain and bloom to colors

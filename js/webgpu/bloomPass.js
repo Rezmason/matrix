@@ -1,4 +1,4 @@
-import { structs } from "/lib/gpu-buffer.js";
+import { structs } from "../../lib/gpu-buffer.js";
 import { makeComputeTarget, makePyramidView, loadShader, makeUniformBuffer, makeBindGroup, makePass } from "./utils.js";
 
 // The bloom pass is basically an added blur of the rain pass's high-pass output.

@@ -1,4 +1,4 @@
-import { structs } from "/lib/gpu-buffer.js";
+import { structs } from "../../lib/gpu-buffer.js";
 import { loadShader, make1DTexture, makeUniformBuffer, makeBindGroup, makeComputeTarget, makePass } from "./utils.js";
 
 // Multiplies the rendered rain and bloom by a 1D gradient texture

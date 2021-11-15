@@ -1,4 +1,4 @@
-import { structs } from "/lib/gpu-buffer.js";
+import { structs } from "../../lib/gpu-buffer.js";
 import { getCanvasSize, makeUniformBuffer, makePipeline } from "./utils.js";
 
 import makeRain from "./rainPass.js";
