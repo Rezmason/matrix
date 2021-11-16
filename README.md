@@ -21,7 +21,7 @@
 ---
 ### about
 
-This project is a WebGL implementation of the raining green code seen in _The Matrix Trilogy_. It's currently built on top of the functional WebGL wrapper, [REGL](http://regl.party); its previous Three.js version is maintained in a separate branch.
+This project is a WebGL implementation of the raining green code seen in _The Matrix Trilogy_. It's built right on top of the upcoming graphics API [WebGPU](https://github.com/gpuweb/gpuweb), but falls back to the functional WebGL wrapper, [REGL](https://regl.party); its previous Three.js version is maintained in a separate branch.
 
 ---
 ### goals
