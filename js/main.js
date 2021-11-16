@@ -8,7 +8,7 @@ document.addEventListener("touchmove", (e) => e.preventDefault(), {
 
 const supportsWebGPU = async () => {
 	return window?.GPUQueue?.prototype?.copyExternalImageToTexture != null;
-}
+};
 
 document.body.onload = async () => {
 	const urlParams = Object.fromEntries(new URLSearchParams(window.location.search).entries());

@@ -17,6 +17,16 @@ const fonts = {
 		glyphSequenceLength: 57,
 		glyphTextureColumns: 8,
 	},
+	huberfishA: {
+		glyphTexURL: "assets/huberfish_a_msdf.png",
+		glyphSequenceLength: 34,
+		glyphTextureColumns: 6,
+	},
+	huberfishD: {
+		glyphTexURL: "assets/huberfish_d_msdf.png",
+		glyphSequenceLength: 34,
+		glyphTextureColumns: 6,
+	},
 };
 
 const defaults = {
@@ -26,7 +36,6 @@ const defaults = {
 	animationSpeed: 1, // The global rate that all animations progress
 	forwardSpeed: 0.25, // The speed volumetric rain approaches the eye
 	bloomStrength: 1, // The intensity of the bloom
-	newBloomStrength: 1, // WGSL's bloom intensity has different math. TODO: investigate
 	bloomSize: 0.6, // The amount the bloom calculation is scaled
 	highPassThreshold: 0.1, // The minimum brightness that is still blurred
 	cycleSpeed: 1, // The speed glyphs change
@@ -71,7 +80,6 @@ const versions = {
 		...defaults,
 		...fonts.matrixcode,
 		bloomStrength: 0.75,
-		newBloomStrength: 1.5,
 		highPassThreshold: 0.0,
 		cycleSpeed: 0.2,
 		cycleFrameSkip: 8,
@@ -113,7 +121,6 @@ const versions = {
 		...defaults,
 		...fonts.coptic,
 		bloomStrength: 1,
-		newBloomStrength: 1,
 		highPassThreshold: 0,
 		cycleSpeed: 0.1,
 		brightnessDecay: 0.05,
@@ -141,6 +148,40 @@ const versions = {
 		numColumns: 100,
 		volumetric: true,
 		fallSpeed: 0.4,
+	},
+	palimpsest: {
+		...defaults,
+		...fonts.huberfishA,
+		bloomStrength: 0.2,
+		numColumns: 40,
+		raindropLength: 1.2,
+		cycleFrameSkip: 3,
+		fallSpeed: 0.5,
+		cycleStyle: "cycleRandomly",
+		slant: Math.PI * -0.0625,
+		paletteEntries: [
+			{ hsl: [0.15, 0.25, 0.9], at: 0.0 },
+			{ hsl: [0.6, 0.8, 0.1], at: 0.4 },
+		],
+	},
+	twilight: {
+		...defaults,
+		...fonts.huberfishD,
+		bloomStrength: 0.3,
+		numColumns: 50,
+		raindropLength: 0.4,
+		cycleFrameSkip: 3,
+		fallSpeed: 0.15,
+		cycleStyle: "cycleRandomly",
+		highPassThreshold: 0.0,
+		hasSun: true,
+		paletteEntries: [
+			{ hsl: [0.6, 1.0, 0.05], at: 0.0 },
+			{ hsl: [0.6, 0.8, 0.1], at: 0.1 },
+			{ hsl: [0.88, 0.8, 0.5], at: 0.5 },
+			{ hsl: [0.15, 1.0, 0.6], at: 0.8 },
+			{ hsl: [0.1, 1.0, 0.9], at: 1.0 },
+		],
 	},
 };
 versions.throwback = versions.operator;

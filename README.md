@@ -12,7 +12,10 @@
   - [(you know, this stuff).](http://matrix.wikia.com/wiki/Nightmare_Matrix)
 - [Code of the "Paradise Matrix"](https://rezmason.github.io/matrix?version=paradise)
   - [(AKA this stuff).](http://matrix.wikia.com/wiki/Paradise_Matrix)
-- [Pride colors](https://rezmason.github.io/matrix/?effect=pride)
+- [A custom variety I call "Palimpsest"](https://rezmason.github.io/matrix?version=palimpsest)
+- [A custom variety I call "Twilight"](https://rezmason.github.io/matrix?version=twilight)
+- [Pride flag colors](https://rezmason.github.io/matrix/?effect=pride)
+- [Trans flag colors](https://rezmason.github.io/matrix/?effect=trans)
 - [Custom stripes (`colors=R,G,B,R,G,B,R,G,B, etc`)](https://rezmason.github.io/matrix/?effect=customStripes&colors=1,0,0,1,1,0,0,1,0)
 - [Custom image (`url=www.website.com/picture.jpg`)](https://rezmason.github.io/matrix/?effect=image&url=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg)
 - [Raw compute texture (`effect=none`) (_epilepsy warning_: lots of flickering)](https://rezmason.github.io/matrix/?effect=none)
@@ -46,6 +49,7 @@ While there have been a lot of attempts at #1 and #3, they're all missing import
 - **Make it free, open source and web based.** Because someone could probably improve on what I've done, and I'd like to see that, and maybe incorporate their improvements back into this project.
 - **Support as many browsers and devices as possible.** This project used to rely on Three.js's GPUComputationRenderer, which only worked in browsers supporting WebGL's [oes_texture_float extension](https://caniuse.com/#search=OES_texture_float). The rewrite dropped this dependency, and gained support for a broader range of browsers and devices.
 - **Whip up some artistic license and depict the *previous* Matrix versions.** The sequels describe [a paradisiacal predecessor](https://rezmason.github.io/matrix?version=paradise) to the Matrix that was too idyllic, [and another earlier, nightmarish Hobbesian version](https://rezmason.github.io/matrix?version=nightmare) that proved too campy. They depict some programs running older, differently colored code, so it's time someone tried rendering them.
+- **Heck, try building some homemade varieties that have nothing to do with the franchise.** See the list of links above for the full set of available versions.
 - **Promote a progressive interpretation of the film franchise.** *The Matrix* is an action film you can enjoy without critical analysis, but if you do read into it, you'll be rewarded. And let's be clear: **The Matrix is a story about transitioning, directed by two siblings who transitioned**. This is undeniable. Its franchise has plenty more themes, and plenty of room for interpretation, but the widely known community of misogynists who claim this imagery for their movement cannot be tolerated in any form. This is a chance to open minds, not shut them.
 
 ---
@@ -94,6 +98,8 @@ Now you know link fu. Here's a list of customization options:
 The Coptic glyphs in the "Paradise Matrix" version are derived from [George Douros's font "Symbola"](http://users.teilar.gr/~g1951d), due to their similarity to the script in [CG II of Nag Hammadi](https://en.wikipedia.org/wiki/Nag_Hammadi_Codex_II). If a 4th century Gnostic scribe trolled Athanasius over IRC, it might look like this.
 
 The Gothic glyphs in the "Nightmare Matrix" version are derived from [Dr. jur. Robert Pfeffer's font "Silubur"](http://www.robert-pfeffer.net/gotica/englisch/index.html), which are inspired by the uncial script found in the [Codex Argenteus](https://en.wikipedia.org/wiki/Codex_Argenteus). If a werewolf emailed a vampire in the 6th century, it might look like this.
+
+The glyphs used in the "Palimpsest" and "Twilight" versions are derived from [Teague Chrystie's font "Huberfish"](http://robotsoup.com/huberfish.html), a fictitious alphabet that comes in several styles. If a spacedock technician bought a soda from a vending machine in an cool utopian future that will never happen, it might look like this.
 
 The glyphs are formatted as a multi-channel distance field (or MSDF) via Victor Chlumsky's [msdfgen](https://github.com/Chlumsky/msdfgen). This format preserves the crisp edges and corners of vector graphics when rendered as textures. Chlumsky's thesis paper, which is in English and is also easy to read, is [available to download here](https://dspace.cvut.cz/handle/10467/62770).
 
