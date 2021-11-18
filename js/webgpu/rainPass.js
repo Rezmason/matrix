@@ -29,7 +29,7 @@ const makeConfigBuffer = (device, configUniforms, config, density, gridSize) => 
 	return makeUniformBuffer(device, configUniforms, configData);
 };
 
-export default ({ config, device, timeBuffer, canvasFormat }) => {
+export default ({ config, device, timeBuffer }) => {
 	const { mat4, vec3 } = glMatrix;
 
 	const assets = [loadTexture(device, config.glyphTexURL), loadShader(device, "shaders/wgsl/rainPass.wgsl")];
@@ -59,6 +59,10 @@ export default ({ config, device, timeBuffer, canvasFormat }) => {
 		mat4.translate(transform, transform, vec3.fromValues(0, 0, -1));
 	}
 	const camera = mat4.create();
+
+	// It's handy to have multiple channels, in case we have
+	// multiple varieties of code, such as downward and upward flowing
+	const renderFormat = "rgba8unorm";
 
 	const linearSampler = device.createSampler({
 		magFilter: "linear",
@@ -122,14 +126,14 @@ export default ({ config, device, timeBuffer, canvasFormat }) => {
 				entryPoint: "fragMain",
 				targets: [
 					{
-						format: canvasFormat,
+						format: renderFormat,
 						blend: {
 							color: additiveBlendComponent,
 							alpha: additiveBlendComponent,
 						},
 					},
 					{
-						format: canvasFormat,
+						format: renderFormat,
 						blend: {
 							color: additiveBlendComponent,
 							alpha: additiveBlendComponent,
@@ -160,10 +164,10 @@ export default ({ config, device, timeBuffer, canvasFormat }) => {
 
 		// Update
 		output?.destroy();
-		output = makeRenderTarget(device, size, canvasFormat);
+		output = makeRenderTarget(device, size, renderFormat);
 
 		highPassOutput?.destroy();
-		highPassOutput = makeRenderTarget(device, size, canvasFormat);
+		highPassOutput = makeRenderTarget(device, size, renderFormat);
 
 		return {
 			primary: output,

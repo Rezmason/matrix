@@ -1,7 +1,10 @@
 TODO:
 
 WebGPU
-  Get everything to load properly from gh pages
+  FF Nightly bugs
+    What's it warning about?
+    Why's it crashing?
+  Try https://github.com/brendan-duncan/wgsl_reflect
   Get rid of end pass once it's possible to copy a bgra8unorm to a canvas texture
   Switch to rgba32float somehow?
     Why isn't this straightforward?
