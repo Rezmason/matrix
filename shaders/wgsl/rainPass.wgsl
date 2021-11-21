@@ -311,13 +311,13 @@ var<private> quadCorners : array<vec2<f32>, NUM_VERTICES_PER_QUAD> = array<vec2<
 	var uv = (quadPosition + quadCorner) / quadGridSize;
 
 	// Retrieve the quad's glyph data
-	var vGlyph = cells_RO.cells[quadIndex];
+	var glyph = cells_RO.cells[quadIndex];
 
 	// Calculate the quad's depth
 	var quadDepth = 0.0;
 	if (volumetric) {
-		quadDepth = fract(vGlyph.b + time.seconds * config.animationSpeed * config.forwardSpeed);
-		vGlyph.b = quadDepth;
+		quadDepth = fract(glyph.b + time.seconds * config.animationSpeed * config.forwardSpeed);
+		glyph.b = quadDepth;
 	}
 
 	// Calculate the vertex's world space position
@@ -328,10 +328,10 @@ var<private> quadCorners : array<vec2<f32>, NUM_VERTICES_PER_QUAD> = array<vec2<
 
 	// "Resurrected" columns are in the green channel,
 	// and are vertically flipped (along with their glyphs)
-	var vChannel = vec3<f32>(1.0, 0.0, 0.0);
+	var channel = vec3<f32>(1.0, 0.0, 0.0);
 	if (volumetric && randomFloat(vec2<f32>(quadPosition.x, 0.0)) < config.resurrectingCodeRatio) {
 		worldPosition.y = -worldPosition.y;
-		vChannel = vec3<f32>(0.0, 1.0, 0.0);
+		channel = vec3<f32>(0.0, 1.0, 0.0);
 	}
 
 	// Convert the vertex's world space position to screen space
@@ -346,8 +346,8 @@ var<private> quadCorners : array<vec2<f32>, NUM_VERTICES_PER_QUAD> = array<vec2<
 	return VertOutput(
 		screenPosition,
 		uv,
-		vChannel,
-		vGlyph
+		channel,
+		glyph
 	);
 }
 
