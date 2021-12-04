@@ -3,26 +3,46 @@ const getCanvasSize = (canvas) => {
 	return [canvas.clientWidth * devicePixelRatio, canvas.clientHeight * devicePixelRatio];
 };
 
+/*
 const loadTexture = async (device, url) => {
 	const response = await fetch(url);
 	const data = await response.blob();
-	const imageBitmap = await createImageBitmap(data);
+	const source = await createImageBitmap(data);
+	const size = [source.width, source.height, 1];
 
 	const texture = device.createTexture({
-		size: [imageBitmap.width, imageBitmap.height, 1],
+		size,
 		format: "rgba8unorm",
 		usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
 	});
 
-	device.queue.copyExternalImageToTexture(
-		{
-			source: imageBitmap,
-		},
-		{
-			texture: texture,
-		},
-		[imageBitmap.width, imageBitmap.height]
-	);
+	device.queue.copyExternalImageToTexture({ source }, { texture }, size);
+
+	return texture;
+};
+*/
+
+const loadTexture = async (device, url) => {
+	const image = new Image();
+	image.src = url;
+	await image.decode();
+	const { width, height } = image;
+	const size = [width, height, 1];
+
+	const canvas = document.createElement("canvas");
+	canvas.width = width;
+	canvas.height = height;
+	const ctx = canvas.getContext("2d");
+	ctx.drawImage(image, 0, 0);
+	const source = ctx.getImageData(0, 0, width, height).data;
+
+	const texture = device.createTexture({
+		size,
+		format: "rgba8unorm",
+		usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+	});
+
+	device.queue.writeTexture({ texture }, source, { bytesPerRow: 4 * width }, size);
 
 	return texture;
 };
