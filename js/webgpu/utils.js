@@ -98,13 +98,6 @@ const make1DTexture = (device, rgbas) => {
 	return texture;
 };
 
-const makePyramidView = (texture, level) =>
-	texture.createView({
-		baseMipLevel: level,
-		mipLevelCount: 1,
-		dimension: "2d",
-	});
-
 const makeBindGroup = (device, pipeline, index, entries) =>
 	device.createBindGroup({
 		layout: pipeline.getBindGroupLayout(index),
@@ -129,7 +122,6 @@ export {
 	makeRenderTarget,
 	makeComputeTarget,
 	make1DTexture,
-	makePyramidView,
 	loadTexture,
 	loadShader,
 	makeUniformBuffer,

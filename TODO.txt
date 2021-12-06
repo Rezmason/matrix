@@ -1,8 +1,6 @@
 TODO:
 
 WebGPU
-  FF Nightly
-    Bloom pass isn't working right
   Try https://github.com/brendan-duncan/wgsl_reflect
   Get rid of end pass once it's possible to copy a bgra8unorm to a canvas texture
   Switch to rgba32float somehow?
