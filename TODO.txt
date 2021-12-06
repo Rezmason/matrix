@@ -1,9 +1,9 @@
 TODO:
 
 WebGPU
-  FF Nightly bugs
-    What's it warning about?
-    Why's it crashing?
+  FF Nightly
+    var<private> quadCorners : array<vec2<f32>, NUM_VERTICES_PER_QUAD> contained the wrong values
+    Bloom pass isn't working right
   Try https://github.com/brendan-duncan/wgsl_reflect
   Get rid of end pass once it's possible to copy a bgra8unorm to a canvas texture
   Switch to rgba32float somehow?
