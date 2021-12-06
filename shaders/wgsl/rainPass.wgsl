@@ -285,10 +285,11 @@ fn computeResult (isFirstFrame : bool, previousResult : vec4<f32>, glyphPos : ve
 
 // Vertex shader
 
-var<private> quadCorners : array<vec2<f32>, NUM_VERTICES_PER_QUAD> = array<vec2<f32>, NUM_VERTICES_PER_QUAD>(
-	vec2<f32>(0.0, 0.0), vec2<f32>(1.0, 0.0), vec2<f32>(0.0, 1.0),
-	vec2<f32>(1.0, 1.0), vec2<f32>(0.0, 1.0), vec2<f32>(1.0, 0.0)
-);
+// Firefox Nightly (that is to say, Naga) currently has a bug that mixes up these values from ones in the uniforms.
+// var<private> quadCorners : array<vec2<f32>, NUM_VERTICES_PER_QUAD> = array<vec2<f32>, NUM_VERTICES_PER_QUAD>(
+// 	vec2<f32>(0.0, 0.0), vec2<f32>(1.0, 0.0), vec2<f32>(0.0, 1.0),
+// 	vec2<f32>(1.0, 1.0), vec2<f32>(0.0, 1.0), vec2<f32>(1.0, 0.0)
+// );
 
 [[stage(vertex)]] fn vertMain(input : VertInput) -> VertOutput {
 
@@ -300,7 +301,8 @@ var<private> quadCorners : array<vec2<f32>, NUM_VERTICES_PER_QUAD> = array<vec2<
 	var i = i32(input.index);
 	var quadIndex = i / NUM_VERTICES_PER_QUAD;
 
-	var quadCorner = quadCorners[i % NUM_VERTICES_PER_QUAD];
+	// var quadCorner = quadCorners[i % NUM_VERTICES_PER_QUAD];
+	var quadCorner = vec2<f32>(f32(i % 2), f32((i + 1) % 6 / 3));
 
 	var quadPosition = vec2<f32>(
 		f32(quadIndex % i32(quadGridSize.x)),

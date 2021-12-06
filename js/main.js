@@ -7,7 +7,7 @@ document.addEventListener("touchmove", (e) => e.preventDefault(), {
 });
 
 const supportsWebGPU = async () => {
-	return window?.GPUQueue?.prototype?.copyExternalImageToTexture != null;
+	return window.GPUQueue != null;
 };
 
 document.body.onload = async () => {
