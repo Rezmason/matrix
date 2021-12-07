@@ -3,29 +3,29 @@ const fonts = {
 		// The script the Gnostic codices were written in
 		glyphTexURL: "assets/coptic_msdf.png",
 		glyphSequenceLength: 32,
-		glyphTextureColumns: 8,
+		glyphTextureGridSize: [8, 8],
 	},
 	gothic: {
 		// The script the Codex Argenteus was written in
 		glyphTexURL: "assets/gothic_msdf.png",
 		glyphSequenceLength: 27,
-		glyphTextureColumns: 8,
+		glyphTextureGridSize: [8, 8],
 	},
 	matrixcode: {
 		// The glyphs seen in the film trilogy
 		glyphTexURL: "assets/matrixcode_msdf.png",
 		glyphSequenceLength: 57,
-		glyphTextureColumns: 8,
+		glyphTextureGridSize: [8, 8],
 	},
 	huberfishA: {
 		glyphTexURL: "assets/huberfish_a_msdf.png",
 		glyphSequenceLength: 34,
-		glyphTextureColumns: 6,
+		glyphTextureGridSize: [6, 6],
 	},
 	huberfishD: {
 		glyphTexURL: "assets/huberfish_d_msdf.png",
 		glyphSequenceLength: 34,
-		glyphTextureColumns: 6,
+		glyphTextureGridSize: [6, 6],
 	},
 };
 

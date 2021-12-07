@@ -7,7 +7,8 @@ precision lowp float;
 uniform sampler2D state;
 uniform float numColumns, numRows;
 uniform sampler2D glyphTex;
-uniform float glyphHeightToWidth, glyphSequenceLength, glyphTextureColumns, glyphEdgeCrop;
+uniform float glyphHeightToWidth, glyphSequenceLength, glyphEdgeCrop;
+uniform vec2 glyphTextureGridSize;
 uniform vec2 slantVec;
 uniform float slantScale;
 uniform bool isPolar;
@@ -24,8 +25,8 @@ float median3(vec3 i) {
 
 vec2 getSymbolUV(float glyphCycle) {
 	float symbol = floor(glyphSequenceLength * glyphCycle);
-	float symbolX = mod(symbol, glyphTextureColumns);
-	float symbolY = glyphTextureColumns - floor(symbol / glyphTextureColumns);
+	float symbolX = mod(symbol, glyphTextureGridSize.x);
+	float symbolY = floor(symbol / glyphTextureGridSize.y);
 	return vec2(symbolX, symbolY);
 }
 
@@ -71,7 +72,7 @@ void main() {
 	glyphUV -= 0.5;
 	glyphUV *= clamp(1.0 - glyphEdgeCrop, 0.0, 1.0);
 	glyphUV += 0.5;
-	vec2 msdfUV = (glyphUV + symbolUV) / glyphTextureColumns;
+	vec2 msdfUV = (glyphUV + symbolUV) / glyphTextureGridSize;
 
 	// MSDF: calculate brightness of fragment based on distance to shape
 	vec3 dist = texture2D(glyphTex, msdfUV).rgb;

@@ -5,7 +5,7 @@
 	// common properties used for compute and rendering
 	animationSpeed : f32;
 	glyphSequenceLength : i32;
-	glyphTextureColumns : i32;
+	glyphTextureGridSize : vec2<i32>;
 	glyphHeightToWidth : f32;
 	resurrectingCodeRatio : f32;
 	gridSize : vec2<f32>;
@@ -361,8 +361,8 @@ fn median3(i : vec3<f32>) -> f32 {
 
 fn getSymbolUV(glyphCycle : f32) -> vec2<f32> {
 	var symbol = i32(f32(config.glyphSequenceLength) * glyphCycle);
-	var symbolX = symbol % config.glyphTextureColumns;
-	var symbolY = symbol / config.glyphTextureColumns;
+	var symbolX = symbol % config.glyphTextureGridSize.x;
+	var symbolY = symbol / config.glyphTextureGridSize.y;
 	return vec2<f32>(f32(symbolX), f32(symbolY));
 }
 
@@ -420,7 +420,7 @@ fn getSymbolUV(glyphCycle : f32) -> vec2<f32> {
 	glyphUV = glyphUV - 0.5;
 	glyphUV = glyphUV * clamp(1.0 - config.glyphEdgeCrop, 0.0, 1.0);
 	glyphUV = glyphUV + 0.5;
-	var msdfUV = (glyphUV + symbolUV) / f32(config.glyphTextureColumns);
+	var msdfUV = (glyphUV + symbolUV) / vec2<f32>(config.glyphTextureGridSize);
 
 	// MSDF : calculate brightness of fragment based on distance to shape
 	var dist = textureSample(msdfTexture, linearSampler, msdfUV).rgb;
