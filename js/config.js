@@ -17,6 +17,12 @@ const fonts = {
 		glyphSequenceLength: 57,
 		glyphTextureGridSize: [8, 8],
 	},
+	resurrections: {
+		// The glyphs seen in the film trilogy
+		glyphTexURL: "assets/resurrections_msdf.png",
+		glyphSequenceLength: 133,
+		glyphTextureGridSize: [13, 12],
+	},
 	huberfishA: {
 		glyphTexURL: "assets/huberfish_a_msdf.png",
 		glyphSequenceLength: 34,
@@ -148,6 +154,23 @@ const versions = {
 		numColumns: 100,
 		volumetric: true,
 		fallSpeed: 0.4,
+	},
+	updated: {
+		...defaults,
+		...fonts.resurrections,
+		numColumns: 108,
+		fallSpeed: 0.35,
+		cycleStyle: "cycleRandomly",
+		cycleSpeed: 0.8,
+		glyphEdgeCrop: 0.1,
+		paletteEntries: [
+			{ hsl: [0.39, 0.9, 0.0], at: 0.0 },
+			{ hsl: [0.39, 1.0, 0.6], at: 0.5 },
+			{ hsl: [0.39, 1.0, 1.0], at: 1.0 },
+		],
+		raindropLength: 1.4,
+		highPassThreshold: 0.2,
+		cursorEffectThreshold: 0.8,
 	},
 	palimpsest: {
 		...defaults,

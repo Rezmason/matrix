@@ -117,15 +117,4 @@ const makePass = (loaded, build, run) => ({
 
 const makePipeline = (context, steps) => steps.filter((f) => f != null).map((f) => f(context));
 
-export {
-	getCanvasSize,
-	makeRenderTarget,
-	makeComputeTarget,
-	make1DTexture,
-	loadTexture,
-	loadShader,
-	makeUniformBuffer,
-	makePass,
-	makePipeline,
-	makeBindGroup,
-};
+export { getCanvasSize, makeRenderTarget, makeComputeTarget, make1DTexture, loadTexture, loadShader, makeUniformBuffer, makePass, makePipeline, makeBindGroup };
