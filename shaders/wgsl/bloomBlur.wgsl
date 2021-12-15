@@ -1,6 +1,6 @@
 let ONE_OVER_SQRT_2PI = 0.39894;
 
-[[block]] struct Config {
+struct Config {
 	bloomRadius : f32;
 	direction : vec2<f32>;
 };

@@ -1,13 +1,13 @@
-[[block]] struct Config {
+struct Config {
 	ditherMagnitude : f32;
 	backgroundColor : vec3<f32>;
 };
 
-[[block]] struct Palette {
+struct Palette {
 	colors : array<vec3<f32>, 512>;
 };
 
-[[block]] struct Time {
+struct Time {
 	seconds : f32;
 	frames : i32;
 };

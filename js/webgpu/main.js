@@ -50,7 +50,7 @@ export default async (canvas, config) => {
 			GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST,
 	};
 
-	const timeUniforms = structs.from(`[[block]] struct Time { seconds : f32; frames : i32; };`).Time;
+	const timeUniforms = structs.from(`struct Time { seconds : f32; frames : i32; };`).Time;
 	const timeBuffer = makeUniformBuffer(device, timeUniforms);
 
 	const context = {

@@ -1,7 +1,7 @@
 // This shader module is the star of the show.
 // It is where the cell states update and the symbols get drawn to the screen.
 
-[[block]] struct Config {
+struct Config {
 	// common properties used for compute and rendering
 	animationSpeed : f32;
 	glyphSequenceLength : i32;
@@ -41,20 +41,20 @@
 };
 
 // The properties that change over time get their own buffer.
-[[block]] struct Time {
+struct Time {
 	seconds : f32;
 	frames : i32;
 };
 
 // The properties related to the size of the canvas get their own buffer.
-[[block]] struct Scene {
+struct Scene {
 	screenSize : vec2<f32>;
 	camera : mat4x4<f32>;
 	transform : mat4x4<f32>;
 };
 
 // The array of cells that the compute shader updates, and the fragment shader draws.
-[[block]] struct CellData {
+struct CellData {
 	cells: array<vec4<f32>>;
 };
 

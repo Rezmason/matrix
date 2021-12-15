@@ -1,4 +1,4 @@
-[[block]] struct Config {
+struct Config {
 	bloomStrength : f32;
 	pyramidHeight : f32;
 };
