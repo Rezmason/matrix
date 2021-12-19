@@ -51,6 +51,7 @@ export default async (canvas, config) => {
 		optionalExtensions: ["EXT_color_buffer_half_float", "WEBGL_color_buffer_float", "OES_standard_derivatives"],
 	});
 
+	const noDeviceLKG = { tileX: 1, tileY: 1, fov: 90 };
 	const lkg = await new Promise((resolve, reject) => {
 		const client = new HoloPlayCore.Client((data) => {
 			/*
@@ -99,7 +100,7 @@ export default async (canvas, config) => {
 
 
 			if (data.devices.length === 0) {
-				resolve({ tileX: 1, tileY: 1, fov: 90 });
+				resolve(noDeviceLKG);
 				return;
 			}
 
@@ -138,7 +139,10 @@ export default async (canvas, config) => {
 			};
 
 			resolve(output);
-		}, reject);
+		}, (error) => {
+			console.warn("Holoplay connection error:", error);
+			resolve(noDeviceLKG);
+		});
 	});
 
 	// All this takes place in a full screen quad.
