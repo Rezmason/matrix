@@ -6,6 +6,7 @@
 
 - [Classic Matrix code](https://rezmason.github.io/matrix)
 - [3D mode](https://rezmason.github.io/matrix?volumetric=true)
+- [Holographic version](https://rezmason.github.io/matrix?version=holoplay) (requires a Looking Glass display; see it in action [here](https://www.youtube.com/watch?v=gwA9hfq1Ing))
 - [Matrix Resurrections code (WIP)](https://rezmason.github.io/matrix?version=resurrections)
 - [Matrix Resurrections's updated code (WIP)](https://rezmason.github.io/matrix?version=updated)
 - [Operator Matrix code (with ripple effects)](https://rezmason.github.io/matrix?version=operator)

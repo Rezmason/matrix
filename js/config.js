@@ -210,7 +210,7 @@ const versions = {
 	holoplay: {
 		...defaults,
 		...fonts.resurrections,
-		numColumns: 40,
+		numColumns: 20,
 		fallSpeed: 0.35,
 		cycleStyle: "cycleRandomly",
 		cycleSpeed: 0.8,

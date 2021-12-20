@@ -3,11 +3,7 @@ import { loadImage, loadText, makePassFBO, makePass } from "./utils.js";
 // Multiplies the rendered rain and bloom by a loaded in image
 
 export default ({ regl, config, lkg }, inputs) => {
-	let enabled = lkg.tileX * lkg.tileY > 1;
-
-	// enabled = false;
-
-	if (!enabled) {
+	if (!lkg.enabled) {
 		return makePass({
 			primary: inputs.primary,
 		});

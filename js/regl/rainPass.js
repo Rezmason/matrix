@@ -163,13 +163,12 @@ export default ({ regl, config, lkg }) => {
 		mat4.rotateY(transform, transform, (Math.PI * 1) / 4);
 		mat4.translate(transform, transform, vec3.fromValues(0, 0, -1));
 		mat4.scale(transform, transform, vec3.fromValues(1, 1, 2));
+	} else if (lkg.enabled) {
+		mat4.translate(transform, transform, vec3.fromValues(0, 0, -1.1));
+		mat4.scale(transform, transform, vec3.fromValues(1, 1, 1));
+		mat4.scale(transform, transform, vec3.fromValues(0.15, 0.15, 0.15));
 	} else {
 		mat4.translate(transform, transform, vec3.fromValues(0, 0, -1));
-
-		// mat4.rotateX(transform, transform, (Math.PI * 1) / 8);
-		// mat4.rotateY(transform, transform, (Math.PI * 1) / 4);
-		// mat4.translate(transform, transform, vec3.fromValues(0, 0, -1));
-		// mat4.scale(transform, transform, vec3.fromValues(1, 1, 2));
 	}
 	const camera = mat4.create();
 
@@ -186,7 +185,8 @@ export default ({ regl, config, lkg }) => {
 
 			const [numTileColumns, numTileRows] = [lkg.tileX, lkg.tileY];
 			const numVantagePoints = numTileRows * numTileColumns;
-			const tileSize = [Math.floor(w /*lkg.quiltX*/ / numTileColumns), Math.floor(h /*lkg.quiltY*/ / numTileRows)];
+			const tileWidth = Math.floor(w / numTileColumns);
+			const tileHeight = Math.floor(h / numTileRows);
 			vantagePoints.length = 0;
 			for (let row = 0; row < numTileRows; row++) {
 				for (let column = 0; column < numTileColumns; column++) {
@@ -199,12 +199,10 @@ export default ({ regl, config, lkg }) => {
 						} else {
 							mat4.ortho(camera, -1.5, 1.5, -1.5 / aspectRatio, 1.5 / aspectRatio, -1000, 1000);
 						}
-					} else {
-						mat4.perspective(camera, (Math.PI / 180) * lkg.fov, aspectRatio, 0.0001, 1000);
+					} else if (lkg.enabled) {
+						mat4.perspective(camera, (Math.PI / 180) * lkg.fov, lkg.quiltAspect, 0.0001, 1000);
 
-						mat4.translate(camera, camera, vec3.fromValues(0, 0, -1));
-
-						const distanceToTarget = 1; // TODO: Get from somewhere else
+						const distanceToTarget = -1; // TODO: Get from somewhere else
 						let vantagePointAngle = (Math.PI / 180) * lkg.viewCone * (index / (numVantagePoints - 1) - 0.5);
 						if (isNaN(vantagePointAngle)) {
 							vantagePointAngle = 0;
@@ -213,14 +211,16 @@ export default ({ regl, config, lkg }) => {
 
 						mat4.translate(camera, camera, vec3.fromValues(xOffset, 0, 0));
 
-						camera[8] = -xOffset / (distanceToTarget * Math.tan((Math.PI / 180) * 0.5 * lkg.fov) * aspectRatio); // Is this right??
+						camera[8] = -xOffset / (distanceToTarget * Math.tan((Math.PI / 180) * 0.5 * lkg.fov) * lkg.quiltAspect); // Is this right??
+					} else {
+						mat4.perspective(camera, (Math.PI / 180) * 90, aspectRatio, 0.0001, 1000);
 					}
 
 					const viewport = {
-						x: column * tileSize[0],
-						y: row * tileSize[1],
-						width: tileSize[0],
-						height: tileSize[1],
+						x: column * tileWidth,
+						y: row * tileHeight,
+						width: tileWidth,
+						height: tileHeight,
 					};
 					vantagePoints.push({ camera, viewport });
 				}
@@ -234,14 +234,6 @@ export default ({ regl, config, lkg }) => {
 				color: [0, 0, 0, 1],
 				framebuffer: output,
 			});
-
-			// const now = Date.now();
-
-			// mat4.identity(transform);
-			// mat4.rotateX(transform, transform, (Math.PI * 1) / 8);
-			// mat4.rotateY(transform, transform, Math.sin(0.001 * now));
-			// mat4.translate(transform, transform, vec3.fromValues(0, 0, -1));
-			// mat4.scale(transform, transform, vec3.fromValues(1, 1, 2));
 
 			for (const vantagePoint of vantagePoints) {
 				render({ ...vantagePoint, transform, screenSize, vert: rainPassVert.text(), frag: rainPassFrag.text() });
