@@ -80,7 +80,10 @@ const interpretDevice = (device) => {
 	};
 };
 
-export default async (useRecordedDevice = false) => {
+export default async (useHoloplay = false, useRecordedDevice = false) => {
+	if (!useHoloplay) {
+		return interpretDevice(null);
+	}
 	const detectedDevice = await getDetectedDevice;
 	if (detectedDevice == null && useRecordedDevice) {
 		return interpretDevice(recordedDevice);

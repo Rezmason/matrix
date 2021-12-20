@@ -59,7 +59,7 @@ export default async (canvas, config) => {
 		optionalExtensions: ["EXT_color_buffer_half_float", "WEBGL_color_buffer_float", "OES_standard_derivatives"],
 	});
 
-	const lkg = await getLKG(true);
+	const lkg = await getLKG(config.useHoloplay, true);
 
 	// All this takes place in a full screen quad.
 	const fullScreenQuad = makeFullScreenQuad(regl);

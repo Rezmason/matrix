@@ -76,6 +76,7 @@ const defaults = {
 	resolution: 1, // An overall scale multiplier
 	useHalfFloat: false,
 	renderer: "webgpu", // The preferred web graphics API
+	useHoloplay: false,
 };
 
 const versions = {
@@ -229,6 +230,7 @@ const versions = {
 		volumetric: true,
 		forwardSpeed: 0,
 		density: 3,
+		useHoloplay: true,
 	},
 };
 versions.throwback = versions.operator;
