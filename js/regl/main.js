@@ -41,10 +41,14 @@ export default async (canvas, config) => {
 		canvas.height = Math.ceil(canvas.clientHeight * config.resolution);
 	};
 	window.onresize = resize;
-	if (document.fullscreenEnabled) {
+	if (document.fullscreenEnabled || document.webkitFullscreenEnabled) {
 		window.onclick = () => {
 			if (document.fullscreenElement == null) {
-				document.documentElement.requestFullscreen();
+				if (canvas.webkitRequestFullscreen != null) {
+					canvas.webkitRequestFullscreen();
+				} else {
+					canvas.requestFullscreen();
+				}
 			} else {
 				document.exitFullscreen();
 			}
