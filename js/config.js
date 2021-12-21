@@ -77,6 +77,7 @@ const defaults = {
 	useHalfFloat: false,
 	renderer: "webgpu", // The preferred web graphics API
 	useHoloplay: false,
+	loops: false,
 };
 
 const versions = {
@@ -274,6 +275,7 @@ const paramMapping = {
 	stripeColors: { key: "stripeColors", parser: (s) => s },
 	backgroundColor: { key: "backgroundColor", parser: (s) => s.split(",").map(parseFloat) },
 	volumetric: { key: "volumetric", parser: (s) => s.toLowerCase().includes("true") },
+	loops: { key: "loops", parser: (s) => s.toLowerCase().includes("true") },
 	renderer: { key: "renderer", parser: (s) => s },
 };
 paramMapping.dropLength = paramMapping.raindropLength;

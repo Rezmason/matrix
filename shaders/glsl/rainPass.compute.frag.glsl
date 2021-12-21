@@ -20,7 +20,7 @@ uniform float numColumns, numRows;
 uniform float time, tick, cycleFrameSkip;
 uniform float animationSpeed, fallSpeed, cycleSpeed;
 
-uniform bool hasSun, hasThunder;
+uniform bool hasSun, hasThunder, loops;
 uniform bool showComputationTexture;
 uniform float brightnessOverride, brightnessThreshold, brightnessDecay;
 uniform float raindropLength, glyphHeightToWidth;
@@ -51,14 +51,18 @@ float wobble(float x) {
 float getRainTime(float simTime, vec2 glyphPos) {
 	float columnTimeOffset = randomFloat(vec2(glyphPos.x, 0.)) * 1000.;
 	float columnSpeedOffset = randomFloat(vec2(glyphPos.x + 0.1, 0.)) * 0.5 + 0.5;
-	// columnSpeedOffset = 0.; // TODO: loop
+	if (loops) {
+		columnSpeedOffset = 0.5;
+	}
 	float columnTime = columnTimeOffset + simTime * fallSpeed * columnSpeedOffset;
 	return (glyphPos.y * 0.01 + columnTime) / raindropLength;
 }
 
 float getBrightness(float rainTime) {
 	float value = 1. - fract(wobble(rainTime));
-	// value = 1. - fract(rainTime); // TODO: loop
+	if (loops) {
+		value = 1. - fract(rainTime);
+	}
 	return log(value * 1.25) * 3.;
 }
 
@@ -84,7 +88,9 @@ float applySunShowerBrightness(float brightness, vec2 screenPos) {
 float applyThunderBrightness(float brightness, float simTime, vec2 screenPos) {
 	simTime *= 0.5;
 	float thunder = 1. - fract(wobble(simTime));
-	// thunder = 1. - fract(simTime + 0.3); // TODO: loop
+	if (loops) {
+		thunder = 1. - fract(simTime + 0.3);
+	}
 
 	thunder = log(thunder * 1.5) * 4.;
 	thunder = clamp(thunder, 0., 1.);
@@ -98,10 +104,14 @@ float applyRippleEffect(float effect, float simTime, vec2 screenPos) {
 	}
 
 	float rippleTime = (simTime * 0.5 + sin(simTime) * 0.2) * rippleSpeed + 1.; // TODO: clarify
-	// rippleTime = (simTime * 0.5) * rippleSpeed + 1.; // TODO: loop
+	if (loops) {
+		rippleTime = (simTime * 0.5) * rippleSpeed + 1.;
+	}
 
 	vec2 offset = randomVec2(vec2(floor(rippleTime), 0.)) - 0.5;
-	// offset = vec2(0.); // TODO: loop
+	if (loops) {
+		offset = vec2(0.);
+	}
 	vec2 ripplePos = screenPos * 2. - 1. + offset;
 	float rippleDistance;
 	if (rippleType == 0) {
@@ -149,7 +159,10 @@ vec4 computeResult(bool isFirstFrame, vec4 previousResult, vec2 glyphPos, vec2 s
 
 	// Determine the glyph's cycle— the percent this glyph has progressed through the glyph sequence
 	float previousCycle = previousResult.g;
-	bool resetGlyph = isFirstFrame; // || previousBrightness <= 0.; // TODO: loop
+	bool resetGlyph = isFirstFrame;
+	if (loops) {
+		resetGlyph = resetGlyph || previousBrightness <= 0.;
+	}
 	if (resetGlyph) {
 		previousCycle = showComputationTexture ? 0. : randomFloat(screenPos);
 	}

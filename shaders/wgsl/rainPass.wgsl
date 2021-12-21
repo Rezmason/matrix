@@ -37,6 +37,7 @@ struct Config {
 	slantScale : f32;
 	slantVec : vec2<f32>;
 	volumetric : i32;
+	loops : i32;
 	highPassThreshold : f32;
 };
 
@@ -127,14 +128,18 @@ fn wobble(x : f32) -> f32 {
 fn getRainTime(simTime : f32, glyphPos : vec2<f32>) -> f32 {
 	var columnTimeOffset = randomFloat(vec2<f32>(glyphPos.x, 0.0)) * 1000.0;
 	var columnSpeedOffset = randomFloat(vec2<f32>(glyphPos.x + 0.1, 0.0)) * 0.5 + 0.5;
-	// columnSpeedOffset = 0.0; // TODO: loop
+	if (bool(config.loops)) {
+		columnSpeedOffset = 0.5;
+	}
 	var columnTime = columnTimeOffset + simTime * config.fallSpeed * columnSpeedOffset;
 	return (glyphPos.y * 0.01 + columnTime) / config.raindropLength;
 }
 
 fn getBrightness(rainTime : f32) -> f32 {
 	var value = 1.0 - fract(wobble(rainTime));
-	// value = 1.0 - fract(rainTime); // TODO: loop
+	if (bool(config.loops)) {
+		value = 1.0 - fract(rainTime);
+	}
 	return log(value * 1.25) * 3.0;
 }
 
@@ -160,7 +165,9 @@ fn applySunShowerBrightness(brightness : f32, screenPos : vec2<f32>) -> f32 {
 fn applyThunderBrightness(brightness : f32, simTime : f32, screenPos : vec2<f32>) -> f32 {
 	var thunderTime = simTime * 0.5;
 	var thunder = 1.0 - fract(wobble(thunderTime));
-	// thunder = 1.0 - fract(thunderTime + 0.3); // TODO: loop
+	if (bool(config.loops)) {
+		thunder = 1.0 - fract(thunderTime + 0.3);
+	}
 
 	thunder = log(thunder * 1.5) * 4.0;
 	thunder = clamp(thunder, 0.0, 1.0);
@@ -174,10 +181,14 @@ fn applyRippleEffect(effect : f32, simTime : f32, screenPos : vec2<f32>) -> f32 
 	}
 
 	var rippleTime = (simTime * 0.5 + sin(simTime) * 0.2) * config.rippleSpeed + 1.0; // TODO: clarify
-	// rippleTime = (simTime * 0.5) * config.rippleSpeed + 1.0; // TODO: loop
+	if (bool(config.loops)) {
+		rippleTime = (simTime * 0.5) * config.rippleSpeed + 1.0;
+	}
 
 	var offset = randomVec2(vec2<f32>(floor(rippleTime), 0.0)) - 0.5;
-	// offset = vec2<f32>(0.0); // TODO: loop
+	if (bool(config.loops)) {
+		offset = vec2<f32>(0.0);
+	}
 	var ripplePos = screenPos * 2.0 - 1.0 + offset;
 	var rippleDistance : f32;
 	if (config.rippleType == 0) {
@@ -225,7 +236,10 @@ fn computeResult (isFirstFrame : bool, previousResult : vec4<f32>, glyphPos : ve
 
 	// Determine the glyph's cycle— the percent this glyph has progressed through the glyph sequence
 	var previousCycle = previousResult.g;
-	var resetGlyph = isFirstFrame; // || previousBrightness <= 0.0; // TODO: loop
+	var resetGlyph = isFirstFrame;
+	if (bool(config.loops)) {
+		resetGlyph = resetGlyph || previousBrightness < 0.0;
+	}
 	if (resetGlyph) {
 		previousCycle = select(randomFloat(screenPos), 0.0, bool(config.showComputationTexture));
 	}

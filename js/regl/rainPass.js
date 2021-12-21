@@ -76,6 +76,7 @@ export default ({ regl, config, lkg }) => {
 			"rippleScale",
 			"rippleSpeed",
 			"rippleThickness",
+			"loops",
 		]),
 		cycleStyle,
 		rippleType,

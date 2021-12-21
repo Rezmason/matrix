@@ -92,7 +92,7 @@ Now you know link fu. Here's a list of customization options:
   - ("none" displays the texture whose RGBA values represent the glyph shape and brightness data. _epilepsy warning_: lots of flickering)
 - **colors** - if you set the effect to "customStripes", you can specify the colors of vertical stripes as alternating *R,G,B* numeric values, like so: [https://rezmason.github.io/matrix/?effect=customStripes&colors=1,0,0,1,1,0,0,1,0](https://rezmason.github.io/matrix/?effect=customStripes&colors=1,0,0,1,1,0,0,1,0)
 - **url** - if you set the effect to "image", this is how you specify which image to load. It doesn't work with any URL; I suggest grabbing them from Wikipedia: [https://rezmason.github.io/matrix/?effect=image&url=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg](https://rezmason.github.io/matrix/?effect=image&url=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg)
-
+- **loops** - (WIP) if set to "true", this causes the effect to loop, so that it can be converted into a looping video.
 
 ---
 ### other details
