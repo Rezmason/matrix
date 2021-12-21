@@ -36,6 +36,7 @@ const fonts = {
 };
 
 const defaults = {
+	font: "matrixcode",
 	backgroundColor: [0, 0, 0], // The color "behind" the glyphs
 	volumetric: false, // A mode where the raindrops appear in perspective
 	resurrectingCodeRatio: 0, // The percent of columns that flow upward
@@ -81,11 +82,8 @@ const defaults = {
 };
 
 const versions = {
-	classic: {
-		font: "matrixcode",
-	},
+	classic: {},
 	operator: {
-		font: "matrixcode",
 		bloomStrength: 0.75,
 		highPassThreshold: 0.0,
 		cycleSpeed: 0.2,
@@ -145,7 +143,6 @@ const versions = {
 		raindropLength: 0.4,
 	},
 	resurrections: {
-		font: "matrixcode",
 		resurrectingCodeRatio: 0.25,
 		glyphVerticalSpacing: 1.5,
 		effect: "resurrections",
