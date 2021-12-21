@@ -77,6 +77,7 @@ Now you know link fu. Here's a list of customization options:
   - "operator" is more reminiscent of the matrix code as it appears in the first movie's opening titles, and on operators' screens: flatter, crowded, without a gradient, and with occasional effects (such as a square ripple).
   - "paradise" is how the Matrix's idyllic predecessor may have appeared: warm, simplistic, encompassing.
   - "nightmare" is how the Matrix may have appeared in the Merovingian's heyday: flashy, foreboding, relentless.
+- **font** - the set of glyphs to draw. Current options are "matrixcode", "resurrections", "gothic", "coptic", "huberfishA", and "huberfishD".
 - **width** - the number of columns (and rows) to draw. Default is 80.
 - **volumetric** - when set to "true", this renders the glyphs with depth, slowly approaching the eye. Default is "false".
 - **density** - the number of 3D raindrops to draw, proportional to the default. Default is 1.0.

@@ -82,12 +82,10 @@ const defaults = {
 
 const versions = {
 	classic: {
-		...defaults,
-		...fonts.matrixcode,
+		font: "matrixcode",
 	},
 	operator: {
-		...defaults,
-		...fonts.matrixcode,
+		font: "matrixcode",
 		bloomStrength: 0.75,
 		highPassThreshold: 0.0,
 		cycleSpeed: 0.2,
@@ -109,8 +107,7 @@ const versions = {
 		raindropLength: 1.5,
 	},
 	nightmare: {
-		...defaults,
-		...fonts.gothic,
+		font: "gothic",
 		highPassThreshold: 0.7,
 		brightnessDecay: 0.75,
 		fallSpeed: 1.2,
@@ -127,8 +124,7 @@ const versions = {
 		slant: (22.5 * Math.PI) / 180,
 	},
 	paradise: {
-		...defaults,
-		...fonts.coptic,
+		font: "coptic",
 		bloomStrength: 1,
 		highPassThreshold: 0,
 		cycleSpeed: 0.1,
@@ -149,8 +145,7 @@ const versions = {
 		raindropLength: 0.4,
 	},
 	resurrections: {
-		...defaults,
-		...fonts.matrixcode,
+		font: "matrixcode",
 		resurrectingCodeRatio: 0.25,
 		glyphVerticalSpacing: 1.5,
 		effect: "resurrections",
@@ -159,8 +154,7 @@ const versions = {
 		fallSpeed: 0.4,
 	},
 	updated: {
-		...defaults,
-		...fonts.resurrections,
+		font: "resurrections",
 		numColumns: 108,
 		fallSpeed: 0.35,
 		cycleStyle: "cycleRandomly",
@@ -176,8 +170,7 @@ const versions = {
 		cursorEffectThreshold: 0.8,
 	},
 	palimpsest: {
-		...defaults,
-		...fonts.huberfishA,
+		font: "huberfishA",
 		bloomStrength: 0.2,
 		numColumns: 40,
 		raindropLength: 1.2,
@@ -191,8 +184,7 @@ const versions = {
 		],
 	},
 	twilight: {
-		...defaults,
-		...fonts.huberfishD,
+		font: "huberfishD",
 		bloomStrength: 0.3,
 		numColumns: 50,
 		raindropLength: 0.9,
@@ -210,8 +202,7 @@ const versions = {
 	},
 
 	holoplay: {
-		...defaults,
-		...fonts.resurrections,
+		font: "resurrections",
 		numColumns: 20,
 		fallSpeed: 0.35,
 		cycleStyle: "cycleRandomly",
@@ -244,6 +235,7 @@ const nullNaN = (f) => (isNaN(f) ? null : f);
 
 const paramMapping = {
 	version: { key: "version", parser: (s) => s },
+	font: { key: "font", parser: (s) => s },
 	effect: { key: "effect", parser: (s) => s },
 	width: { key: "numColumns", parser: (s) => nullNaN(parseInt(s)) },
 	numColumns: { key: "numColumns", parser: (s) => nullNaN(parseInt(s)) },
@@ -291,9 +283,13 @@ export default (urlParams) => {
 	);
 
 	const version = validParams.version in versions ? versions[validParams.version] : versions.classic;
+	const fontName = [validParams.font, version.font, defaults.font].find((name) => name in fonts);
+	const font = fonts[fontName];
 
 	return {
+		...defaults,
 		...version,
+		...font,
 		...validParams,
 	};
 };
