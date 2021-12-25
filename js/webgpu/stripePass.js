@@ -73,7 +73,11 @@ export default ({ config, device, timeBuffer }) => {
 		});
 
 		const configUniforms = structs.from(stripeShader.code).Config;
-		configBuffer = makeUniformBuffer(device, configUniforms, { ditherMagnitude: config.ditherMagnitude, backgroundColor: config.backgroundColor });
+		configBuffer = makeUniformBuffer(device, configUniforms, {
+			bloomStrength: config.bloomStrength,
+			ditherMagnitude: config.ditherMagnitude,
+			backgroundColor: config.backgroundColor,
+		});
 	})();
 
 	const build = (size, inputs) => {

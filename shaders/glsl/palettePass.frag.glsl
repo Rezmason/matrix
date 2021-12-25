@@ -4,6 +4,7 @@ precision mediump float;
 uniform sampler2D tex;
 uniform sampler2D bloomTex;
 uniform sampler2D palette;
+uniform float bloomStrength;
 uniform float ditherMagnitude;
 uniform float time;
 uniform vec3 backgroundColor;
@@ -15,8 +16,14 @@ highp float rand( const in vec2 uv, const in float t ) {
 	return fract(sin(sn) * c + t);
 }
 
+vec4 getBrightness(vec2 uv) {
+	vec4 primary = texture2D(tex, uv);
+	vec4 bloom = texture2D(bloomTex, uv) * bloomStrength;
+	return min((primary + bloom) * (2.0 - bloomStrength), 1.0);
+}
+
 void main() {
-	vec4 brightnessRGB = texture2D( tex, vUV ) + texture2D( bloomTex, vUV );
+	vec4 brightnessRGB = getBrightness(vUV);
 
 	// Combine the texture and bloom
 	float brightness = brightnessRGB.r + brightnessRGB.g + brightnessRGB.b;

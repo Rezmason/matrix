@@ -15,16 +15,20 @@ import { makeComputeTarget, loadShader, makeUniformBuffer, makeBindGroup, makePa
 // const makePyramidViews = (pyramid) => [pyramid.createView()];
 
 const makePyramid = (device, size, pyramidHeight) =>
-	Array(pyramidHeight).fill().map((_, index) => makeComputeTarget(
-		device,
-		size.map(x => Math.floor(x * 2 ** -(index + 1)))
-		));
+	Array(pyramidHeight)
+		.fill()
+		.map((_, index) =>
+			makeComputeTarget(
+				device,
+				size.map((x) => Math.floor(x * 2 ** -(index + 1)))
+			)
+		);
 
-const destroyPyramid = (pyramid) => pyramid?.forEach(texture => texture.destroy());
+const destroyPyramid = (pyramid) => pyramid?.forEach((texture) => texture.destroy());
 
 const makePyramidLevelView = (pyramid, level) => pyramid[level].createView();
 
-const makePyramidViews = (pyramid) => pyramid.map(tex => tex.createView());
+const makePyramidViews = (pyramid) => pyramid.map((tex) => tex.createView());
 
 // The bloom pass is basically an added blur of the rain pass's high-pass output.
 // The blur approximation is the sum of a pyramid of downscaled, blurred textures.
@@ -89,7 +93,7 @@ export default ({ config, device }) => {
 		vBlurBuffer = makeUniformBuffer(device, blurUniforms, { bloomRadius, direction: [0, 1] });
 
 		const combineUniforms = structs.from(combineShader.code).Config;
-		combineBuffer = makeUniformBuffer(device, combineUniforms, { bloomStrength, pyramidHeight });
+		combineBuffer = makeUniformBuffer(device, combineUniforms, { pyramidHeight });
 	})();
 
 	const build = (screenSize, inputs) => {

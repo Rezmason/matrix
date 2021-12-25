@@ -2,13 +2,20 @@ precision mediump float;
 uniform sampler2D tex;
 uniform sampler2D bloomTex;
 uniform sampler2D backgroundTex;
+uniform float bloomStrength;
 varying vec2 vUV;
+
+vec4 getBrightness(vec2 uv) {
+	vec4 primary = texture2D(tex, uv);
+	vec4 bloom = texture2D(bloomTex, uv) * bloomStrength;
+	return min((primary + bloom) * (2.0 - bloomStrength), 1.0);
+}
 
 void main() {
 	vec3 bgColor = texture2D(backgroundTex, vUV).rgb;
 
 	// Combine the texture and bloom, then blow it out to reveal more of the image
-	float brightness = pow(min(1., texture2D(tex, vUV).r * 2.) + texture2D(bloomTex, vUV).r, 1.5);
+	float brightness = pow(getBrightness(vUV).r, 1.5);
 	
 	gl_FragColor = vec4(bgColor * brightness, 1.0);
 }

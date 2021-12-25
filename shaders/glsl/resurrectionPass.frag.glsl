@@ -3,6 +3,7 @@ precision mediump float;
 
 uniform sampler2D tex;
 uniform sampler2D bloomTex;
+uniform float bloomStrength;
 uniform float ditherMagnitude;
 uniform float time;
 uniform vec3 backgroundColor;
@@ -38,7 +39,7 @@ void main() {
 	// Mix the texture and bloom based on distance from center,
 	// to approximate a lens blur
 	vec3 brightness = mix(
-		texture2D( bloomTex, vUV ).rgb, 
+		texture2D( bloomTex, vUV ).rgb * bloomStrength,
 		texture2D( tex, vUV ).rgb, 
 		(0.7 - length(vUV - 0.5))
 	) * 1.25;

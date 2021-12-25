@@ -1,4 +1,5 @@
 struct Config {
+	bloomStrength : f32;
 	ditherMagnitude : f32;
 	backgroundColor : vec3<f32>;
 };
@@ -71,7 +72,7 @@ fn hslToRgb(h : f32, s : f32, l : f32) -> vec3<f32> {
 	// to approximate a lens blur
 	var brightness = mix(
 		textureSampleLevel( tex, linearSampler, uv, 0.0 ).rgb,
-		textureSampleLevel( bloomTex, linearSampler, uv, 0.0 ).rgb,
+		textureSampleLevel( bloomTex, linearSampler, uv, 0.0 ).rgb * config.bloomStrength,
 		(0.7 - length(uv - 0.5))
 	) * 1.25;
 

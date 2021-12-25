@@ -1,4 +1,5 @@
-import { makeComputeTarget, loadTexture, loadShader, makeBindGroup, makePass } from "./utils.js";
+import { structs } from "../../lib/gpu-buffer.js";
+import { makeComputeTarget, makeUniformBuffer, loadTexture, loadShader, makeBindGroup, makePass } from "./utils.js";
 
 // Multiplies the rendered rain and bloom by a loaded in image
 
@@ -14,6 +15,7 @@ export default ({ config, device }) => {
 	});
 
 	let computePipeline;
+	let configBuffer;
 	let output;
 	let screenSize;
 	let backgroundTex;
@@ -30,6 +32,9 @@ export default ({ config, device }) => {
 				entryPoint: "computeMain",
 			},
 		});
+
+		const configUniforms = structs.from(imageShader.code).Config;
+		configBuffer = makeUniformBuffer(device, configUniforms, { bloomStrength: config.bloomStrength });
 	})();
 
 	const build = (size, inputs) => {
@@ -37,6 +42,7 @@ export default ({ config, device }) => {
 		output = makeComputeTarget(device, size);
 		screenSize = size;
 		computeBindGroup = makeBindGroup(device, computePipeline, 0, [
+			configBuffer,
 			linearSampler,
 			inputs.primary.createView(),
 			inputs.bloom.createView(),

@@ -1,5 +1,4 @@
 struct Config {
-	bloomStrength : f32;
 	pyramidHeight : f32;
 };
 
@@ -63,5 +62,5 @@ struct ComputeInput {
 		sum = sum + textureSampleLevel( tex4, linearSampler, uv, i + 1.0 ) * weight;
 	}
 
-	textureStore(outputTex, coord, sum * config.bloomStrength);
+	textureStore(outputTex, coord, sum);
 }

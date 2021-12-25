@@ -31,7 +31,7 @@ const prideStripeColors = [
 export default ({ regl, config }, inputs) => {
 	const output = makePassFBO(regl, config.useHalfFloat);
 
-	const { backgroundColor, ditherMagnitude } = config;
+	const { backgroundColor, ditherMagnitude, bloomStrength } = config;
 
 	// Expand and convert stripe colors into 1D texture data
 	const stripeColors =
@@ -50,6 +50,7 @@ export default ({ regl, config }, inputs) => {
 		uniforms: {
 			backgroundColor,
 			ditherMagnitude,
+			bloomStrength,
 			tex: inputs.primary,
 			bloomTex: inputs.bloom,
 			stripes,

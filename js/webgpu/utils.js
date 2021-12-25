@@ -24,6 +24,7 @@ const loadTexture = async (device, url) => {
 
 const loadTexture = async (device, url) => {
 	const image = new Image();
+	image.crossOrigin = "Anonymous";
 	image.src = url;
 	await image.decode();
 	const { width, height } = image;

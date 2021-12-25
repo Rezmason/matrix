@@ -3,6 +3,7 @@ precision mediump float;
 
 uniform sampler2D tex;
 uniform sampler2D bloomTex;
+uniform float bloomStrength;
 uniform sampler2D stripes;
 uniform float ditherMagnitude;
 uniform float time;
@@ -15,10 +16,16 @@ highp float rand( const in vec2 uv, const in float t ) {
 	return fract(sin(sn) * c + t);
 }
 
+vec4 getBrightness(vec2 uv) {
+	vec4 primary = texture2D(tex, uv);
+	vec4 bloom = texture2D(bloomTex, uv) * bloomStrength;
+	return min((primary + bloom) * (2.0 - bloomStrength), 1.0);
+}
+
 void main() {
 	vec3 color = texture2D(stripes, vUV).rgb;
 	// Combine the texture and bloom
-	float brightness = min(1., texture2D(tex, vUV).r * 2.) + texture2D(bloomTex, vUV).r;
+	float brightness = getBrightness(vUV).r;
 
 	// Dither: subtract a random value from the brightness
 	brightness = brightness - rand( gl_FragCoord.xy, time ) * ditherMagnitude;

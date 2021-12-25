@@ -186,7 +186,7 @@ const versions = {
 		bloomStrength: 0.3,
 		numColumns: 50,
 		raindropLength: 0.9,
-		fallSpeed: 0.15,
+		fallSpeed: 0.1,
 		cycleStyle: "cycleRandomly",
 		highPassThreshold: 0.0,
 		hasSun: true,
@@ -206,6 +206,7 @@ const versions = {
 		cycleStyle: "cycleRandomly",
 		cycleSpeed: 0.8,
 		glyphEdgeCrop: 0.1,
+		ditherMagnitude: 0,
 		paletteEntries: [
 			{ hsl: [0.39, 0.9, 0.0], at: 0.0 },
 			{ hsl: [0.39, 1.0, 0.6], at: 0.5 },
@@ -216,7 +217,7 @@ const versions = {
 		cursorEffectThreshold: 0.8,
 
 		renderer: "regl",
-		bloomSize: 0,
+		bloomStrength: 0,
 		volumetric: true,
 		forwardSpeed: 0,
 		density: 3,
@@ -292,10 +293,16 @@ export default (urlParams) => {
 	const fontName = [validParams.font, version.font, defaults.font].find((name) => name in fonts);
 	const font = fonts[fontName];
 
-	return {
+	const config = {
 		...defaults,
 		...version,
 		...font,
 		...validParams,
 	};
+
+	if (config.bloomSize <= 0) {
+		config.bloomStrength = 0;
+	}
+
+	return config;
 };
