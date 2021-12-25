@@ -10,7 +10,7 @@ import { loadText, make1DTexture, makePassFBO, makePass } from "./utils.js";
 
 export default ({ regl, config }, inputs) => {
 	const output = makePassFBO(regl, config.useHalfFloat);
-	const { backgroundColor } = config;
+	const { backgroundColor, ditherMagnitude } = config;
 	const resurrectionPassFrag = loadText("shaders/glsl/resurrectionPass.frag.glsl");
 
 	const render = regl({
@@ -18,9 +18,9 @@ export default ({ regl, config }, inputs) => {
 
 		uniforms: {
 			backgroundColor,
+			ditherMagnitude,
 			tex: inputs.primary,
 			bloomTex: inputs.bloom,
-			ditherMagnitude: 0.05,
 		},
 		framebuffer: output,
 	});

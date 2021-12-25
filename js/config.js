@@ -52,6 +52,7 @@ const defaults = {
 	brightnessOverride: 0.0, // A global override to the brightness of displayed glyphs. Only used if it is > 0.
 	brightnessThreshold: 0, // The minimum brightness for a glyph to still be considered visible
 	brightnessDecay: 1.0, // The rate at which glyphs light up and dim
+	ditherMagnitude: 0.05, // The magnitude of the random per-pixel dimming
 	fallSpeed: 0.75, // The speed the raindrops progress downwards
 	glyphEdgeCrop: 0.0, // The border around a glyph in a font texture that should be cropped out
 	glyphHeightToWidth: 1, // The aspect ratio of glyphs
@@ -258,6 +259,14 @@ const paramMapping = {
 	},
 	bloomSize: {
 		key: "bloomSize",
+		parser: (s) => nullNaN(range(parseFloat(s), 0, 1)),
+	},
+	bloomStrength: {
+		key: "bloomStrength",
+		parser: (s) => nullNaN(range(parseFloat(s), 0, 1)),
+	},
+	ditherMagnitude: {
+		key: "ditherMagnitude",
 		parser: (s) => nullNaN(range(parseFloat(s), 0, 1)),
 	},
 	url: { key: "bgURL", parser: (s) => s },

@@ -102,7 +102,7 @@ export default ({ config, device, timeBuffer }) => {
 
 		const paletteShaderUniforms = structs.from(paletteShader.code);
 		const configUniforms = paletteShaderUniforms.Config;
-		configBuffer = makeUniformBuffer(device, configUniforms, { ditherMagnitude: 0.05, backgroundColor: config.backgroundColor });
+		configBuffer = makeUniformBuffer(device, configUniforms, { ditherMagnitude: config.ditherMagnitude, backgroundColor: config.backgroundColor });
 
 		const paletteUniforms = paletteShaderUniforms.Palette;
 		paletteBuffer = makePalette(device, paletteUniforms, config.paletteEntries);

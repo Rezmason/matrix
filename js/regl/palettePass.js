@@ -65,7 +65,7 @@ const makePalette = (regl, entries) => {
 export default ({ regl, config }, inputs) => {
 	const output = makePassFBO(regl, config.useHalfFloat);
 	const palette = makePalette(regl, config.paletteEntries);
-	const { backgroundColor } = config;
+	const { backgroundColor, ditherMagnitude } = config;
 
 	const palettePassFrag = loadText("shaders/glsl/palettePass.frag.glsl");
 
@@ -74,10 +74,10 @@ export default ({ regl, config }, inputs) => {
 
 		uniforms: {
 			backgroundColor,
+			ditherMagnitude,
 			tex: inputs.primary,
 			bloomTex: inputs.bloom,
 			palette,
-			ditherMagnitude: 0.05,
 		},
 		framebuffer: output,
 	});

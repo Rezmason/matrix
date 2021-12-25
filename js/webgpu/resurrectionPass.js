@@ -36,7 +36,7 @@ export default ({ config, device, timeBuffer }) => {
 		});
 
 		const configUniforms = structs.from(resurrectionShader.code).Config;
-		configBuffer = makeUniformBuffer(device, configUniforms, { ditherMagnitude: 0.05, backgroundColor: config.backgroundColor });
+		configBuffer = makeUniformBuffer(device, configUniforms, { ditherMagnitude: config.ditherMagnitude, backgroundColor: config.backgroundColor });
 	})();
 
 	const build = (size, inputs) => {
