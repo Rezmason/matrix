@@ -33,6 +33,16 @@ const fonts = {
 		glyphSequenceLength: 34,
 		glyphTextureGridSize: [6, 6],
 	},
+	gtarg_tenretniolleh: {
+		glyphTexURL: "assets/gtarg_tenretniolleh_msdf.png",
+		glyphSequenceLength: 36,
+		glyphTextureGridSize: [6, 6],
+	},
+	gtarg_alientext: {
+		glyphTexURL: "assets/gtarg_alientext_msdf.png",
+		glyphSequenceLength: 38,
+		glyphTextureGridSize: [8, 5],
+	},
 };
 
 const defaults = {
