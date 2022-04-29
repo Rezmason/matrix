@@ -16,6 +16,7 @@
   - [(AKA this stuff).](http://matrix.wikia.com/wiki/Paradise_Matrix)
 - [A custom variety I call "Palimpsest"](https://rezmason.github.io/matrix?version=palimpsest)
 - [A custom variety I call "Twilight"](https://rezmason.github.io/matrix?version=twilight)
+- [Megacity Mode, as seen in Revolutions](https://rezmason.github.io/matrix?version=megacity)
 - [Pride flag colors](https://rezmason.github.io/matrix/?effect=pride)
 - [Trans flag colors](https://rezmason.github.io/matrix/?effect=trans)
 - [Custom stripes (`colors=R,G,B,R,G,B,R,G,B, etc`)](https://rezmason.github.io/matrix/?effect=customStripes&colors=1,0,0,1,1,0,0,1,0)

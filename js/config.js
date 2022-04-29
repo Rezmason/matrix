@@ -101,7 +101,9 @@ const defaults = {
 const versions = {
 	classic: {},
 	megacity: {
-		font: "megacity"
+		font: "megacity",
+		animationSpeed: 0.5,
+		width: 40
 	},
 	operator: {
 		bloomStrength: 0.75,
