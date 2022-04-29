@@ -1,5 +1,11 @@
 TODO:
 
+Resurrections
+  Support random glyph order
+  Support annomaly streaks
+  Eventually improve expanded new glyph set
+    Make font
+
 WebGPU
   Try https://github.com/brendan-duncan/wgsl_reflect
   Get rid of end pass once it's possible to copy a bgra8unorm to a canvas texture
@@ -21,11 +27,6 @@ gpu-buffer, working title
   Make improvements
   Capture expected requirements down the road, make roadmap
   License it and put it somewhere else
-
-Resurrection
-  Modified glyph order?
-  New glyphs?
-    Good luck with that, champ
 
 Zion Control's matrix variant
   From Reloaded

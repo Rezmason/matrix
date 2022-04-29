@@ -377,6 +377,7 @@ fn getSymbolUV(glyphCycle : f32) -> vec2<f32> {
 	var symbol = i32(f32(config.glyphSequenceLength) * glyphCycle);
 	var symbolX = symbol % config.glyphTextureGridSize.x;
 	var symbolY = symbol / config.glyphTextureGridSize.x;
+	// TODO: make sure this is working properly, it had a bug in the GLSL for a while.
 	return vec2<f32>(f32(symbolX), f32(symbolY));
 }
 

@@ -17,6 +17,12 @@ const fonts = {
 		glyphSequenceLength: 57,
 		glyphTextureGridSize: [8, 8],
 	},
+	megacity: {
+		// The glyphs seen in the film trilogy
+		glyphTexURL: "assets/megacity_msdf.png",
+		glyphSequenceLength: 64,
+		glyphTextureGridSize: [8, 8],
+	},
 	resurrections: {
 		// The glyphs seen in the film trilogy
 		glyphTexURL: "assets/resurrections_msdf.png",
@@ -94,6 +100,9 @@ const defaults = {
 
 const versions = {
 	classic: {},
+	megacity: {
+		font: "megacity"
+	},
 	operator: {
 		bloomStrength: 0.75,
 		highPassThreshold: 0.0,

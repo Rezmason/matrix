@@ -25,8 +25,9 @@ float median3(vec3 i) {
 
 vec2 getSymbolUV(float glyphCycle) {
 	float symbol = floor((glyphSequenceLength) * glyphCycle) + 1.0;
-	float symbolX = mod(symbol, glyphTextureGridSize.x) - 1.0;
-	float symbolY = glyphTextureGridSize.y - 1.0 - (mod(floor(symbol / glyphTextureGridSize.x), glyphTextureGridSize.y));
+	float symbolX = mod(symbol, glyphTextureGridSize.x);
+	float symbolY = mod(floor(symbol / glyphTextureGridSize.x), glyphTextureGridSize.y);
+	symbolY = glyphTextureGridSize.y - symbolY - 1.0;
 	return vec2(symbolX, symbolY);
 }
 
