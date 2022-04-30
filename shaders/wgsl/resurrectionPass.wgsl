@@ -33,8 +33,8 @@ fn randomFloat( uv : vec2<f32> ) -> f32 {
 
 fn rgbComponent(p : f32, q : f32, t : f32) -> f32 {
 	var t2 = t;
-	if (t2 < 0.0) { t2 = t2 + 1.0; }
-	if (t2 > 1.0) { t2 = t2 - 1.0; }
+	if (t2 < 0.0) { t2 += 1.0; }
+	if (t2 > 1.0) { t2 -= 1.0; }
 	if (t2 < 1.0 / 6.0) { return p + (q - p) * 6.0 * t2; }
 	if (t2 < 1.0 / 2.0) { return q; }
 	if (t2 < 2.0 / 3.0) { return p + (q - p) * (2.0 / 3.0 - t2) * 6.0; }
@@ -77,7 +77,7 @@ fn hslToRgb(h : f32, s : f32, l : f32) -> vec3<f32> {
 	) * 1.25;
 
 	// Dither: subtract a random value from the brightness
-	brightness = brightness - randomFloat( uv + vec2<f32>(time.seconds) ) * config.ditherMagnitude;
+	brightness -= randomFloat( uv + vec2<f32>(time.seconds) ) * config.ditherMagnitude;
 
 	// Calculate a hue based on distance from center
 	var hue = 0.35 + (length(vec2<f32>(uv.x, 1.0 - uv.y) - vec2<f32>(0.5, 1.0)) * -0.4 + 0.2);

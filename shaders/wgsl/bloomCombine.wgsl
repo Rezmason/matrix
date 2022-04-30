@@ -31,35 +31,35 @@ struct ComputeInput {
 	var uv = (vec2<f32>(coord) + 0.5) / vec2<f32>(outputSize);
 	var sum = vec4<f32>(0.0);
 
-	// for (var i = 0.0; i < config.pyramidHeight; i = i + 1.0) {
+	// for (var i = 0.0; i < config.pyramidHeight; i += 1.0) {
 	// 	var weight = (1.0 - i / config.pyramidHeight);
 	// 	weight = pow(weight + 0.5, 1.0 / 3.0);
-	// 	sum = sum + textureSampleLevel( tex, linearSampler, uv, i + 1.0 ) * weight;
+	// 	sum += textureSampleLevel( tex, linearSampler, uv, i + 1.0 ) * weight;
 	// }
 
 	{
 		var i = 0.0;
 		var weight = (1.0 - i / config.pyramidHeight);
 		weight = pow(weight + 0.5, 1.0 / 3.0);
-		sum = sum + textureSampleLevel( tex1, linearSampler, uv, i + 1.0 ) * weight;
+		sum += textureSampleLevel( tex1, linearSampler, uv, i + 1.0 ) * weight;
 	}
 	{
 		var i = 1.0;
 		var weight = (1.0 - i / config.pyramidHeight);
 		weight = pow(weight + 0.5, 1.0 / 3.0);
-		sum = sum + textureSampleLevel( tex2, linearSampler, uv, i + 1.0 ) * weight;
+		sum += textureSampleLevel( tex2, linearSampler, uv, i + 1.0 ) * weight;
 	}
 	{
 		var i = 2.0;
 		var weight = (1.0 - i / config.pyramidHeight);
 		weight = pow(weight + 0.5, 1.0 / 3.0);
-		sum = sum + textureSampleLevel( tex3, linearSampler, uv, i + 1.0 ) * weight;
+		sum += textureSampleLevel( tex3, linearSampler, uv, i + 1.0 ) * weight;
 	}
 	{
 		var i = 3.0;
 		var weight = (1.0 - i / config.pyramidHeight);
 		weight = pow(weight + 0.5, 1.0 / 3.0);
-		sum = sum + textureSampleLevel( tex4, linearSampler, uv, i + 1.0 ) * weight;
+		sum += textureSampleLevel( tex4, linearSampler, uv, i + 1.0 ) * weight;
 	}
 
 	textureStore(outputTex, coord, sum);

@@ -34,11 +34,11 @@ fn gaussianPDF(x : f32) -> f32 {
 
 	var weightSum = gaussianPDF(0.0);
 	var sum = textureSampleLevel( tex, linearSampler, uv, 0.0) * weightSum;
-	for (var x : f32 = 1.0; x < config.bloomRadius; x = x + 1.0) {
+	for (var x : f32 = 1.0; x < config.bloomRadius; x += 1.0) {
 		var weight = gaussianPDF(x);
-		sum = sum + textureSampleLevel( tex, linearSampler, uv + uvOffset * x, 0.0) * weight;
-		sum = sum + textureSampleLevel( tex, linearSampler, uv - uvOffset * x, 0.0) * weight;
-		weightSum = weightSum + weight * 2.0;
+		sum += textureSampleLevel( tex, linearSampler, uv + uvOffset * x, 0.0) * weight;
+		sum += textureSampleLevel( tex, linearSampler, uv - uvOffset * x, 0.0) * weight;
+		weightSum += weight * 2.0;
 	}
 
 	textureStore(outputTex, coord, sum / weightSum);

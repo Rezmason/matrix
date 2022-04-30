@@ -55,7 +55,7 @@ fn getBrightness(uv : vec2<f32>) -> vec4<f32> {
 	var brightness = getBrightness(uv).r;
 
 	// Dither: subtract a random value from the brightness
-	brightness = brightness - randomFloat( uv + vec2<f32>(time.seconds) ) * config.ditherMagnitude;
+	brightness -= randomFloat( uv + vec2<f32>(time.seconds) ) * config.ditherMagnitude;
 
 	textureStore(outputTex, coord, vec4<f32>(color * brightness + config.backgroundColor, 1.0));
 }

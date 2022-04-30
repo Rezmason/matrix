@@ -171,7 +171,7 @@ fn applyThunderBrightness(brightness : f32, simTime : f32, screenPos : vec2<f32>
 
 	thunder = log(thunder * 1.5) * 4.0;
 	thunder = clamp(thunder, 0.0, 1.0);
-	thunder = thunder * pow(screenPos.y, 2.0) * 3.0;
+	thunder *= pow(screenPos.y, 2.0) * 3.0;
 	return brightness + thunder;
 }
 
@@ -338,8 +338,8 @@ fn computeResult (isFirstFrame : bool, previousResult : vec4<f32>, glyphPos : ve
 
 	// Calculate the vertex's world space position
 	var worldPosition = quadPosition * vec2<f32>(1.0, config.glyphVerticalSpacing);
-	worldPosition = worldPosition + quadCorner * vec2<f32>(config.density, 1.0);
-	worldPosition = worldPosition / quadGridSize;
+	worldPosition += quadCorner * vec2<f32>(config.density, 1.0);
+	worldPosition /= quadGridSize;
 	worldPosition = (worldPosition - 0.5) * 2.0;
 
 	// "Resurrected" columns are in the green channel,
@@ -353,7 +353,7 @@ fn computeResult (isFirstFrame : bool, previousResult : vec4<f32>, glyphPos : ve
 	// Convert the vertex's world space position to screen space
 	var screenPosition = vec4<f32>(worldPosition, quadDepth, 1.0);
 	if (volumetric) {
-		screenPosition.x = screenPosition.x / config.glyphHeightToWidth;
+		screenPosition.x /= config.glyphHeightToWidth;
 		screenPosition = scene.camera * scene.transform * screenPosition;
 	} else {
 		screenPosition = vec4<f32>(screenPosition.xy * scene.screenSize, screenPosition.zw);
@@ -392,9 +392,9 @@ fn getSymbolUV(glyphCycle : f32) -> vec2<f32> {
 	if (!volumetric) {
 		if (bool(config.isPolar)) {
 			// Curve space to make the letters appear to radiate from up above
-			uv = uv - 0.5;
-			uv = uv * 0.5;
-			uv.y = uv.y - 0.5;
+			uv -= 0.5;
+			uv *= 0.5;
+			uv.y -= 0.5;
 			var radius = length(uv);
 			var angle = atan2(uv.y, uv.x) / (2.0 * PI) + 0.5;
 			uv = vec2<f32>(fract(angle * 4.0 - 0.5), 1.5 * (1.0 - sqrt(radius)));
@@ -406,7 +406,7 @@ fn getSymbolUV(glyphCycle : f32) -> vec2<f32> {
 				(uv.y - 0.5) * config.slantVec.x - (uv.x - 0.5) * config.slantVec.y
 			) * config.slantScale + 0.5;
 		}
-		uv.y = uv.y / config.glyphHeightToWidth;
+		uv.y /= config.glyphHeightToWidth;
 	}
 
 	// Retrieve values from the data texture
@@ -426,15 +426,15 @@ fn getSymbolUV(glyphCycle : f32) -> vec2<f32> {
 	brightness = max(effect, brightness);
 	// In volumetric mode, distant glyphs are dimmer
 	if (volumetric) {
-		brightness = brightness * min(1.0, quadDepth);
+		brightness *= min(1.0, quadDepth);
 	}
 
 	// resolve UV to cropped position of glyph in MSDF texture
 	var glyphUV = fract(uv * config.gridSize);
 	glyphUV.y = 1.0 - glyphUV.y; // WebGL -> WebGPU y-flip
-	glyphUV = glyphUV - 0.5;
-	glyphUV = glyphUV * clamp(1.0 - config.glyphEdgeCrop, 0.0, 1.0);
-	glyphUV = glyphUV + 0.5;
+	glyphUV -= 0.5;
+	glyphUV *= clamp(1.0 - config.glyphEdgeCrop, 0.0, 1.0);
+	glyphUV += 0.5;
 	var msdfUV = (glyphUV + symbolUV) / vec2<f32>(config.glyphTextureGridSize);
 
 	// MSDF : calculate brightness of fragment based on distance to shape
@@ -447,7 +447,7 @@ fn getSymbolUV(glyphCycle : f32) -> vec2<f32> {
 	if (bool(config.showComputationTexture)) {
 		output.color = vec4<f32>(glyph.r - alpha, glyph.g * alpha, glyph.a - alpha, 1.0);
 		if (volumetric) {
-			output.color.g = output.color.g * 0.9 + 0.1;
+			output.color.g *= 0.9 + 0.1;
 		}
 	} else {
 		output.color = vec4<f32>(input.channel * brightness * alpha, 1.0);
