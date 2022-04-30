@@ -5,13 +5,13 @@ struct Config {
 	direction : vec2<f32>;
 };
 
-[[group(0), binding(0)]] var<uniform> config : Config;
-[[group(0), binding(1)]] var linearSampler : sampler;
-[[group(0), binding(2)]] var tex : texture_2d<f32>;
-[[group(0), binding(3)]] var outputTex : texture_storage_2d<rgba8unorm, write>;
+@group(0) @binding(0) var<uniform> config : Config;
+@group(0) @binding(1) var linearSampler : sampler;
+@group(0) @binding(2) var tex : texture_2d<f32>;
+@group(0) @binding(3) var outputTex : texture_storage_2d<rgba8unorm, write>;
 
 struct ComputeInput {
-	[[builtin(global_invocation_id)]] id : vec3<u32>;
+	@builtin(global_invocation_id) id : vec3<u32>;
 };
 
 fn gaussianPDF(x : f32) -> f32 {
@@ -20,7 +20,7 @@ fn gaussianPDF(x : f32) -> f32 {
 	) / config.bloomRadius;
 }
 
-[[stage(compute), workgroup_size(32, 1, 1)]] fn computeMain(input : ComputeInput) {
+@stage(compute) @workgroup_size(32, 1, 1) fn computeMain(input : ComputeInput) {
 
 	var coord = vec2<i32>(input.id.xy);
 	var outputSize = textureDimensions(outputTex);

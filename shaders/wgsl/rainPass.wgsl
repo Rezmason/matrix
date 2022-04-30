@@ -60,38 +60,38 @@ struct CellData {
 };
 
 // Shared bindings
-[[group(0), binding(0)]] var<uniform> config : Config;
-[[group(0), binding(1)]] var<uniform> time : Time;
+@group(0) @binding(0) var<uniform> config : Config;
+@group(0) @binding(1) var<uniform> time : Time;
 
 // Compute-specific bindings
-[[group(0), binding(2)]] var<storage, read_write> cells_RW : CellData;
+@group(0) @binding(2) var<storage, read_write> cells_RW : CellData;
 
 // Render-specific bindings
-[[group(0), binding(2)]] var<uniform> scene : Scene;
-[[group(0), binding(3)]] var linearSampler : sampler;
-[[group(0), binding(4)]] var msdfTexture : texture_2d<f32>;
-[[group(0), binding(5)]] var<storage, read> cells_RO : CellData;
+@group(0) @binding(2) var<uniform> scene : Scene;
+@group(0) @binding(3) var linearSampler : sampler;
+@group(0) @binding(4) var msdfTexture : texture_2d<f32>;
+@group(0) @binding(5) var<storage, read> cells_RO : CellData;
 
 // Shader params
 
 struct ComputeInput {
-	[[builtin(global_invocation_id)]] id : vec3<u32>;
+	@builtin(global_invocation_id) id : vec3<u32>;
 };
 
 struct VertInput {
-	[[builtin(vertex_index)]] index : u32;
+	@builtin(vertex_index) index : u32;
 };
 
 struct VertOutput {
-	[[builtin(position)]] Position : vec4<f32>;
-	[[location(0)]] uv : vec2<f32>;
-	[[location(1)]] channel : vec3<f32>;
-	[[location(2)]] glyph : vec4<f32>;
+	@builtin(position) Position : vec4<f32>;
+	@location(0) uv : vec2<f32>;
+	@location(1) channel : vec3<f32>;
+	@location(2) glyph : vec4<f32>;
 };
 
 struct FragOutput {
-	[[location(0)]] color : vec4<f32>;
-	[[location(1)]] highPassColor : vec4<f32>;
+	@location(0) color : vec4<f32>;
+	@location(1) highPassColor : vec4<f32>;
 };
 
 // Constants
@@ -147,7 +147,7 @@ fn getCycleSpeed(rainTime : f32, brightness : f32) -> f32 {
 	var localCycleSpeed = 0.0;
 	if (config.cycleStyle == 0 && brightness > 0.0) {
 		localCycleSpeed = pow(1.0 - brightness, 4.0);
-	} elseif (config.cycleStyle == 1) {
+	} else if (config.cycleStyle == 1) {
 		localCycleSpeed = fract(rainTime);
 	}
 	return config.animationSpeed * config.cycleSpeed * localCycleSpeed;
@@ -194,7 +194,7 @@ fn applyRippleEffect(effect : f32, simTime : f32, screenPos : vec2<f32>) -> f32 
 	if (config.rippleType == 0) {
 		var boxDistance = abs(ripplePos) * vec2<f32>(1.0, config.glyphHeightToWidth);
 		rippleDistance = max(boxDistance.x, boxDistance.y);
-	} elseif (config.rippleType == 1) {
+	} else if (config.rippleType == 1) {
 		rippleDistance = length(ripplePos);
 	}
 
@@ -277,7 +277,7 @@ fn computeResult (isFirstFrame : bool, previousResult : vec4<f32>, glyphPos : ve
 	return result;
 }
 
-[[stage(compute), workgroup_size(32, 1, 1)]] fn computeMain(input : ComputeInput) {
+@stage(compute) @workgroup_size(32, 1, 1) fn computeMain(input : ComputeInput) {
 
 	// Resolve the invocation ID to a cell coordinate
 	var row = i32(input.id.y);
@@ -305,7 +305,7 @@ fn computeResult (isFirstFrame : bool, previousResult : vec4<f32>, glyphPos : ve
 // 	vec2<f32>(1.0, 1.0), vec2<f32>(0.0, 1.0), vec2<f32>(1.0, 0.0)
 // );
 
-[[stage(vertex)]] fn vertMain(input : VertInput) -> VertOutput {
+@stage(vertex) fn vertMain(input : VertInput) -> VertOutput {
 
 	var volumetric = bool(config.volumetric);
 
@@ -383,7 +383,7 @@ fn getSymbolUV(glyphCycle : f32) -> vec2<f32> {
 
 // Fragment shader
 
-[[stage(fragment)]] fn fragMain(input : VertOutput) -> FragOutput {
+@stage(fragment) fn fragMain(input : VertOutput) -> FragOutput {
 
 	var volumetric = bool(config.volumetric);
 	var uv = input.uv;
