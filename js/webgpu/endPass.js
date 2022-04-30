@@ -54,7 +54,7 @@ export default ({ device, canvasFormat, canvasContext }) => {
 		renderPass.setPipeline(renderPipeline);
 		renderPass.setBindGroup(0, renderBindGroup);
 		renderPass.draw(numVerticesPerQuad, 1, 0, 0);
-		renderPass.endPass();
+		renderPass.end();
 	};
 
 	return makePass(loaded, build, run);

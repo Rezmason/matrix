@@ -147,7 +147,7 @@ export default ({ config, device }) => {
 		computePass.setBindGroup(0, combineBindGroup);
 		computePass.dispatch(Math.ceil(scaledScreenSize[0] / 32), scaledScreenSize[1], 1);
 
-		computePass.endPass();
+		computePass.end();
 	};
 
 	return makePass(loaded, build, run);

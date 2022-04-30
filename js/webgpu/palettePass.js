@@ -133,7 +133,7 @@ export default ({ config, device, timeBuffer }) => {
 		computePass.setPipeline(computePipeline);
 		computePass.setBindGroup(0, computeBindGroup);
 		computePass.dispatch(Math.ceil(screenSize[0] / 32), screenSize[1], 1);
-		computePass.endPass();
+		computePass.end();
 	};
 
 	return makePass(loaded, build, run);

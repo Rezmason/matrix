@@ -182,7 +182,7 @@ export default ({ config, device, timeBuffer }) => {
 		computePass.setPipeline(computePipeline);
 		computePass.setBindGroup(0, computeBindGroup);
 		computePass.dispatch(Math.ceil(gridSize[0] / 32), gridSize[1], 1);
-		computePass.endPass();
+		computePass.end();
 
 		renderPassConfig.colorAttachments[0].view = output.createView();
 		renderPassConfig.colorAttachments[1].view = highPassOutput.createView();
@@ -190,7 +190,7 @@ export default ({ config, device, timeBuffer }) => {
 		renderPass.setPipeline(renderPipeline);
 		renderPass.setBindGroup(0, renderBindGroup);
 		renderPass.draw(numVerticesPerQuad * numQuads, 1, 0, 0);
-		renderPass.endPass();
+		renderPass.end();
 	};
 
 	return makePass(loaded, build, run);
