@@ -1,5 +1,5 @@
 struct Config {
-	bloomStrength : f32;
+	bloomStrength : f32,
 };
 
 @group(0) @binding(0) var<uniform> config : Config;
@@ -10,7 +10,7 @@ struct Config {
 @group(0) @binding(5) var outputTex : texture_storage_2d<rgba8unorm, write>;
 
 struct ComputeInput {
-	@builtin(global_invocation_id) id : vec3<u32>;
+	@builtin(global_invocation_id) id : vec3<u32>,
 };
 
 fn getBrightness(uv : vec2<f32>) -> vec4<f32> {

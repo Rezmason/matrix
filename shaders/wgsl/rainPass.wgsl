@@ -3,60 +3,60 @@
 
 struct Config {
 	// common properties used for compute and rendering
-	animationSpeed : f32;
-	glyphSequenceLength : i32;
-	glyphTextureGridSize : vec2<i32>;
-	glyphHeightToWidth : f32;
-	resurrectingCodeRatio : f32;
-	gridSize : vec2<f32>;
-	showComputationTexture : i32;
+	animationSpeed : f32,
+	glyphSequenceLength : i32,
+	glyphTextureGridSize : vec2<i32>,
+	glyphHeightToWidth : f32,
+	resurrectingCodeRatio : f32,
+	gridSize : vec2<f32>,
+	showComputationTexture : i32,
 
 	// compute-specific properties
-	brightnessThreshold : f32;
-	brightnessOverride : f32;
-	brightnessDecay : f32;
-	cursorEffectThreshold : f32;
-	cycleSpeed : f32;
-	cycleFrameSkip : i32;
-	fallSpeed : f32;
-	hasSun : i32;
-	hasThunder : i32;
-	raindropLength : f32;
-	rippleScale : f32;
-	rippleSpeed : f32;
-	rippleThickness : f32;
-	cycleStyle : i32;
-	rippleType : i32;
+	brightnessThreshold : f32,
+	brightnessOverride : f32,
+	brightnessDecay : f32,
+	cursorEffectThreshold : f32,
+	cycleSpeed : f32,
+	cycleFrameSkip : i32,
+	fallSpeed : f32,
+	hasSun : i32,
+	hasThunder : i32,
+	raindropLength : f32,
+	rippleScale : f32,
+	rippleSpeed : f32,
+	rippleThickness : f32,
+	cycleStyle : i32,
+	rippleType : i32,
 
 	// render-specific properties
-	forwardSpeed : f32;
-	glyphVerticalSpacing : f32;
-	glyphEdgeCrop : f32;
-	isPolar : i32;
-	density : f32;
-	slantScale : f32;
-	slantVec : vec2<f32>;
-	volumetric : i32;
-	loops : i32;
-	highPassThreshold : f32;
+	forwardSpeed : f32,
+	glyphVerticalSpacing : f32,
+	glyphEdgeCrop : f32,
+	isPolar : i32,
+	density : f32,
+	slantScale : f32,
+	slantVec : vec2<f32>,
+	volumetric : i32,
+	loops : i32,
+	highPassThreshold : f32,
 };
 
 // The properties that change over time get their own buffer.
 struct Time {
-	seconds : f32;
-	frames : i32;
+	seconds : f32,
+	frames : i32,
 };
 
 // The properties related to the size of the canvas get their own buffer.
 struct Scene {
-	screenSize : vec2<f32>;
-	camera : mat4x4<f32>;
-	transform : mat4x4<f32>;
+	screenSize : vec2<f32>,
+	camera : mat4x4<f32>,
+	transform : mat4x4<f32>,
 };
 
 // The array of cells that the compute shader updates, and the fragment shader draws.
 struct CellData {
-	cells: array<vec4<f32>>;
+	cells: array<vec4<f32>>,
 };
 
 // Shared bindings
@@ -75,23 +75,23 @@ struct CellData {
 // Shader params
 
 struct ComputeInput {
-	@builtin(global_invocation_id) id : vec3<u32>;
+	@builtin(global_invocation_id) id : vec3<u32>,
 };
 
 struct VertInput {
-	@builtin(vertex_index) index : u32;
+	@builtin(vertex_index) index : u32,
 };
 
 struct VertOutput {
-	@builtin(position) Position : vec4<f32>;
-	@location(0) uv : vec2<f32>;
-	@location(1) channel : vec3<f32>;
-	@location(2) glyph : vec4<f32>;
+	@builtin(position) Position : vec4<f32>,
+	@location(0) uv : vec2<f32>,
+	@location(1) channel : vec3<f32>,
+	@location(2) glyph : vec4<f32>,
 };
 
 struct FragOutput {
-	@location(0) color : vec4<f32>;
-	@location(1) highPassColor : vec4<f32>;
+	@location(0) color : vec4<f32>,
+	@location(1) highPassColor : vec4<f32>,
 };
 
 // Constants

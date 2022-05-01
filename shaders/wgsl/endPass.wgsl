@@ -2,8 +2,8 @@
 @group(0) @binding(1) var tex : texture_2d<f32>;
 
 struct VertOutput {
-	@builtin(position) Position : vec4<f32>;
-	@location(0) uv : vec2<f32>;
+	@builtin(position) Position : vec4<f32>,
+	@location(0) uv : vec2<f32>,
 };
 
 @stage(vertex) fn vertMain(@builtin(vertex_index) index : u32) -> VertOutput {

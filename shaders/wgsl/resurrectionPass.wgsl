@@ -1,12 +1,12 @@
 struct Config {
-	bloomStrength : f32;
-	ditherMagnitude : f32;
-	backgroundColor : vec3<f32>;
+	bloomStrength : f32,
+	ditherMagnitude : f32,
+	backgroundColor : vec3<f32>,
 };
 
 struct Time {
-	seconds : f32;
-	frames : i32;
+	seconds : f32,
+	frames : i32,
 };
 
 @group(0) @binding(0) var<uniform> config : Config;
@@ -17,7 +17,7 @@ struct Time {
 @group(0) @binding(5) var outputTex : texture_storage_2d<rgba8unorm, write>;
 
 struct ComputeInput {
-	@builtin(global_invocation_id) id : vec3<u32>;
+	@builtin(global_invocation_id) id : vec3<u32>,
 };
 
 let PI : f32 = 3.14159265359;
