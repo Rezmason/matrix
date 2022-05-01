@@ -11,8 +11,8 @@ export default ({ device, canvasFormat, canvasContext }) => {
 	const renderPassConfig = {
 		colorAttachments: [
 			{
-				view: null,
-				loadValue: { r: 0, g: 0, b: 0, a: 1 },
+				// view: null,
+				loadOp: "clear",
 				storeOp: "store",
 			},
 		],
