@@ -138,14 +138,14 @@ export default ({ config, device }) => {
 		for (let i = 0; i < pyramidHeight; i++) {
 			const dispatchSize = [Math.ceil(Math.floor(scaledScreenSize[0] * 2 ** -i) / 32), Math.floor(Math.floor(scaledScreenSize[1] * 2 ** -i)), 1];
 			computePass.setBindGroup(0, hBlurBindGroups[i]);
-			computePass.dispatch(...dispatchSize);
+			computePass.dispatchWorkgroups(...dispatchSize);
 			computePass.setBindGroup(0, vBlurBindGroups[i]);
-			computePass.dispatch(...dispatchSize);
+			computePass.dispatchWorkgroups(...dispatchSize);
 		}
 
 		computePass.setPipeline(combinePipeline);
 		computePass.setBindGroup(0, combineBindGroup);
-		computePass.dispatch(Math.ceil(scaledScreenSize[0] / 32), scaledScreenSize[1], 1);
+		computePass.dispatchWorkgroups(Math.ceil(scaledScreenSize[0] / 32), scaledScreenSize[1], 1);
 
 		computePass.end();
 	};

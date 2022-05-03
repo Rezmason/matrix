@@ -181,7 +181,7 @@ export default ({ config, device, timeBuffer }) => {
 		const computePass = encoder.beginComputePass();
 		computePass.setPipeline(computePipeline);
 		computePass.setBindGroup(0, computeBindGroup);
-		computePass.dispatch(Math.ceil(gridSize[0] / 32), gridSize[1], 1);
+		computePass.dispatchWorkgroups(Math.ceil(gridSize[0] / 32), gridSize[1], 1);
 		computePass.end();
 
 		renderPassConfig.colorAttachments[0].view = output.createView();

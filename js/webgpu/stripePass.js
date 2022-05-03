@@ -106,7 +106,7 @@ export default ({ config, device, timeBuffer }) => {
 			output.createView(),
 		]);
 		computePass.setBindGroup(0, computeBindGroup);
-		computePass.dispatch(Math.ceil(screenSize[0] / 32), screenSize[1], 1);
+		computePass.dispatchWorkgroups(Math.ceil(screenSize[0] / 32), screenSize[1], 1);
 		computePass.end();
 	};
 
