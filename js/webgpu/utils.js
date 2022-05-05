@@ -118,12 +118,12 @@ const makePass = (loaded, build, run) => ({
 
 const makePipeline = async (context, steps) => {
 	steps = steps.filter((f) => f != null).map((f) => f(context));
-	await Promise.all(steps.map(step => step.loaded));
+	await Promise.all(steps.map((step) => step.loaded));
 	return {
 		steps,
 		build: (canvasSize) => steps.reduce((outputs, step) => step.build(canvasSize, outputs), null),
-		run: (encoder) => steps.forEach((step) => step.run(encoder))
+		run: (encoder) => steps.forEach((step) => step.run(encoder)),
 	};
-}
+};
 
 export { getCanvasSize, makeRenderTarget, makeComputeTarget, make1DTexture, loadTexture, loadShader, makeUniformBuffer, makePass, makePipeline, makeBindGroup };
