@@ -8,30 +8,24 @@ local numRows <const> = math.floor(screenHeight / glyphWidth)
 local numCells <const> = numColumns * numRows
 
 local numGlyphs <const> = 133
-local glyphs = gfx.imagetable.new('images/matrix')
--- local glyphMap = gfx.tilemap.new()
--- glyphMap:setImageTable(glyphs)
--- glyphMap:setSize(numColumns, numRows)
+local glyphTable = gfx.imagetable.new('images/matrix')
+local glyphs = {}
+for i = 1, numGlyphs do
+	glyphs[i] = glyphTable[i]
+end
 
 local ditherType = gfx.image.kDitherTypeAtkinson
 local image = gfx.image.new(glyphWidth, glyphWidth, gfx.kColorBlack)
 local numFades <const> = 15
-local fades = gfx.imagetable.new(numFades)
+local fades = {}
 for i = 1, numFades do
-	fades:setImage(i, image:fadedImage(i / numFades, ditherType))
+	fades[i] = image:fadedImage(i / numFades, ditherType)
 end
--- local fadeMap = gfx.tilemap.new()
--- fadeMap:setImageTable(fades)
--- fadeMap:setSize(numColumns, numRows)
 
 local minSpeed <const> = 0.15
 local maxSpeed <const> = 1
 local time = 0
 local speed = maxSpeed
-
-function randomFloat()
-	return math.random(10000) / 10000
-end
 
 local sqrt2 <const> = math.sqrt(2)
 local sqrt5 <const> = math.sqrt(5)
@@ -41,20 +35,19 @@ end
 
 local cells = {}
 for x = 1, numColumns do
-	local columnTimeOffset = randomFloat() * 1000
-	local columnSpeedOffset = randomFloat() * 0.5 + 0.5
+	local columnTimeOffset = math.random() * 1000
+	local columnSpeedOffset = math.random() * 0.5 + 0.5
 	for y = 1, numRows do
 		local cell = {}
 		cell.x = x
 		cell.y = y
-		cell.glyphCycle = randomFloat()
+		cell.glyphCycle = math.random()
 		cell.columnTimeOffset = columnTimeOffset
 		cell.columnSpeedOffset = columnSpeedOffset
-		cell.glyphIndex = math.random(numGlyphs) + 1
+		cell.glyphIndex = math.floor(math.random() * numGlyphs) + 1
 		cell.fadeIndex = -1
 
 		cells[#cells + 1] = cell
-		-- glyphMap:setTileAtPosition(x, y, cell.glyphIndex)
 	end
 end
 
@@ -73,8 +66,6 @@ function playdate.update()
 	playdate.resetElapsedTime()
 	time += delta
 
-	-- local count = 0
-
 	for i = 1, numCells do
 		local mustDraw = false
 		local cell = cells[i]
@@ -90,7 +81,7 @@ function playdate.update()
 		cell.glyphCycle = cell.glyphCycle + delta * 2
 		if cell.glyphCycle > 1 then
 			cell.glyphCycle = cell.glyphCycle % 1
-			local glyphIndex = (cell.glyphIndex + math.random(math.floor(numGlyphs / 2))) % numGlyphs + 1
+			local glyphIndex = (cell.glyphIndex + math.random(20)) % numGlyphs + 1
 			if cell.glyphIndex ~= glyphIndex then
 				cell.glyphIndex = glyphIndex
 				if fadeIndex < numFades then
@@ -100,19 +91,9 @@ function playdate.update()
 		end
 
 		if mustDraw then
-			-- count += 1
-			-- glyphMap:setTileAtPosition(cell.x, cell.y, cell.glyphIndex)
-			-- fadeMap:setTileAtPosition(cell.x, cell.y, cell.fadeIndex)
-
 			glyphs[cell.glyphIndex]:draw((cell.x - 1) * glyphWidth, (cell.y - 1) * glyphWidth)
 			fades[cell.fadeIndex]:draw((cell.x - 1) * glyphWidth, (cell.y - 1) * glyphWidth)
 		end
 	end
-
-	-- print(count / numGlyphs)
-
-	-- gfx.clear()
-	-- glyphMap:draw(0, 0)
-	-- fadeMap:draw(0, 0)
 
 end
