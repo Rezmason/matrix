@@ -8,18 +8,17 @@ local numRows <const> = math.floor(screenHeight / glyphWidth)
 local numCells <const> = numColumns * numRows
 
 local numGlyphs <const> = 133
+local numFades <const> = 15
+local blackImage = gfx.image.new(glyphWidth, glyphWidth, gfx.kColorBlack)
 local glyphTable = gfx.imagetable.new('images/matrix')
+local ditherType = gfx.image.kDitherTypeAtkinson
 local glyphs = {}
 for i = 1, numGlyphs do
-	glyphs[i] = glyphTable[i]
-end
-
-local ditherType = gfx.image.kDitherTypeAtkinson
-local image = gfx.image.new(glyphWidth, glyphWidth, gfx.kColorBlack)
-local numFades <const> = 15
-local fades = {}
-for i = 1, numFades do
-	fades[i] = image:fadedImage(i / numFades, ditherType)
+	glyphs[i] = {}
+	local glyph = glyphTable[i]
+	for j = 1, numFades do
+		glyphs[i][j] = glyph:blendWithImage(blackImage, 1 - j / numFades, ditherType)
+	end
 end
 
 local minSpeed <const> = 0.15
@@ -91,8 +90,7 @@ function playdate.update()
 		end
 
 		if mustDraw then
-			glyphs[cell.glyphIndex]:draw((cell.x - 1) * glyphWidth, (cell.y - 1) * glyphWidth)
-			fades[cell.fadeIndex]:draw((cell.x - 1) * glyphWidth, (cell.y - 1) * glyphWidth)
+			glyphs[cell.glyphIndex][cell.fadeIndex]:draw((cell.x - 1) * glyphWidth, (cell.y - 1) * glyphWidth)
 		end
 	end
 
