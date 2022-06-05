@@ -10,16 +10,30 @@ local numRows <const> = floor(screenHeight / glyphWidth)
 local numCells <const> = numColumns * numRows
 
 local numGlyphs <const> = 133
-local numFades <const> = 16
-local blackImage = gfx.image.new(glyphWidth, glyphWidth, gfx.kColorBlack)
-local glyphTable = gfx.imagetable.new('images/matrix')
-local ditherType = gfx.image.kDitherTypeAtkinson
+local numFades <const> = 32
 local glyphs = {}
-for i = 1, numGlyphs do
-	glyphs[i] = {}
-	local glyph = glyphTable[i]
-	for j = 1, numFades do
-		glyphs[i][j] = glyph:blendWithImage(blackImage, 1 - j / numFades, ditherType)
+
+do
+	local glyphSpritesheet = gfx.image.new('images/matrix-glyphs')
+	local spritesheetColumns = floor(glyphSpritesheet.width / glyphWidth)
+	local fadeGradient = gfx.image.new('images/fade-gradient')
+	local glyph = gfx.image.new(glyphWidth, glyphWidth, gfx.kColorBlack)
+
+	for i = 1, numGlyphs do
+		local column = (i - 1) % spritesheetColumns
+		local row = floor((i - 1) / spritesheetColumns)
+		gfx.lockFocus(glyph)
+		glyphSpritesheet:draw(-column * glyphWidth, -row * glyphWidth)
+		gfx.unlockFocus()
+		glyphs[i] = {}
+		for j = 1, numFades do
+			local fade = (j - 1) / (numFades - 1)
+			local variant = glyph:copy()
+			glyphs[i][j] = variant
+			gfx.lockFocus(variant)
+			fadeGradient:draw(fade * (glyphWidth - fadeGradient.width), 0)
+			gfx.unlockFocus()
+		end
 	end
 end
 
@@ -66,7 +80,7 @@ for x = 1, numColumns do
 	end
 end
 
-playdate.display.setRefreshRate(24)
+playdate.display.setRefreshRate(0)
 playdate.resetElapsedTime()
 
 function playdate.update()
