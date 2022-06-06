@@ -1,0 +1,8 @@
+name=The Playtrix
+author=Rezmason
+description=A familiar animation of mysterious raining symbols.
+bundleID=net.rezmason.theplaytrix
+version=1.0
+buildNumber=1
+imagePath=path/to/launcher/assets
+launchSoundPath=path/to/launch/sound/file
