@@ -76,6 +76,23 @@ static void freeBitmapView(BitmapView *bv)
 	pd->system->realloc(bv, 0);
 }
 
+static void composite(BitmapView *src, BitmapView *dest, int srcX, int srcY, int width, int height, int destX, int destY)
+{
+	if (height < 0) { srcY -= height; destY -= height; height = -height; }
+	if (srcY < 0) { height += srcY; destY += srcY; srcY = 0; }
+	if (destY < 0) { height += destY; destY += destY; destY = 0; }
+	if (height > src->height - srcY) { height = src->height - srcY; }
+	if (height > dest->height - destY) { height = dest->height - destY; }
+	if (height == 0) return;
+
+	if (width < 0) { srcX -= width; destX -= width; width = -width; }
+	if (srcX < 0) { width += srcX; destX += srcX; srcX = 0; }
+	if (destX < 0) { width += destX; destX += destX; destX = 0; }
+	if (width > src->width - srcX) { width = src->width - srcX; }
+	if (width > dest->width - destX) { width = dest->width - destX; }
+	if (width == 0) return;
+}
+
 static void logBitmapViewToConsole(BitmapView *bv)
 {
 	pd->system->logToConsole("bitmap: %i x %i %s", bv->width, bv->height, bv->hasMask ? "transparent" : "");
