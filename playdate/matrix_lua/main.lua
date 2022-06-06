@@ -19,22 +19,22 @@ do
 	local fadeGradient = gfx.image.new('images/fade-gradient')
 	local glyph = gfx.image.new(glyphWidth, glyphWidth, gfx.kColorBlack)
 
+	gfx.pushContext(glyph)
 	for i = 1, numGlyphs do
 		local column = (i - 1) % spritesheetColumns
 		local row = floor((i - 1) / spritesheetColumns)
-		gfx.lockFocus(glyph)
 		glyphSpritesheet:draw(-column * glyphWidth, -row * glyphWidth)
-		gfx.unlockFocus()
 		glyphs[i] = {}
 		for j = 1, numFades do
 			local fade = (j - 1) / (numFades - 1)
 			local variant = glyph:copy()
 			glyphs[i][j] = variant
-			gfx.lockFocus(variant)
+			gfx.pushContext(variant)
 			fadeGradient:draw(fade * (glyphWidth - fadeGradient.width), 0)
-			gfx.unlockFocus()
+			gfx.popContext()
 		end
 	end
+	gfx.popContext()
 end
 
 local minSpeed <const> = 0.15
