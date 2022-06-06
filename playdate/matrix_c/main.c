@@ -22,14 +22,6 @@ typedef struct {
 	float columnTimeOffset;
 } Cell;
 
-typedef struct {
-	int width;
-	int height;
-	int rowBytes;
-	int hasMask;
-	uint8_t *data;
-} BitmapView;
-
 static PlaydateAPI* pd = NULL;
 
 static const int glyphWidth = 20;
@@ -56,92 +48,6 @@ static float randf() {
 	return (float)rand() / (float)(RAND_MAX);
 }
 
-static BitmapView* getBitmapView(LCDBitmap *bitmap)
-{
-	BitmapView *bv = pd->system->realloc(NULL, sizeof(BitmapView));
-	pd->graphics->getBitmapData(
-		bitmap,
-		&(bv->width),
-		&(bv->height),
-		&(bv->rowBytes),
-		&(bv->hasMask),
-		&(bv->data)
-	);
-
-	return bv;
-}
-
-static void freeBitmapView(BitmapView *bv)
-{
-	pd->system->realloc(bv, 0);
-}
-
-static void composite(BitmapView *src, BitmapView *dest, int srcX, int srcY, int width, int height, int destX, int destY)
-{
-	if (height < 0) { srcY -= height; destY -= height; height = -height; }
-	if (srcY < 0) { height += srcY; destY += srcY; srcY = 0; }
-	if (destY < 0) { height += destY; destY += destY; destY = 0; }
-	if (height > src->height - srcY) { height = src->height - srcY; }
-	if (height > dest->height - destY) { height = dest->height - destY; }
-	if (height == 0) return;
-
-	if (width < 0) { srcX -= width; destX -= width; width = -width; }
-	if (srcX < 0) { width += srcX; destX += srcX; srcX = 0; }
-	if (destX < 0) { width += destX; destX += destX; destX = 0; }
-	if (width > src->width - srcX) { width = src->width - srcX; }
-	if (width > dest->width - destX) { width = dest->width - destX; }
-	if (width == 0) return;
-}
-
-static void logBitmapViewToConsole(BitmapView *bv)
-{
-	pd->system->logToConsole("bitmap: %i x %i %s", bv->width, bv->height, bv->hasMask ? "transparent" : "");
-
-	int dataSize = bv->rowBytes * bv->height;
-
-	{
-		char line[bv->rowBytes * 8 + 1];
-		for (int l = 0; l < bv->width; l++) {
-			line[l] = (l % 8 == 0) ? '|' : '_';
-		}
-		for (int l = bv->width; l < bv->rowBytes * 8; l++) {
-			line[l] = 'x';
-		}
-		line[bv->rowBytes * 8] = '\0';
-
-		pd->system->logToConsole("+%s+", line);
-	}
-
-	int i = 0;
-	for (int y = 0; y < bv->height; y++) {
-
-		char line[bv->rowBytes * 8 + 1];
-		for (int l = 0; l < bv->rowBytes * 8; l++) {
-			line[l] = ' ';
-		}
-		line[bv->rowBytes * 8] = '\0';
-
-		int l = 0;
-		for (int x = 0; x < bv->rowBytes; x++) {
-			int byte = bv->data[i];
-			int maskByte = bv->hasMask ? bv->data[i + dataSize] : 0xFF;
-			for (int j = 0; j < 8; j++) {
-				int bit = (byte >> (7 - j)) & 1;
-				int maskBit = (maskByte >> (7 - j)) & 1;
-				if (maskBit) {
-					line[l] = bit ? '#' : '.';
-				} else {
-					line[l] = bit ? '?' : ' ';
-				}
-				l++;
-			}
-			i++;
-		}
-
-		pd->system->logToConsole("[%s]", line);
-	}
-}
-
 static void init()
 {
 	srand(pd->system->getSecondsSinceEpoch(NULL));
@@ -160,65 +66,67 @@ static void init()
 		sineTable[i] = sin(M_PI / 180 * i);
 	}
 
-	const char *outErr = NULL;
-	LCDBitmap *glyphSpritesheet = pd->graphics->loadBitmap("images/matrix-glyphs", &outErr);
-	BitmapView *glyphSpritesheetBV = getBitmapView(glyphSpritesheet);
+	LCDBitmap *glyphSpritesheet = pd->graphics->loadBitmap("images/matrix-glyphs", NULL);
+	int glyphSpritesheetWidth;
+	pd->graphics->getBitmapData(glyphSpritesheet, &glyphSpritesheetWidth, NULL, NULL, NULL, NULL);
+	int spritesheetColumns = floor(glyphSpritesheetWidth / glyphWidth);
 
-	int spritesheetColumns = floor(glyphSpritesheetBV->width / glyphWidth);
+	LCDBitmap *fadeGradient = pd->graphics->loadBitmap("images/fade-gradient", NULL);
+	int fadeGradientWidth;
+	pd->graphics->getBitmapData(fadeGradient, &fadeGradientWidth, NULL, NULL, NULL, NULL);
 
-	LCDBitmap *fadeGradient = pd->graphics->loadBitmap("images/fade-gradient", &outErr);
-	BitmapView *fadeGradientBV = getBitmapView(fadeGradient);
+
+	LCDBitmap *fadeGradientTransparent = pd->graphics->loadBitmap("images/fade-gradient-transparent", NULL);
+	int wrongWidth;
+	pd->graphics->getBitmapData(fadeGradientTransparent, &wrongWidth, NULL, NULL, NULL, NULL);
+	pd->system->logToConsole("%i should be 512", wrongWidth);
+
 
 	glyphs = pd->system->realloc(NULL, sizeof(LCDBitmap *) * numGlyphs * numFades);
 
 	LCDBitmap *glyph = pd->graphics->newBitmap(glyphWidth, glyphWidth, kColorBlack);
 
+	pd->graphics->pushContext(glyph);
 	for (int i = 0; i < numGlyphs; i++) {
 		int column = i % spritesheetColumns;
 		int row = i / spritesheetColumns;
-		/*
-		pd->graphics.lockFocus(glyph)
-		glyphSpritesheet:draw(-column * glyphWidth, -row * glyphWidth)
-		pd->graphics.unlockFocus()
-		glyphs[i] = {}
-		for j = 1, numFades do
-			local fade = (j - 1) / (numFades - 1)
-			local variant = glyph:copy()
-			glyphs[i][j] = variant
-			pd->graphics.lockFocus(variant)
-			fadeGradient:draw(fade * (glyphWidth - fadeGradient.width), 0)
-			pd->graphics.unlockFocus()
-		end
-		*/
+		pd->graphics->drawBitmap(glyphSpritesheet, -column * glyphWidth, -row * glyphWidth, kBitmapUnflipped);
+		for (int j = 0; j < numFades; j++) {
+			float fade = j / (numFades - 1.0);
+			LCDBitmap *variant = pd->graphics->copyBitmap(glyph);
+			glyphs[i * numFades + j] = variant;
+			pd->graphics->pushContext(variant);
+			pd->graphics->setDrawMode(kDrawModeWhiteTransparent);
+			pd->graphics->drawBitmap(fadeGradient, fade * (glyphWidth - fadeGradientWidth), 0, kBitmapUnflipped);
+			pd->graphics->popContext();
+		}
 	}
-
-	pd->graphics->drawBitmap(glyphSpritesheet, 0, 20, kBitmapUnflipped);
-	pd->graphics->drawBitmap(fadeGradient, 0, 0, kBitmapUnflipped);
+	pd->graphics->popContext();
 
 	pd->graphics->freeBitmap(glyphSpritesheet);
-	freeBitmapView(glyphSpritesheetBV);
 	pd->graphics->freeBitmap(fadeGradient);
-	freeBitmapView(fadeGradientBV);
 
 	cells = pd->system->realloc(NULL, sizeof(Cell) * numCells);
 
 	int i = 0;
 	for (int x = 0; x < numColumns; x++) {
 		float columnTimeOffset = randf() * 1000;
-		float columnSpeedOffset = random() * 0.5 + 0.5;
+		float columnSpeedOffset = randf() * 0.5 + 0.5;
 		for (int y = 0; y < numRows; y++) {
 			Cell *cell = &cells[i];
 			i++;
 
 			cell->x = x;
 			cell->y = y;
-			cell->glyphCycle = random();
+			cell->glyphCycle = randf();
 			cell->columnTimeOffset = columnTimeOffset;
 			cell->columnSpeedOffset = columnSpeedOffset;
 			cell->glyphIndex = rand() % numGlyphs;
 			cell->fadeIndex = -1;
 		}
 	}
+
+	pd->graphics->clear(kColorBlack);
 }
 
 static int update(void* ud)
@@ -251,10 +159,10 @@ static int update(void* ud)
 			+ 0.2 * sineTable[(int)(fmod(wobbleB * cellTime, 360))],
 			1
 		);
-		int fadeIndex = brightness * numFades;
 
-		if (fadeIndex < 1) fadeIndex = 1;
-		if (fadeIndex > numFades) fadeIndex = numFades;
+		int fadeIndex = brightness * numFades;
+		if (fadeIndex < 0) fadeIndex = 0;
+		if (fadeIndex >= numFades - 1) fadeIndex = numFades - 1;
 		if (cell->fadeIndex != fadeIndex) {
 			cell->fadeIndex = fadeIndex;
 			mustDraw = 1;
@@ -266,21 +174,15 @@ static int update(void* ud)
 			int glyphIndex = (cell->glyphIndex + (rand() % 20)) % numGlyphs;
 			if (cell->glyphIndex != glyphIndex) {
 				cell->glyphIndex = glyphIndex;
-				if (fadeIndex < numFades) {
+				if (fadeIndex < numFades - 1) {
 					mustDraw = 1;
 				}
 			}
 		}
 
 		if (mustDraw) {
-			/*
-			pd->graphics->drawBitmap(
-				glyphs[cell->glyphIndex * numFades + cell->fadeIndex],
-				(cell->x - 1) * glyphWidth,
-				(cell->y - 1) * glyphWidth,
-				kBitmapUnflipped
-			);
-			*/
+			LCDBitmap *glyph = glyphs[cell->glyphIndex * numFades + cell->fadeIndex];
+			pd->graphics->drawBitmap(glyph, cell->x * glyphWidth, cell->y * glyphWidth, kBitmapUnflipped);
 		}
 	}
 
@@ -295,7 +197,7 @@ int eventHandler(PlaydateAPI* playdate, PDSystemEvent event, uint32_t arg)
 	if ( event == kEventInit )
 	{
 		pd = playdate;
-		pd->display->setRefreshRate(0);
+		pd->display->setRefreshRate(30);
 		pd->system->setUpdateCallback(update, NULL);
 		init();
 		pd->system->resetElapsedTime();
