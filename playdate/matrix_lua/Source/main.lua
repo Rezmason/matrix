@@ -9,7 +9,9 @@ local numColumns <const> = floor(screenWidth / glyphWidth)
 local numRows <const> = floor(screenHeight / glyphWidth)
 local numCells <const> = numColumns * numRows
 
-local numGlyphs <const> = 133
+local numStandardGlyphs <const> = 133
+local numPDGlyphs <const> = 10
+local numTotalGlyphs <const> = numStandardGlyphs + numPDGlyphs
 local numFades <const> = 32
 local glyphs = {}
 
@@ -20,7 +22,7 @@ do
 	local glyph = gfx.image.new(glyphWidth, glyphWidth, gfx.kColorBlack)
 
 	gfx.pushContext(glyph)
-	for i = 1, numGlyphs do
+	for i = 1, numTotalGlyphs do
 		local column = (i - 1) % spritesheetColumns
 		local row = floor((i - 1) / spritesheetColumns)
 		glyphSpritesheet:draw(-column * glyphWidth, -row * glyphWidth)
@@ -48,18 +50,6 @@ for i = 1,360 do
 	sineTable[i] = math.sin(math.pi / 180 * i)
 end
 
--- function fastSin(x)
--- 	x = x / 360 % 1
--- 	local sign
--- 	if x < 0.5 then
--- 		sign = -1
--- 	else
--- 		sign = 1
--- 	end
--- 	x = (x % 0.5) * 2 - 0.5
--- 	return sign * x * x * 4 - 1
--- end
-
 local wobbleA <const> = math.sqrt(2) / 50
 local wobbleB <const> = math.sqrt(5) / 50
 
@@ -74,14 +64,14 @@ for x = 1, numColumns do
 		cell.glyphCycle = random()
 		cell.columnTimeOffset = columnTimeOffset
 		cell.columnSpeedOffset = columnSpeedOffset
-		cell.glyphIndex = floor(random() * numGlyphs) + 1
+		cell.glyphIndex = random(numStandardGlyphs)
 		cell.fadeIndex = -1
 
 		cells[#cells + 1] = cell
 	end
 end
 
-playdate.display.setRefreshRate(0)
+playdate.display.setRefreshRate(30)
 playdate.resetElapsedTime()
 
 function playdate.update()
@@ -95,6 +85,8 @@ function playdate.update()
 	end
 	playdate.resetElapsedTime()
 	time += delta
+
+	local addPDGlyphs = playdate.buttonIsPressed(playdate.kButtonA) and playdate.buttonIsPressed(playdate.kButtonB)
 
 	for i = 1, numCells do
 		local mustDraw = false
@@ -119,12 +111,16 @@ function playdate.update()
 		cell.glyphCycle = cell.glyphCycle + delta * 2
 		if cell.glyphCycle > 1 then
 			cell.glyphCycle = cell.glyphCycle % 1
-			local glyphIndex = (cell.glyphIndex + random(20)) % numGlyphs + 1
-			if cell.glyphIndex ~= glyphIndex then
-				cell.glyphIndex = glyphIndex
-				if fadeIndex < numFades then
-					mustDraw = true
+			local lastGlyphIndex = cell.glyphIndex
+			while cell.glyphIndex == lastGlyphIndex do
+				if addPDGlyphs and random(4) == 1 then
+					cell.glyphIndex = random(numPDGlyphs) + numStandardGlyphs
+				else
+					cell.glyphIndex = random(numStandardGlyphs)
 				end
+			end
+			if fadeIndex < numFades then
+				mustDraw = true
 			end
 		end
 

@@ -6,7 +6,6 @@
 //  Read the LICENSE file if you want to
 //
 
-// #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
@@ -29,7 +28,9 @@ static int numColumns;
 static int numRows;
 static int numCells;
 
-static const int numGlyphs = 133;
+static const int numStandardGlyphs = 133;
+static const int numPDGlyphs = 10;
+static const int numTotalGlyphs = numStandardGlyphs + numPDGlyphs;
 static const int numFades = 32;
 
 static const float minSpeed = 0.15;
@@ -75,19 +76,12 @@ static void init()
 	int fadeGradientWidth;
 	pd->graphics->getBitmapData(fadeGradient, &fadeGradientWidth, NULL, NULL, NULL, NULL);
 
-
-	LCDBitmap *fadeGradientTransparent = pd->graphics->loadBitmap("images/fade-gradient-transparent", NULL);
-	int wrongWidth;
-	pd->graphics->getBitmapData(fadeGradientTransparent, &wrongWidth, NULL, NULL, NULL, NULL);
-	pd->system->logToConsole("%i should be 512", wrongWidth);
-
-
-	glyphs = pd->system->realloc(NULL, sizeof(LCDBitmap *) * numGlyphs * numFades);
+	glyphs = pd->system->realloc(NULL, sizeof(LCDBitmap *) * numTotalGlyphs * numFades);
 
 	LCDBitmap *glyph = pd->graphics->newBitmap(glyphWidth, glyphWidth, kColorBlack);
 
 	pd->graphics->pushContext(glyph);
-	for (int i = 0; i < numGlyphs; i++) {
+	for (int i = 0; i < numTotalGlyphs; i++) {
 		int column = i % spritesheetColumns;
 		int row = i / spritesheetColumns;
 		pd->graphics->drawBitmap(glyphSpritesheet, -column * glyphWidth, -row * glyphWidth, kBitmapUnflipped);
@@ -121,7 +115,7 @@ static void init()
 			cell->glyphCycle = randf();
 			cell->columnTimeOffset = columnTimeOffset;
 			cell->columnSpeedOffset = columnSpeedOffset;
-			cell->glyphIndex = rand() % numGlyphs;
+			cell->glyphIndex = rand() % numStandardGlyphs;
 			cell->fadeIndex = -1;
 		}
 	}
@@ -148,6 +142,10 @@ static int update(void* ud)
 	pd->system->resetElapsedTime();
 	time += delta;
 
+	PDButtons currentButtons;
+	pd->system->getButtonState(&currentButtons, NULL, NULL);
+	int addPDGlyphs = currentButtons & kButtonA && currentButtons & kButtonB;
+
 	for (int i = 0; i < numCells; i++) {
 		int mustDraw = 0;
 		Cell *cell = &cells[i];
@@ -171,12 +169,17 @@ static int update(void* ud)
 		cell->glyphCycle = cell->glyphCycle + delta * 2;
 		if (cell->glyphCycle > 1) {
 			cell->glyphCycle = fmod(cell->glyphCycle, 1);
-			int glyphIndex = (cell->glyphIndex + (rand() % 20)) % numGlyphs;
-			if (cell->glyphIndex != glyphIndex) {
-				cell->glyphIndex = glyphIndex;
-				if (fadeIndex < numFades - 1) {
-					mustDraw = 1;
+			int lastGlyphIndex = cell->glyphIndex;
+			while (cell->glyphIndex == lastGlyphIndex) {
+				cell->glyphIndex = rand();
+				if (addPDGlyphs && rand() % 4 == 0) {
+					cell->glyphIndex = numStandardGlyphs + cell->glyphIndex % numPDGlyphs;
+				} else {
+					cell->glyphIndex = cell->glyphIndex % numStandardGlyphs;
 				}
+			}
+			if (fadeIndex < numFades - 1) {
+				mustDraw = 1;
 			}
 		}
 
