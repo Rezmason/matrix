@@ -128,12 +128,15 @@ static void init(void)
 static int update(void* ud)
 {
 	float delta;
+	int currentFadeSkip = 1;
+
 	if (sys->isCrankDocked()) {
 		speed += 0.07f;
 		if (speed > maxSpeed) {
 			speed = maxSpeed;
 		}
 		delta = sys->getElapsedTime() * speed;
+		currentFadeSkip = 6;
 	} else {
 		speed -= 0.07f;
 		if (speed < minSpeed) {
@@ -143,6 +146,8 @@ static int update(void* ud)
 	}
 	sys->resetElapsedTime();
 	time += delta;
+
+	int currentNumFades = numFades / currentFadeSkip;
 
 	PDButtons currentButtons;
 	sys->getButtonState(&currentButtons, NULL, NULL);
@@ -160,7 +165,8 @@ static int update(void* ud)
 			1
 		);
 
-		int fadeIndex = brightness * numFades;
+		int fadeIndex = brightness * currentNumFades;
+		fadeIndex *= currentFadeSkip;
 		if (fadeIndex < 0) fadeIndex = 0;
 		if (fadeIndex >= numFades - 1) fadeIndex = numFades - 1;
 		if (cell->fadeIndex != fadeIndex) {
