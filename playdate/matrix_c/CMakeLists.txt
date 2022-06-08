@@ -36,8 +36,11 @@ file(GLOB IMAGES
 
 if (TOOLCHAIN STREQUAL "armgcc")
 	add_executable(${PLAYDATE_GAME_DEVICE} ${SDK}/C_API/buildsupport/setup.c main.c)
+	target_compile_options(${PLAYDATE_GAME_DEVICE} PUBLIC -Wstrict-prototypes -Wdouble-promotion -Wall -Wpedantic -Wshadow -Wextra -Werror=implicit-int -Werror=incompatible-pointer-types -Werror=int-conversion -Wvla )
 else()
 	add_library(${PLAYDATE_GAME_NAME} SHARED main.c ${IMAGES})
+	target_compile_options(${PLAYDATE_GAME_NAME} PUBLIC -Wstrict-prototypes -Wdouble-promotion -Wall -Wpedantic -Wshadow -Wextra -Werror=implicit-int -Werror=incompatible-pointer-types -Werror=int-conversion -Wvla )
 endif()
 
 include(${SDK}/C_API/buildsupport/playdate_game.cmake)
+

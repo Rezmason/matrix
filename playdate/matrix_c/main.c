@@ -3,10 +3,9 @@
 //  Matrix Effect
 //
 //  Created by Rezmason on 6/05/22.
-//  Read the LICENSE file if you want to
+//  Licensed under MIT. (See the LICENSE file.)
 //
 
-#include <stdlib.h>
 #include <math.h>
 
 #include "pd_api.h"
@@ -45,11 +44,11 @@ static float wobbleB;
 static LCDBitmap **glyphs = NULL;
 static Cell *cells = NULL;
 
-static float randf() {
+static float randf(void) {
 	return (float)rand() / (float)(RAND_MAX);
 }
 
-static void init()
+static void init(void)
 {
 	srand(pd->system->getSecondsSinceEpoch(NULL));
 
@@ -105,7 +104,7 @@ static void init()
 	int i = 0;
 	for (int x = 0; x < numColumns; x++) {
 		float columnTimeOffset = randf() * 1000;
-		float columnSpeedOffset = randf() * 0.5 + 0.5;
+		float columnSpeedOffset = randf() * 0.5f + 0.5f;
 		for (int y = 0; y < numRows; y++) {
 			Cell *cell = &cells[i];
 			i++;
@@ -127,13 +126,13 @@ static int update(void* ud)
 {
 	float delta;
 	if (pd->system->isCrankDocked()) {
-		speed += 0.07;
+		speed += 0.07f;
 		if (speed > maxSpeed) {
 			speed = maxSpeed;
 		}
 		delta = pd->system->getElapsedTime() * speed;
 	} else {
-		speed -= 0.07;
+		speed -= 0.07f;
 		if (speed < minSpeed) {
 			speed = minSpeed;
 		}
@@ -150,11 +149,11 @@ static int update(void* ud)
 		int mustDraw = 0;
 		Cell *cell = &cells[i];
 
-		float cellTime = cell->y * -0.03 + cell->columnTimeOffset + time * cell->columnSpeedOffset;
-		float brightness = 4 * fmod(
+		float cellTime = cell->y * -0.03f + cell->columnTimeOffset + time * cell->columnSpeedOffset;
+		float brightness = 4 * fmodf(
 			cellTime
-			+ 0.3 * sineTable[(int)(fmod(wobbleA * cellTime, 360))]
-			+ 0.2 * sineTable[(int)(fmod(wobbleB * cellTime, 360))],
+			+ 0.3f * sineTable[(int)(fmodf(wobbleA * cellTime, 360))]
+			+ 0.2f * sineTable[(int)(fmodf(wobbleB * cellTime, 360))],
 			1
 		);
 
@@ -168,7 +167,7 @@ static int update(void* ud)
 
 		cell->glyphCycle = cell->glyphCycle + delta * 2;
 		if (cell->glyphCycle > 1) {
-			cell->glyphCycle = fmod(cell->glyphCycle, 1);
+			cell->glyphCycle = fmodf(cell->glyphCycle, 1);
 			int lastGlyphIndex = cell->glyphIndex;
 			while (cell->glyphIndex == lastGlyphIndex) {
 				cell->glyphIndex = rand();
