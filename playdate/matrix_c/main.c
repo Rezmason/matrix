@@ -94,7 +94,6 @@ static void init(void)
 			LCDBitmap *variant = gfx->copyBitmap(glyph);
 			glyphs[i * numFades + j] = variant;
 			gfx->pushContext(variant);
-			gfx->setDrawMode(kDrawModeWhiteTransparent);
 			gfx->drawBitmap(fadeGradient, fade * (glyphWidth - fadeGradientWidth), 0, kBitmapUnflipped);
 			gfx->popContext();
 		}

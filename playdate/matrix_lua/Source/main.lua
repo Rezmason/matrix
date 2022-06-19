@@ -32,7 +32,6 @@ do
 			local variant = glyph:copy()
 			glyphs[i][j] = variant
 			gfx.pushContext(variant)
-			gfx.setImageDrawMode(gfx.kDrawModeWhiteTransparent);
 			fadeGradient:draw(fade * (glyphWidth - fadeGradient.width), 0)
 			gfx.popContext()
 		end
