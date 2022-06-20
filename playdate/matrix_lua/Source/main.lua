@@ -1,3 +1,11 @@
+--
+--  main.lua
+--  Matrix Effect (Lua build)
+--
+--  Created by Rezmason on 5/30/22.
+--  Licensed under MIT. (See the LICENSE file.)
+--
+
 local gfx <const> = playdate.graphics
 local floor <const> = math.floor
 local random <const> = math.random
