@@ -7,6 +7,7 @@ import makeStripePass from "./stripePass.js";
 import makeImagePass from "./imagePass.js";
 import makeResurrectionPass from "./resurrectionPass.js";
 import makeQuiltPass from "./quiltPass.js";
+import makeRipplesPass from "./ripplesPass.js";
 import getLKG from "./lkgHelper.js";
 
 const effects = {
@@ -20,6 +21,7 @@ const effects = {
 	image: makeImagePass,
 	resurrection: makeResurrectionPass,
 	resurrections: makeResurrectionPass,
+	ripples: makeRipplesPass,
 };
 
 const dimensions = { width: 1, height: 1 };
@@ -41,19 +43,19 @@ export default async (canvas, config) => {
 		canvas.height = Math.ceil(canvas.clientHeight * config.resolution);
 	};
 	window.onresize = resize;
-	if (document.fullscreenEnabled || document.webkitFullscreenEnabled) {
-		window.onclick = () => {
-			if (document.fullscreenElement == null) {
-				if (canvas.webkitRequestFullscreen != null) {
-					canvas.webkitRequestFullscreen();
-				} else {
-					canvas.requestFullscreen();
-				}
-			} else {
-				document.exitFullscreen();
-			}
-		};
-	}
+	// if (document.fullscreenEnabled || document.webkitFullscreenEnabled) {
+	// 	window.onclick = () => {
+	// 		if (document.fullscreenElement == null) {
+	// 			if (canvas.webkitRequestFullscreen != null) {
+	// 				canvas.webkitRequestFullscreen();
+	// 			} else {
+	// 				canvas.requestFullscreen();
+	// 			}
+	// 		} else {
+	// 			document.exitFullscreen();
+	// 		}
+	// 	};
+	// }
 	resize();
 
 	const regl = createREGL({
