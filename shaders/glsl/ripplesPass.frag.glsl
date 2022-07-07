@@ -3,7 +3,7 @@ varying vec2 vUV;
 uniform float width, height;
 uniform float time;
 uniform sampler2D tex;
-// uniform sampler2D bloomTex;
+uniform sampler2D bloomTex;
 
 void main() {
 
@@ -13,10 +13,10 @@ void main() {
 	vec2 iResolution = vec2(width,height);
 	vec2 cp = -1.0 + 2.0 * gl_FragCoord.xy / iResolution.xy;
 	float cl = length(cp);
-    vec2 uv = gl_FragCoord.xy / iResolution.xy + (cp / cl / 10.) * cos(cl * 1.0 - time * 5.0) * 0.8;
+    vec2 uv = gl_FragCoord.xy / iResolution.xy + (cp / cl/3.) * sin(cl * 1.0 - time * 4.) * 0.3;
 	// vec4 col=smoothstep(0.1,.91,texture2D(color).xyz);
 	
-	vec3 col = texture2D(tex, uv).xyz;// + texture2D(bloomTex, uv).xyz;;
+	vec3 col = texture2D(tex, uv).xyz + texture2D(bloomTex, uv).xyz;;
 
 
 
