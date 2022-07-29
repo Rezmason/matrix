@@ -1,8 +1,6 @@
 import { loadImage, loadText, makePassFBO, makePass } from "./utils.js";
 
-// Multiplies the rendered rain and bloom by a loaded in image
 
-// const defaultBGURL = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Flammarion_Colored.jpg/917px-Flammarion_Colored.jpg";
 
 export default ({ regl, config }, inputs) => {
     console.log('ripples');
@@ -19,8 +17,17 @@ export default ({ regl, config }, inputs) => {
 			time: regl.context("time"),
 			tex: inputs.primary,
 			bloomTex: inputs.bloom,
+			intensity: ()=>{
+				let inten = 8 - (Date.now() - window.ripples[0])/500 
+				if (inten < 0) inten = 0
+				return inten / 50
+			},
 			height: regl.context("viewportWidth"),
 			width: regl.context("viewportHeight"),
+			centerW: ()=> {
+				return window.ripples[1]
+			},
+			centerH: ()=> window.ripples[2]
 		},
 		framebuffer: output,
 	});
