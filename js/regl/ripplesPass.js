@@ -18,9 +18,9 @@ export default ({ regl, config }, inputs) => {
 			tex: inputs.primary,
 			bloomTex: inputs.bloom,
 			intensity: ()=>{
-				let inten = 8 - (Date.now() - window.ripples[0])/500 
+				let inten = 2 - (Date.now() - window.ripples[0])/2000 
 				if (inten < 0) inten = 0
-				return inten / 50
+				return inten / 10
 			},
 			height: regl.context("viewportWidth"),
 			width: regl.context("viewportHeight"),

@@ -61,8 +61,8 @@ export default async (canvas, config) => {
 	window.ripples = [0,0,0]
 	window.onclick = (e) => { // ripple init
 		console.log(e)
-		window.ripples = [Date.now(), e.clientX, e.clientY]
-		console.log(ripples)
+		window.ripples = [Date.now(), (e.clientX/e.srcElement.clientWidth*2)-1, (e.clientY/e.srcElement.clientHeight*2)-1]
+		// console.log(ripples)
 
 	}
 
