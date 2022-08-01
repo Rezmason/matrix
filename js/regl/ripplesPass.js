@@ -18,7 +18,7 @@ export default ({ regl, config }, inputs) => {
 			tex: inputs.primary,
 			bloomTex: inputs.bloom,
 			intensity: ()=>{
-				let inten = 2 - (Date.now() - window.ripples[0])/2000 
+				let inten = 1 - (Date.now() - window.ripples[0])/4000 
 				if (inten < 0) inten = 0
 				return inten / 10
 			},

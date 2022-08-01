@@ -14,8 +14,9 @@ void main() {
 		-1. + 2.* gl_FragCoord.x /iResolution.x - centerW,
 		-1. + 2.* gl_FragCoord.y /iResolution.y + centerH
 	);
-	float cl = length(cp);
-    vec2 uv = gl_FragCoord.xy / iResolution.xy + (cp / cl / 4. ) * sin(cl*10. - time * 12.) * intensity*.5;
+	float cl = length(cp);//*(intensity+1.)*.9;
+    vec2 uv = gl_FragCoord.xy / iResolution.xy + (cp / cl / 2. ) * sin(cl*15. - time * 10.) * intensity*.5;
 	vec3 col = texture2D(tex, uv).xyz + texture2D(bloomTex, uv).xyz;;
+	col.y = col.x; col.x = 0.; col.z = 0.;
 	gl_FragColor = vec4(col,1.0);
 }
