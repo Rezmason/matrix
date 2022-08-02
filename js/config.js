@@ -178,7 +178,7 @@ const versions = {
 		fallSpeed: 0.35,
 		cycleStyle: "cycleRandomly",
 		cycleSpeed: 0.8,
-		glyphEdgeCrop: .27,
+		glyphEdgeCrop: .1,
 		paletteEntries: [
 			{ hsl: [0.39, 0.9, 0.0], at: 0.0 },
 			{ hsl: [0.39, 1.0, 0.6], at: 0.5 },
