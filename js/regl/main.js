@@ -58,15 +58,6 @@ export default async (canvas, config) => {
 	// }
 	resize();
 
-	window.ripples = [0,0,0]
-	window.onclick = (e) => { // ripple init
-		console.log(e)
-		window.ripples = [Date.now(), (e.clientX/e.srcElement.clientWidth*2)-1, (e.clientY/e.srcElement.clientHeight*2)-1]
-		// console.log(ripples)
-
-	}
-
-
 	const regl = createREGL({
 		canvas,
 		extensions: ["OES_texture_half_float", "OES_texture_half_float_linear"],

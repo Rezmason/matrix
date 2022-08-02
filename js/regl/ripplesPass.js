@@ -1,33 +1,29 @@
 import { loadImage, loadText, makePassFBO, makePass } from "./utils.js";
 
+const start = Date.now();
+const numClicks = 5;
+const clicks = Array(numClicks).fill([0, 0, -Infinity]).flat();
+let aspectRatio = 1;
 
+let index = 0;
+window.onclick = (e) => {
+	clicks[index * 3 + 0] = 0 + e.clientX / e.srcElement.clientWidth;
+	clicks[index * 3 + 1] = 1 - e.clientY / e.srcElement.clientHeight;
+	clicks[index * 3 + 2] = (Date.now() - start) / 1000;
+	index = (index + 1) % numClicks;
+}
 
 export default ({ regl, config }, inputs) => {
-    console.log('ripples');
-    
 	const output = makePassFBO(regl, config.useHalfFloat);
-	// const bgURL = "bgURL" in config ? config.bgURL : defaultBGURL;
-	// const bloomStrength = config.bloomStrength;
-	// const background = loadImage(regl, bgURL);
 	const ripplesPassFrag = loadText("shaders/glsl/ripplesPass.frag.glsl");
 	const render = regl({
 		frag: regl.prop("frag"),
 		uniforms: {
-			// bloomStrength,
 			time: regl.context("time"),
 			tex: inputs.primary,
 			bloomTex: inputs.bloom,
-			intensity: ()=>{
-				let inten = 1 - (Date.now() - window.ripples[0])/4000 
-				if (inten < 0) inten = 0
-				return inten / 10
-			},
-			height: regl.context("viewportWidth"),
-			width: regl.context("viewportHeight"),
-			centerW: ()=> {
-				return window.ripples[1]
-			},
-			centerH: ()=> window.ripples[2]
+			clicks: () => clicks,
+			aspectRatio: () => aspectRatio
 		},
 		framebuffer: output,
 	});
@@ -36,7 +32,10 @@ export default ({ regl, config }, inputs) => {
 			primary: output,
 		},
 		Promise.all([ripplesPassFrag.loaded]),
-		(w, h) => output.resize(w, h),
+		(w, h) => {
+			output.resize(w, h);
+			aspectRatio = w / h;
+		},
 		() => render({ frag: ripplesPassFrag.text() })
 	);
 };
