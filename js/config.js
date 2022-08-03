@@ -53,6 +53,7 @@ const fonts = {
 
 const defaults = {
 	font: "matrixcode",
+	useCamera: false,
 	backgroundColor: [0, 0, 0], // The color "behind" the glyphs
 	volumetric: false, // A mode where the raindrops appear in perspective
 	resurrectingCodeRatio: 0, // The percent of columns that flow upward
@@ -257,6 +258,7 @@ const paramMapping = {
 	version: { key: "version", parser: (s) => s },
 	font: { key: "font", parser: (s) => s },
 	effect: { key: "effect", parser: (s) => s },
+	camera: { key: "useCamera", parser: (s) => s.toLowerCase().includes("true") },
 	width: { key: "numColumns", parser: (s) => nullNaN(parseInt(s)) },
 	numColumns: { key: "numColumns", parser: (s) => nullNaN(parseInt(s)) },
 	density: { key: "density", parser: (s) => nullNaN(range(parseFloat(s), 0)) },

@@ -1,4 +1,5 @@
 import { loadImage, loadText, makePassFBO, makePass } from "./utils.js";
+import { cameraCanvas, cameraAspectRatio } from "../camera.js";
 
 let start = Date.now();
 const numClicks = 5;
@@ -13,38 +14,9 @@ window.onclick = (e) => {
 	index = (index + 1) % numClicks;
 }
 
-// TODO: switch to video-based texture
-// TODO: mipmap?
-const video = document.createElement("video");
-const canvas = document.createElement("canvas");
-const context = canvas.getContext("2d");
-let cameraAspectRatio = 1.0;
-
-const getCameraFeed = async () => {
-	try {
-		const stream = await navigator.mediaDevices.getUserMedia({video: {
-			width: { min: 800, ideal: 1280 },
-			frameRate: { ideal: 60 }
-		}, audio: false});
-		const videoTrack = stream.getVideoTracks()[0];
-		const {width, height} = videoTrack.getSettings();
-		console.log(videoTrack.getSettings());
-
-		video.width = width;
-		video.height = height;
-		canvas.width = width;
-		canvas.height = height;
-		cameraAspectRatio = width / height;
-
-		video.srcObject = stream;
-		video.play();
-	} catch (e) {}
-};
-
 export default ({ regl, config }, inputs) => {
 
-	getCameraFeed();
-	const cameraTex = regl.texture(canvas);
+	const cameraTex = regl.texture(cameraCanvas);
 
 	start = Date.now();
 
@@ -73,8 +45,7 @@ export default ({ regl, config }, inputs) => {
 			aspectRatio = w / h;
 		},
 		() => {
-			context.drawImage(video, 0, 0);
-			cameraTex(canvas);
+			cameraTex(cameraCanvas);
 			render({ frag: ripplesPassFrag.text() });
 		}
 	);

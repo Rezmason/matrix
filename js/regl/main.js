@@ -9,6 +9,7 @@ import makeResurrectionPass from "./resurrectionPass.js";
 import makeQuiltPass from "./quiltPass.js";
 import makeRipplesPass from "./ripplesPass.js";
 import getLKG from "./lkgHelper.js";
+import { setupCamera } from "../camera.js";
 
 const effects = {
 	none: null,
@@ -66,6 +67,10 @@ export default async (canvas, config) => {
 	});
 
 	const lkg = await getLKG(config.useHoloplay, true);
+
+	if (config.useCamera) {
+		await setupCamera();
+	}
 
 	// All this takes place in a full screen quad.
 	const fullScreenQuad = makeFullScreenQuad(regl);
