@@ -44,20 +44,24 @@ export default async (canvas, config) => {
 		canvas.height = Math.ceil(canvas.clientHeight * config.resolution);
 	};
 	window.onresize = resize;
-	// if (document.fullscreenEnabled || document.webkitFullscreenEnabled) {
-	// 	window.onclick = () => {
-	// 		if (document.fullscreenElement == null) {
-	// 			if (canvas.webkitRequestFullscreen != null) {
-	// 				canvas.webkitRequestFullscreen();
-	// 			} else {
-	// 				canvas.requestFullscreen();
-	// 			}
-	// 		} else {
-	// 			document.exitFullscreen();
-	// 		}
-	// 	};
-	// }
+	if (document.fullscreenEnabled || document.webkitFullscreenEnabled) {
+		window.ondblclick = () => {
+			if (document.fullscreenElement == null) {
+				if (canvas.webkitRequestFullscreen != null) {
+					canvas.webkitRequestFullscreen();
+				} else {
+					canvas.requestFullscreen();
+				}
+			} else {
+				document.exitFullscreen();
+			}
+		};
+	}
 	resize();
+
+	if (config.useCamera) {
+		await setupCamera();
+	}
 
 	const regl = createREGL({
 		canvas,
@@ -67,10 +71,6 @@ export default async (canvas, config) => {
 	});
 
 	const lkg = await getLKG(config.useHoloplay, true);
-
-	if (config.useCamera) {
-		await setupCamera();
-	}
 
 	// All this takes place in a full screen quad.
 	const fullScreenQuad = makeFullScreenQuad(regl);
