@@ -21,7 +21,7 @@ export default ({ regl, config }, inputs) => {
 	start = Date.now();
 
 	const output = makePassFBO(regl, config.useHalfFloat);
-	const ripplesPassFrag = loadText("shaders/glsl/ripplesPass.frag.glsl");
+	const mirrorPassFrag = loadText("shaders/glsl/mirrorPass.frag.glsl");
 	const render = regl({
 		frag: regl.prop("frag"),
 		uniforms: {
@@ -39,14 +39,14 @@ export default ({ regl, config }, inputs) => {
 		{
 			primary: output,
 		},
-		Promise.all([ripplesPassFrag.loaded]),
+		Promise.all([mirrorPassFrag.loaded]),
 		(w, h) => {
 			output.resize(w, h);
 			aspectRatio = w / h;
 		},
 		() => {
 			cameraTex(cameraCanvas);
-			render({ frag: ripplesPassFrag.text() });
+			render({ frag: mirrorPassFrag.text() });
 		}
 	);
 };

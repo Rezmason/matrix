@@ -7,7 +7,7 @@ import makeStripePass from "./stripePass.js";
 import makeImagePass from "./imagePass.js";
 import makeResurrectionPass from "./resurrectionPass.js";
 import makeQuiltPass from "./quiltPass.js";
-import makeRipplesPass from "./ripplesPass.js";
+import makeMirrorPass from "./mirrorPass.js";
 import getLKG from "./lkgHelper.js";
 import { setupCamera } from "../camera.js";
 
@@ -22,7 +22,7 @@ const effects = {
 	image: makeImagePass,
 	resurrection: makeResurrectionPass,
 	resurrections: makeResurrectionPass,
-	ripples: makeRipplesPass,
+	mirror: makeMirrorPass,
 };
 
 const dimensions = { width: 1, height: 1 };
