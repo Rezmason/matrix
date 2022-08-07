@@ -109,7 +109,7 @@ The Gothic glyphs in the "Nightmare Matrix" version are derived from [Dr. jur. R
 
 The glyphs used in the "Palimpsest" and "Twilight" versions are derived from [Teague Chrystie's font "Huberfish"](http://robotsoup.com/huberfish.html), a fictitious alphabet that comes in several styles. If a spacedock technician bought a soda from a vending machine in an cool utopian future that will never happen, it might look like this.
 
-GitHub user @57r31 produced a proof of concept that led to the [interactive mirror effect](rezmason.github.io/matrix/?version=updated&effect=mirror).
+GitHub user 57r31 produced a proof of concept that led to the [interactive mirror effect](rezmason.github.io/matrix/?version=updated&effect=mirror).
 
 ---
 ### Other details
