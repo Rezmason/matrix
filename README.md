@@ -7,6 +7,7 @@
 - [Classic Matrix code](https://rezmason.github.io/matrix)
 - [3D mode](https://rezmason.github.io/matrix?volumetric=true)
 - [Holographic version](https://rezmason.github.io/matrix?version=holoplay) (requires a Looking Glass display; see it in action [here](https://www.youtube.com/watch?v=gwA9hfq1Ing))
+- Mirror mode, [with camera](rezmason.github.io/matrix/?version=updated&effect=mirror&camera=true) and [without](rezmason.github.io/matrix/?version=updated&effect=mirror). (Click to make ripples.)
 - [Matrix Resurrections code (WIP)](https://rezmason.github.io/matrix?version=resurrections)
 - [Matrix Resurrections's updated code (WIP)](https://rezmason.github.io/matrix?version=updated)
 - [Operator Matrix code (with ripple effects)](https://rezmason.github.io/matrix?version=operator)
@@ -92,20 +93,26 @@ Now you know link fu. Here's a list of customization options:
 - **animationSpeed** - the overall speed of the animation. Can be any number, even negative! Default is 1.0.
 - **fallSpeed** - the speed of the rain. Can be any number, even negative! Default is 1.0.
 - **cycleSpeed** - the speed that the glyphs change their symbol. Can be any number, even negative! Default is 1.0.
-- **effect** - alternatives to the default post-processing effect. Can be "plain", "pride", "customStripes", "none", or "image".
+- **effect** - alternatives to the default post-processing effect. Can be "plain", "pride", "customStripes", "none", "image" or "mirror".
   - ("none" displays the texture whose RGBA values represent the glyph shape and brightness data. _epilepsy warning_: lots of flickering)
+- **camera** - some effects, ie. the mirror effect, optionally support webcam input. Can be "true" or "false". Default is false.
 - **colors** - if you set the effect to "customStripes", you can specify the colors of vertical stripes as alternating *R,G,B* numeric values, like so: [https://rezmason.github.io/matrix/?effect=customStripes&colors=1,0,0,1,1,0,0,1,0](https://rezmason.github.io/matrix/?effect=customStripes&colors=1,0,0,1,1,0,0,1,0)
 - **url** - if you set the effect to "image", this is how you specify which image to load. It doesn't work with any URL; I suggest grabbing them from Wikipedia: [https://rezmason.github.io/matrix/?effect=image&url=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg](https://rezmason.github.io/matrix/?effect=image&url=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg)
 - **loops** - (WIP) if set to "true", this causes the effect to loop, so that it can be converted into a looping video.
 
 ---
-### other details
+### Contributions
 
 The Coptic glyphs in the "Paradise Matrix" version are derived from [George Douros's font "Symbola"](http://users.teilar.gr/~g1951d), due to their similarity to the script in [CG II of Nag Hammadi](https://en.wikipedia.org/wiki/Nag_Hammadi_Codex_II). If a 4th century Gnostic scribe trolled Athanasius over IRC, it might look like this.
 
 The Gothic glyphs in the "Nightmare Matrix" version are derived from [Dr. jur. Robert Pfeffer's font "Silubur"](http://www.robert-pfeffer.net/gotica/englisch/index.html), which are inspired by the uncial script found in the [Codex Argenteus](https://en.wikipedia.org/wiki/Codex_Argenteus). If a werewolf emailed a vampire in the 6th century, it might look like this.
 
 The glyphs used in the "Palimpsest" and "Twilight" versions are derived from [Teague Chrystie's font "Huberfish"](http://robotsoup.com/huberfish.html), a fictitious alphabet that comes in several styles. If a spacedock technician bought a soda from a vending machine in an cool utopian future that will never happen, it might look like this.
+
+GitHub user @57r31 produced a proof of concept that led to the [interactive mirror effect](rezmason.github.io/matrix/?version=updated&effect=mirror).
+
+---
+### Other details
 
 The glyphs are formatted as a multi-channel distance field (or MSDF) via Victor Chlumsky's [msdfgen](https://github.com/Chlumsky/msdfgen). This format preserves the crisp edges and corners of vector graphics when rendered as textures. Chlumsky's thesis paper, which is in English and is also easy to read, is [available to download here](https://dspace.cvut.cz/handle/10467/62770).
 
