@@ -14,12 +14,15 @@ const drawToCanvas = () => {
 
 const setupCamera = async () => {
 	try {
-		const stream = await navigator.mediaDevices.getUserMedia({video: {
-			width: { min: 800, ideal: 1280 },
-			frameRate: { ideal: 60 }
-		}, audio: false});
+		const stream = await navigator.mediaDevices.getUserMedia({
+			video: {
+				width: { min: 800, ideal: 1280 },
+				frameRate: { ideal: 60 },
+			},
+			audio: false,
+		});
 		const videoTrack = stream.getVideoTracks()[0];
-		const {width, height} = videoTrack.getSettings();
+		const { width, height } = videoTrack.getSettings();
 
 		video.width = width;
 		video.height = height;

@@ -92,7 +92,7 @@ const defaults = {
 	],
 	raindropLength: 1, // Adjusts the frequency of raindrops (and their length) in a column
 	slant: 0, // The angle at which rain falls; the orientation of the glyph grid
-	resolution: .75, // An overall scale multiplier
+	resolution: 0.75, // An overall scale multiplier
 	useHalfFloat: false,
 	renderer: "webgpu", // The preferred web graphics API
 	useHoloplay: false,
@@ -179,7 +179,7 @@ const versions = {
 		fallSpeed: 0.35,
 		cycleStyle: "cycleRandomly",
 		cycleSpeed: 0.8,
-		glyphEdgeCrop: .1,
+		glyphEdgeCrop: 0.1,
 		paletteEntries: [
 			{ hsl: [0.39, 0.9, 0.0], at: 0.0 },
 			{ hsl: [0.39, 1.0, 0.6], at: 0.5 },

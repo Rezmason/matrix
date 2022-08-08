@@ -12,10 +12,9 @@ window.onclick = (e) => {
 	clicks[index * 3 + 1] = 1 - e.clientY / e.srcElement.clientHeight;
 	clicks[index * 3 + 2] = (Date.now() - start) / 1000;
 	index = (index + 1) % numClicks;
-}
+};
 
 export default ({ regl, config }, inputs) => {
-
 	const cameraTex = regl.texture(cameraCanvas);
 
 	const output = makePassFBO(regl, config.useHalfFloat);
@@ -29,7 +28,7 @@ export default ({ regl, config }, inputs) => {
 			cameraTex,
 			clicks: () => clicks,
 			aspectRatio: () => aspectRatio,
-			cameraAspectRatio: () => cameraAspectRatio
+			cameraAspectRatio: () => cameraAspectRatio,
 		},
 		framebuffer: output,
 	});
