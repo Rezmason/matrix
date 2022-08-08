@@ -1,5 +1,10 @@
 TODO:
 
+Add mirror effect to WebGPU
+
+Reformulate the basis
+  https://buf.com/films/the-matrix-resurrections
+
 Resurrections
   Support random glyph order
   Support annomaly streaks

@@ -8,6 +8,7 @@ import makeStripePass from "./stripePass.js";
 import makeImagePass from "./imagePass.js";
 import makeResurrectionPass from "./resurrectionPass.js";
 import makeEndPass from "./endPass.js";
+import { setupCamera } from "../camera.js";
 
 const loadJS = (src) =>
 	new Promise((resolve, reject) => {
@@ -33,6 +34,10 @@ const effects = {
 
 export default async (canvas, config) => {
 	await loadJS("lib/gl-matrix.js");
+
+	if (config.useCamera) {
+		await setupCamera();
+	}
 
 	const canvasFormat = navigator.gpu.getPreferredCanvasFormat();
 	const adapter = await navigator.gpu.requestAdapter();
