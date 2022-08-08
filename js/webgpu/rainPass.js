@@ -104,6 +104,7 @@ export default ({ config, device, timeBuffer }) => {
 		sceneBuffer = makeUniformBuffer(device, sceneUniforms);
 
 		computePipeline = device.createComputePipeline({
+			layout: "auto",
 			compute: {
 				module: rainShader.module,
 				entryPoint: "computeMain",
@@ -117,6 +118,7 @@ export default ({ config, device, timeBuffer }) => {
 		};
 
 		renderPipeline = device.createRenderPipeline({
+			layout: "auto",
 			vertex: {
 				module: rainShader.module,
 				entryPoint: "vertMain",

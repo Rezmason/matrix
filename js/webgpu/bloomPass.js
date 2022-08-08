@@ -75,6 +75,7 @@ export default ({ config, device }) => {
 		const [blurShader, combineShader] = await Promise.all(assets);
 
 		blurPipeline = device.createComputePipeline({
+			layout: "auto",
 			compute: {
 				module: blurShader.module,
 				entryPoint: "computeMain",
@@ -82,6 +83,7 @@ export default ({ config, device }) => {
 		});
 
 		combinePipeline = device.createComputePipeline({
+			layout: "auto",
 			compute: {
 				module: combineShader.module,
 				entryPoint: "computeMain",

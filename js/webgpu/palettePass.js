@@ -94,6 +94,7 @@ export default ({ config, device, timeBuffer }) => {
 		const [paletteShader] = await Promise.all(assets);
 
 		computePipeline = device.createComputePipeline({
+			layout: "auto",
 			compute: {
 				module: paletteShader.module,
 				entryPoint: "computeMain",

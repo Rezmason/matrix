@@ -1,5 +1,5 @@
 import { structs } from "../../lib/gpu-buffer.js";
-import { getCanvasSize, makeUniformBuffer, makePipeline } from "./utils.js";
+import { makeUniformBuffer, makePipeline } from "./utils.js";
 
 import makeRain from "./rainPass.js";
 import makeBloomPass from "./bloomPass.js";
@@ -34,21 +34,21 @@ const effects = {
 export default async (canvas, config) => {
 	await loadJS("lib/gl-matrix.js");
 
+	const canvasFormat = navigator.gpu.getPreferredCanvasFormat();
 	const adapter = await navigator.gpu.requestAdapter();
 	const device = await adapter.requestDevice();
 	const canvasContext = canvas.getContext("webgpu");
-	const canvasFormat = canvasContext.getPreferredFormat(adapter);
 
 	// console.table(device.limits);
 
-	const canvasConfig = {
+	canvasContext.configure({
 		device,
 		format: canvasFormat,
-		size: [NaN, NaN],
+		alphaMode: "opaque",
 		usage:
 			// GPUTextureUsage.STORAGE_BINDING |
 			GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST,
-	};
+	});
 
 	const timeUniforms = structs.from(`struct Time { seconds : f32, frames : i32, };`).Time;
 	const timeBuffer = makeUniformBuffer(device, timeUniforms);
@@ -72,11 +72,14 @@ export default async (canvas, config) => {
 		if (isNaN(start)) {
 			start = now;
 		}
-		const canvasSize = getCanvasSize(canvas);
-		if (canvasSize[0] !== canvasConfig.size[0] || canvasSize[1] !== canvasConfig.size[1]) {
-			canvasConfig.size = canvasSize;
-			canvasContext.configure(canvasConfig);
-			pipeline.build(canvasSize);
+
+		const devicePixelRatio = window.devicePixelRatio ?? 1;
+		const canvasWidth = canvas.clientWidth * devicePixelRatio;
+		const canvasHeight = canvas.clientHeight * devicePixelRatio;
+		if (canvas.width !== canvasWidth || canvas.height !== canvasHeight) {
+			canvas.width = canvasWidth;
+			canvas.height = canvasHeight;
+			pipeline.build([canvasWidth, canvasHeight]);
 		}
 
 		device.queue.writeBuffer(timeBuffer, 0, timeUniforms.toBuffer({ seconds: (now - start) / 1000, frames }));

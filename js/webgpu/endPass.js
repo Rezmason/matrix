@@ -27,6 +27,7 @@ export default ({ device, canvasFormat, canvasContext }) => {
 		const [imageShader] = await Promise.all(assets);
 
 		renderPipeline = device.createRenderPipeline({
+			layout: "auto",
 			vertex: {
 				module: imageShader.module,
 				entryPoint: "vertMain",

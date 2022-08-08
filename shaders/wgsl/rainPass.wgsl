@@ -96,11 +96,11 @@ struct FragOutput {
 
 // Constants
 
-let NUM_VERTICES_PER_QUAD : i32 = 6; // 2 * 3
-let PI : f32 = 3.14159265359;
-let TWO_PI : f32 = 6.28318530718;
-let SQRT_2 : f32 = 1.4142135623730951;
-let SQRT_5 : f32 = 2.23606797749979;
+const NUM_VERTICES_PER_QUAD : i32 = 6; // 2 * 3
+const PI : f32 = 3.14159265359;
+const TWO_PI : f32 = 6.28318530718;
+const SQRT_2 : f32 = 1.4142135623730951;
+const SQRT_5 : f32 = 2.23606797749979;
 
 // Helper functions for generating randomness, borrowed from elsewhere
 
@@ -277,7 +277,7 @@ fn computeResult (isFirstFrame : bool, previousResult : vec4<f32>, glyphPos : ve
 	return result;
 }
 
-@stage(compute) @workgroup_size(32, 1, 1) fn computeMain(input : ComputeInput) {
+@compute @workgroup_size(32, 1, 1) fn computeMain(input : ComputeInput) {
 
 	// Resolve the invocation ID to a cell coordinate
 	var row = i32(input.id.y);
@@ -305,7 +305,7 @@ fn computeResult (isFirstFrame : bool, previousResult : vec4<f32>, glyphPos : ve
 // 	vec2<f32>(1.0, 1.0), vec2<f32>(0.0, 1.0), vec2<f32>(1.0, 0.0)
 // );
 
-@stage(vertex) fn vertMain(input : VertInput) -> VertOutput {
+@vertex fn vertMain(input : VertInput) -> VertOutput {
 
 	var volumetric = bool(config.volumetric);
 
@@ -383,7 +383,7 @@ fn getSymbolUV(glyphCycle : f32) -> vec2<f32> {
 
 // Fragment shader
 
-@stage(fragment) fn fragMain(input : VertOutput) -> FragOutput {
+@fragment fn fragMain(input : VertOutput) -> FragOutput {
 
 	var volumetric = bool(config.volumetric);
 	var uv = input.uv;

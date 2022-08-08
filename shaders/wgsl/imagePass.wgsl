@@ -19,7 +19,7 @@ fn getBrightness(uv : vec2<f32>) -> vec4<f32> {
 	return min((primary + bloom) * (2.0 - config.bloomStrength), vec4<f32>(1.0));
 }
 
-@stage(compute) @workgroup_size(32, 1, 1) fn computeMain(input : ComputeInput) {
+@compute @workgroup_size(32, 1, 1) fn computeMain(input : ComputeInput) {
 
 	// Resolve the invocation ID to a texel coordinate
 	var coord = vec2<i32>(input.id.xy);

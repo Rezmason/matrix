@@ -1,4 +1,4 @@
-let ONE_OVER_SQRT_2PI = 0.39894;
+const ONE_OVER_SQRT_2PI = 0.39894;
 
 struct Config {
 	bloomRadius : f32,
@@ -20,7 +20,7 @@ fn gaussianPDF(x : f32) -> f32 {
 	) / config.bloomRadius;
 }
 
-@stage(compute) @workgroup_size(32, 1, 1) fn computeMain(input : ComputeInput) {
+@compute @workgroup_size(32, 1, 1) fn computeMain(input : ComputeInput) {
 
 	var coord = vec2<i32>(input.id.xy);
 	var outputSize = textureDimensions(outputTex);

@@ -1,8 +1,3 @@
-const getCanvasSize = (canvas) => {
-	const devicePixelRatio = window.devicePixelRatio ?? 1;
-	return [canvas.clientWidth * devicePixelRatio, canvas.clientHeight * devicePixelRatio];
-};
-
 /*
 const loadTexture = async (device, url) => {
 	const response = await fetch(url);
@@ -126,4 +121,4 @@ const makePipeline = async (context, steps) => {
 	};
 };
 
-export { getCanvasSize, makeRenderTarget, makeComputeTarget, make1DTexture, loadTexture, loadShader, makeUniformBuffer, makePass, makePipeline, makeBindGroup };
+export { makeRenderTarget, makeComputeTarget, make1DTexture, loadTexture, loadShader, makeUniformBuffer, makePass, makePipeline, makeBindGroup };
