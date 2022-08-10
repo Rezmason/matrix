@@ -72,6 +72,7 @@ export default async (canvas, config) => {
 
 	let frames = 0;
 	let start = NaN;
+	let outputs;
 
 	const renderLoop = (now) => {
 		if (isNaN(start)) {
@@ -81,10 +82,11 @@ export default async (canvas, config) => {
 		const devicePixelRatio = window.devicePixelRatio ?? 1;
 		const canvasWidth = canvas.clientWidth * devicePixelRatio;
 		const canvasHeight = canvas.clientHeight * devicePixelRatio;
+		const canvasSize = [canvasWidth, canvasHeight];
 		if (canvas.width !== canvasWidth || canvas.height !== canvasHeight) {
 			canvas.width = canvasWidth;
 			canvas.height = canvasHeight;
-			pipeline.build([canvasWidth, canvasHeight]);
+			outputs = pipeline.build(canvasSize);
 		}
 
 		device.queue.writeBuffer(timeBuffer, 0, timeUniforms.toBuffer({ seconds: (now - start) / 1000, frames }));
@@ -93,7 +95,7 @@ export default async (canvas, config) => {
 		const encoder = device.createCommandEncoder();
 		pipeline.run(encoder);
 		// Eventually, when WebGPU allows it, we'll remove the endPass and just copy from our pipeline's output to the canvas texture.
-		// encoder.copyTextureToTexture({ texture: output.primary }, { texture: canvasContext.getCurrentTexture() }, canvasSize);
+		// encoder.copyTextureToTexture({ texture: outputs?.primary }, { texture: canvasContext.getCurrentTexture() }, canvasSize);
 		device.queue.submit([encoder.finish()]);
 		requestAnimationFrame(renderLoop);
 	};
