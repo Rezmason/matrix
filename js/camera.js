@@ -6,6 +6,7 @@ cameraCanvas.width = 1;
 cameraCanvas.height = 1;
 const context = cameraCanvas.getContext("2d");
 let cameraAspectRatio = 1.0;
+const cameraSize = [1, 1];
 
 const drawToCanvas = () => {
 	requestAnimationFrame(drawToCanvas);
@@ -29,6 +30,8 @@ const setupCamera = async () => {
 		cameraCanvas.width = width;
 		cameraCanvas.height = height;
 		cameraAspectRatio = width / height;
+		cameraSize[0] = width;
+		cameraSize[1] = height;
 
 		video.srcObject = stream;
 		video.play();
@@ -39,4 +42,4 @@ const setupCamera = async () => {
 	}
 };
 
-export { cameraCanvas, cameraAspectRatio, setupCamera };
+export { cameraCanvas, cameraAspectRatio, cameraSize, setupCamera };

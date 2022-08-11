@@ -27,6 +27,7 @@ export default ({ config, device }) => {
 		backgroundTex = bgTex;
 
 		computePipeline = device.createComputePipeline({
+			layout: "auto",
 			compute: {
 				module: imageShader.module,
 				entryPoint: "computeMain",

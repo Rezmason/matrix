@@ -8,8 +8,8 @@ import makeImagePass from "./imagePass.js";
 import makeResurrectionPass from "./resurrectionPass.js";
 import makeQuiltPass from "./quiltPass.js";
 import makeMirrorPass from "./mirrorPass.js";
+import { setupCamera, cameraCanvas, cameraAspectRatio } from "../camera.js";
 import getLKG from "./lkgHelper.js";
-import { setupCamera } from "../camera.js";
 
 const effects = {
 	none: null,
@@ -70,17 +70,24 @@ export default async (canvas, config) => {
 		optionalExtensions: ["EXT_color_buffer_half_float", "WEBGL_color_buffer_float", "OES_standard_derivatives"],
 	});
 
+	const cameraTex = regl.texture(cameraCanvas);
 	const lkg = await getLKG(config.useHoloplay, true);
 
 	// All this takes place in a full screen quad.
 	const fullScreenQuad = makeFullScreenQuad(regl);
 	const effectName = config.effect in effects ? config.effect : "plain";
-	const pipeline = makePipeline({ regl, config, lkg }, [makeRain, makeBloomPass, effects[effectName], makeQuiltPass]);
+	const context = { regl, config, lkg, cameraTex, cameraAspectRatio };
+	const pipeline = makePipeline(context, [makeRain, makeBloomPass, effects[effectName], makeQuiltPass]);
 	const screenUniforms = { tex: pipeline[pipeline.length - 1].outputs.primary };
 	const drawToScreen = regl({ uniforms: screenUniforms });
 	await Promise.all(pipeline.map((step) => step.ready));
 	const tick = regl.frame(({ viewportWidth, viewportHeight }) => {
-		// tick.cancel();
+		if (config.once) {
+			tick.cancel();
+		}
+		if (config.useCamera) {
+			cameraTex(cameraCanvas);
+		}
 		if (dimensions.width !== viewportWidth || dimensions.height !== viewportHeight) {
 			dimensions.width = viewportWidth;
 			dimensions.height = viewportHeight;

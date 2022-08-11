@@ -7,8 +7,9 @@ import makePalettePass from "./palettePass.js";
 import makeStripePass from "./stripePass.js";
 import makeImagePass from "./imagePass.js";
 import makeResurrectionPass from "./resurrectionPass.js";
+import makeMirrorPass from "./mirrorPass.js";
 import makeEndPass from "./endPass.js";
-import { setupCamera } from "../camera.js";
+import { setupCamera, cameraCanvas, cameraAspectRatio, cameraSize } from "../camera.js";
 
 const loadJS = (src) =>
 	new Promise((resolve, reject) => {
@@ -30,10 +31,25 @@ const effects = {
 	image: makeImagePass,
 	resurrection: makeResurrectionPass,
 	resurrections: makeResurrectionPass,
+	mirror: makeMirrorPass,
 };
 
 export default async (canvas, config) => {
 	await loadJS("lib/gl-matrix.js");
+
+	if (document.fullscreenEnabled || document.webkitFullscreenEnabled) {
+		window.ondblclick = () => {
+			if (document.fullscreenElement == null) {
+				if (canvas.webkitRequestFullscreen != null) {
+					canvas.webkitRequestFullscreen();
+				} else {
+					canvas.requestFullscreen();
+				}
+			} else {
+				document.exitFullscreen();
+			}
+		};
+	}
 
 	if (config.useCamera) {
 		await setupCamera();
@@ -57,6 +73,11 @@ export default async (canvas, config) => {
 
 	const timeUniforms = structs.from(`struct Time { seconds : f32, frames : i32, };`).Time;
 	const timeBuffer = makeUniformBuffer(device, timeUniforms);
+	const cameraTex = device.createTexture({
+		size: cameraSize,
+		format: "rgba8unorm",
+		usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+	});
 
 	const context = {
 		config,
@@ -65,6 +86,9 @@ export default async (canvas, config) => {
 		canvasContext,
 		timeBuffer,
 		canvasFormat,
+		cameraTex,
+		cameraAspectRatio,
+		cameraSize,
 	};
 
 	const effectName = config.effect in effects ? config.effect : "plain";
@@ -89,6 +113,10 @@ export default async (canvas, config) => {
 			outputs = pipeline.build(canvasSize);
 		}
 
+		if (config.useCamera) {
+			device.queue.copyExternalImageToTexture({ source: cameraCanvas }, { texture: cameraTex }, cameraSize);
+		}
+
 		device.queue.writeBuffer(timeBuffer, 0, timeUniforms.toBuffer({ seconds: (now - start) / 1000, frames }));
 		frames++;
 
@@ -97,7 +125,9 @@ export default async (canvas, config) => {
 		// Eventually, when WebGPU allows it, we'll remove the endPass and just copy from our pipeline's output to the canvas texture.
 		// encoder.copyTextureToTexture({ texture: outputs?.primary }, { texture: canvasContext.getCurrentTexture() }, canvasSize);
 		device.queue.submit([encoder.finish()]);
-		requestAnimationFrame(renderLoop);
+		if (!config.once) {
+			requestAnimationFrame(renderLoop);
+		}
 	};
 
 	requestAnimationFrame(renderLoop);

@@ -1,5 +1,4 @@
 import { loadImage, loadText, makePassFBO, makePass } from "./utils.js";
-import { cameraCanvas, cameraAspectRatio } from "../camera.js";
 
 let start;
 const numClicks = 5;
@@ -14,9 +13,7 @@ window.onclick = (e) => {
 	index = (index + 1) % numClicks;
 };
 
-export default ({ regl, config }, inputs) => {
-	const cameraTex = regl.texture(cameraCanvas);
-
+export default ({ regl, config, cameraTex, cameraAspectRatio }, inputs) => {
 	const output = makePassFBO(regl, config.useHalfFloat);
 	const mirrorPassFrag = loadText("shaders/glsl/mirrorPass.frag.glsl");
 	const render = regl({
@@ -28,7 +25,7 @@ export default ({ regl, config }, inputs) => {
 			cameraTex,
 			clicks: () => clicks,
 			aspectRatio: () => aspectRatio,
-			cameraAspectRatio: () => cameraAspectRatio,
+			cameraAspectRatio,
 		},
 		framebuffer: output,
 	});
@@ -44,9 +41,6 @@ export default ({ regl, config }, inputs) => {
 			output.resize(w, h);
 			aspectRatio = w / h;
 		},
-		() => {
-			cameraTex(cameraCanvas);
-			render({ frag: mirrorPassFrag.text() });
-		}
+		() => render({ frag: mirrorPassFrag.text() })
 	);
 };

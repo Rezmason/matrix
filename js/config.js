@@ -299,6 +299,7 @@ const paramMapping = {
 	volumetric: { key: "volumetric", parser: (s) => s.toLowerCase().includes("true") },
 	loops: { key: "loops", parser: (s) => s.toLowerCase().includes("true") },
 	renderer: { key: "renderer", parser: (s) => s },
+	once: { key: "once", parser: (s) => s.toLowerCase().includes("true") },
 };
 paramMapping.dropLength = paramMapping.raindropLength;
 paramMapping.angle = paramMapping.slant;
