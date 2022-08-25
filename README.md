@@ -7,7 +7,7 @@
 - [Classic Matrix code](https://rezmason.github.io/matrix)
 - [3D mode](https://rezmason.github.io/matrix?volumetric=true)
 - [Holographic version](https://rezmason.github.io/matrix?version=holoplay) (requires a Looking Glass display; see it in action [here](https://www.youtube.com/watch?v=gwA9hfq1Ing))
-- Mirror mode, [with camera](rezmason.github.io/matrix/?version=updated&effect=mirror&camera=true) and [without](rezmason.github.io/matrix/?version=updated&effect=mirror). (Click to make ripples.)
+- Mirror mode, [with camera](https://rezmason.github.io/matrix/?version=updated&effect=mirror&camera=true) and [without](rezmason.github.io/matrix/?version=updated&effect=mirror). (Click to make ripples.)
 - [Matrix Resurrections code (WIP)](https://rezmason.github.io/matrix?version=resurrections)
 - [Matrix Resurrections's updated code (WIP)](https://rezmason.github.io/matrix?version=updated)
 - [Operator Matrix code (with ripple effects)](https://rezmason.github.io/matrix?version=operator)
@@ -109,7 +109,7 @@ The Gothic glyphs in the "Nightmare Matrix" version are derived from [Dr. jur. R
 
 The glyphs used in the "Palimpsest" and "Twilight" versions are derived from [Teague Chrystie's font "Huberfish"](http://robotsoup.com/huberfish.html), a fictitious alphabet that comes in several styles. If a spacedock technician bought a soda from a vending machine in an cool utopian future that will never happen, it might look like this.
 
-GitHub user 57r31 produced a proof of concept that led to the [interactive mirror effect](rezmason.github.io/matrix/?version=updated&effect=mirror).
+GitHub user 57r31 produced a proof of concept that led to the [interactive mirror effect](https://rezmason.github.io/matrix/?version=updated&effect=mirror).
 
 ---
 ### Other details
