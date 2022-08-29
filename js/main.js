@@ -7,7 +7,7 @@ document.addEventListener("touchmove", (e) => e.preventDefault(), {
 });
 
 const supportsWebGPU = async () => {
-	return window.GPUQueue != null;
+	return window.GPUQueue != null && navigator.gpu != null && navigator.gpu.getPreferredCanvasFormat != null;
 };
 
 document.body.onload = async () => {
