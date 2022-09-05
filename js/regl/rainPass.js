@@ -65,6 +65,8 @@ export default ({ regl, config, lkg }) => {
 		...extractEntries(config, [
 			"brightnessThreshold",
 			"brightnessOverride",
+			"baseBrightness",
+			"baseContrast",
 			"brightnessDecay",
 			"cursorEffectThreshold",
 			"cycleSpeed",

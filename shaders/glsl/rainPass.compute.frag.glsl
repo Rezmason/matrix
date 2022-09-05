@@ -23,6 +23,7 @@ uniform float animationSpeed, fallSpeed, cycleSpeed;
 uniform bool hasSun, hasThunder, loops;
 uniform bool showComputationTexture;
 uniform float brightnessOverride, brightnessThreshold, brightnessDecay;
+uniform float baseContrast, baseBrightness;
 uniform float raindropLength, glyphHeightToWidth;
 uniform int cycleStyle, rippleType;
 uniform float rippleScale, rippleSpeed, rippleThickness;
@@ -63,7 +64,7 @@ float getBrightness(float rainTime) {
 	if (loops) {
 		value = 1. - fract(rainTime);
 	}
-	return log(value * 1.25) * 3.;
+	return value * baseContrast + baseBrightness;
 }
 
 float getCycleSpeed(float rainTime, float brightness) {

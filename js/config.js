@@ -59,18 +59,20 @@ const defaults = {
 	resurrectingCodeRatio: 0, // The percent of columns that flow upward
 	animationSpeed: 1, // The global rate that all animations progress
 	forwardSpeed: 0.25, // The speed volumetric rain approaches the eye
-	bloomStrength: 1, // The intensity of the bloom
-	bloomSize: 0.6, // The amount the bloom calculation is scaled
+	bloomStrength: 0.7, // The intensity of the bloom
+	bloomSize: 0.4, // The amount the bloom calculation is scaled
 	highPassThreshold: 0.1, // The minimum brightness that is still blurred
-	cycleSpeed: 1, // The speed glyphs change
+	cycleSpeed: 0.5, // The speed glyphs change
 	cycleFrameSkip: 1, // The global minimum number of frames between glyphs cycling
 	cycleStyleName: "cycleFasterWhenDimmed", // The way glyphs cycle, either proportional to their brightness or randomly
 	cursorEffectThreshold: 1, // The minimum brightness for a glyph to still be lit up as a cursor at the bottom of a raindrop
+	baseBrightness: -0.5, // The brightness of the glyphs, before any effects are applied
+	baseContrast: 1.25, // The contrast of the glyphs, before any effects are applied
 	brightnessOverride: 0.0, // A global override to the brightness of displayed glyphs. Only used if it is > 0.
 	brightnessThreshold: 0, // The minimum brightness for a glyph to still be considered visible
 	brightnessDecay: 1.0, // The rate at which glyphs light up and dim
 	ditherMagnitude: 0.05, // The magnitude of the random per-pixel dimming
-	fallSpeed: 0.75, // The speed the raindrops progress downwards
+	fallSpeed: 0.3, // The speed the raindrops progress downwards
 	glyphEdgeCrop: 0.0, // The border around a glyph in a font texture that should be cropped out
 	glyphHeightToWidth: 1, // The aspect ratio of glyphs
 	glyphVerticalSpacing: 1, // The ratio of the vertical distance between glyphs to their height
@@ -90,7 +92,7 @@ const defaults = {
 		{ hsl: [0.3, 0.9, 0.7], at: 0.7 },
 		{ hsl: [0.3, 0.9, 0.8], at: 0.8 },
 	],
-	raindropLength: 1, // Adjusts the frequency of raindrops (and their length) in a column
+	raindropLength: 0.75, // Adjusts the frequency of raindrops (and their length) in a column
 	slant: 0, // The angle at which rain falls; the orientation of the glyph grid
 	resolution: 0.75, // An overall scale multiplier
 	useHalfFloat: false,
@@ -107,15 +109,16 @@ const versions = {
 		width: 40,
 	},
 	operator: {
+		bloomSize: 0.6,
 		bloomStrength: 0.75,
 		highPassThreshold: 0.0,
 		cycleSpeed: 0.2,
 		cycleFrameSkip: 8,
 		cycleStyleName: "cycleRandomly",
-		cursorEffectThreshold: 0.64,
+		cursorEffectThreshold: 0.725,
 		brightnessOverride: 0.22,
-		brightnessThreshold: -1.0,
-		fallSpeed: 0.65,
+		brightnessThreshold: 0,
+		fallSpeed: 0.6,
 		glyphEdgeCrop: 0.15,
 		glyphHeightToWidth: 1.35,
 		rippleTypeName: "box",
@@ -130,10 +133,12 @@ const versions = {
 	nightmare: {
 		font: "gothic",
 		highPassThreshold: 0.7,
+		baseBrightness: -0.9,
 		brightnessDecay: 0.75,
 		fallSpeed: 1.2,
 		hasThunder: true,
 		numColumns: 60,
+		cycleSpeed: 1,
 		paletteEntries: [
 			{ hsl: [0.0, 1.0, 0.0], at: 0.0 },
 			{ hsl: [0.0, 1.0, 0.2], at: 0.2 },
@@ -149,13 +154,14 @@ const versions = {
 		bloomStrength: 1,
 		highPassThreshold: 0,
 		cycleSpeed: 0.1,
+		baseBrightness: -0.1,
 		brightnessDecay: 0.05,
-		fallSpeed: 0.02,
+		fallSpeed: 0.04,
 		hasSun: true,
 		isPolar: true,
 		rippleTypeName: "circle",
 		rippleSpeed: 0.1,
-		numColumns: 30,
+		numColumns: 40,
 		paletteEntries: [
 			{ hsl: [0.0, 0.0, 0.0], at: 0.0 },
 			{ hsl: [0.0, 0.8, 0.3], at: 0.3 },
@@ -175,15 +181,15 @@ const versions = {
 	},
 	updated: {
 		font: "resurrections",
-		numColumns: 100,
-		fallSpeed: 0.35,
-		cycleStyle: "cycleRandomly",
-		cycleSpeed: 0.8,
-		glyphEdgeCrop: 0.1,
+		bloomStrength:1,
+		bloomSize:0.6,
+		numColumns: 70,
+		cycleStyleName: "cycleRandomly",
+		cycleSpeed: 0.15,
 		paletteEntries: [
-			{ hsl: [0.39, 0.9, 0.0], at: 0.0 },
-			{ hsl: [0.39, 1.0, 0.6], at: 0.5 },
-			{ hsl: [0.39, 1.0, 1.0], at: 1.0 },
+			{ hsl: [0.38, 0.9, 0.0], at: 0.0 },
+			{ hsl: [0.38, 1.0, 0.6], at: 0.92 },
+			{ hsl: [0.38, 1.0, 1.0], at: 1.0 },
 		],
 		raindropLength: 1.4,
 		highPassThreshold: 0.2,
@@ -196,7 +202,7 @@ const versions = {
 		raindropLength: 1.2,
 		cycleFrameSkip: 3,
 		fallSpeed: 0.5,
-		cycleStyle: "cycleRandomly",
+		cycleStyleName: "cycleRandomly",
 		slant: Math.PI * -0.0625,
 		paletteEntries: [
 			{ hsl: [0.15, 0.25, 0.9], at: 0.0 },
@@ -209,7 +215,7 @@ const versions = {
 		numColumns: 50,
 		raindropLength: 0.9,
 		fallSpeed: 0.1,
-		cycleStyle: "cycleRandomly",
+		cycleStyleName: "cycleRandomly",
 		highPassThreshold: 0.0,
 		hasSun: true,
 		paletteEntries: [
@@ -225,7 +231,7 @@ const versions = {
 		font: "resurrections",
 		numColumns: 20,
 		fallSpeed: 0.35,
-		cycleStyle: "cycleRandomly",
+		cycleStyleName: "cycleRandomly",
 		cycleSpeed: 0.8,
 		glyphEdgeCrop: 0.1,
 		ditherMagnitude: 0,

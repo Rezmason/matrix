@@ -15,6 +15,8 @@ struct Config {
 	brightnessThreshold : f32,
 	brightnessOverride : f32,
 	brightnessDecay : f32,
+	baseBrightness : f32,
+	baseContrast : f32,
 	cursorEffectThreshold : f32,
 	cycleSpeed : f32,
 	cycleFrameSkip : i32,
@@ -140,7 +142,7 @@ fn getBrightness(rainTime : f32) -> f32 {
 	if (bool(config.loops)) {
 		value = 1.0 - fract(rainTime);
 	}
-	return log(value * 1.25) * 3.0;
+	return value * config.baseContrast + config.baseBrightness;
 }
 
 fn getCycleSpeed(rainTime : f32, brightness : f32) -> f32 {
