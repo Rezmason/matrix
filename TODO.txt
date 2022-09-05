@@ -1,15 +1,66 @@
 TODO:
 
+Audio system
+  Toggle (or number representing frequency)
+  Load the sound effect
+  Play it multiple times with delay
+    Random pan
+    Random volume?
+    Randomize pitch a little?
+
+Regenerate the MSDF for "updated" glyph set
+  Finalize database order
+  Rearrange
+  Generate SVGs
+  MSDF
+  Combine
+  Test
+
+Playdate version
+  Regenerate texture
+  At this point, pay someone to make the sound effect or something
+    Audio toggle in system menu
+  Launcher card
+    Resurrecta title
+    Record 3D footage off web version with text in front of it
+    https://sdk.play.date/1.12.3/Inside%20Playdate.html#pdxinfo
+  Menu later?
+
+Create a Resurrections font
+  Icomoon
+  Unicode PUA
+
 Reformulate the basis
   https://buf.com/films/the-matrix-resurrections
+  Why does my existing affect feel *sparser* than these?
+  Softer edges— base them on fwidth still, just soften them
+  Base cursors and other colors on BUF clip
+    Pixel grill?
+  Tighten the threshold
+  Tweak the colors
+  Maybe glow can be an SDF-derived effect instead, look into it
+
+  Migrate the rest of the project over
+  Migrate WebGPU
 
 Resurrections
   Support random glyph order
-  Support annomaly streaks
+  Support anomaly streaks
+    Texture
+    Lighting
+      Different parts of a streak glow at different intensities, at different times
+      The streaks often dim slower, ie. are brighter, than the glyphs beneath them
+      Imagine they're metallic or something
+  Support SDF bevel and "lights"
+    https://shaderfun.com/2018/07/23/signed-distance-fields-part-8-gradients-bevels-and-noise/
+    Get the "normals" and color right
+      Note: even completely dark glyphs can have glint on their edges
+      "Golden hour"
   Eventually improve expanded new glyph set
     Make font
 
 WebGPU
+  Why is it brighter than the regl version?
   Try https://github.com/brendan-duncan/wgsl_reflect
   Get rid of end pass once it's possible to copy a bgra8unorm to a canvas texture
   Switch to rgba32float somehow?
