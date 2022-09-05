@@ -40,7 +40,7 @@ export default ({ regl, config, lkg }) => {
 	const showComputationTexture = config.effect === "none";
 
 	const commonUniforms = {
-		...extractEntries(config, ["animationSpeed", "glyphHeightToWidth", "glyphSequenceLength", "glyphTextureGridSize", "resurrectingCodeRatio"]),
+		...extractEntries(config, ["animationSpeed", "glyphHeightToWidth", "glyphSequenceLength", "glyphTextureGridSize"]),
 		numColumns,
 		numRows,
 		showComputationTexture,

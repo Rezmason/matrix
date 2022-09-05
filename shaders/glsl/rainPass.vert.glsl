@@ -9,7 +9,6 @@ uniform mat4 camera, transform;
 uniform vec2 screenSize;
 uniform float time, animationSpeed, forwardSpeed;
 uniform bool volumetric;
-uniform float resurrectingCodeRatio;
 varying vec2 vUV;
 varying vec3 vChannel;
 varying vec4 vGlyph;
@@ -34,13 +33,7 @@ void main() {
 	vec2 position = (aPosition * vec2(1., glyphVerticalSpacing) + aCorner * vec2(density, 1.)) * quadSize;
 	vec4 pos = vec4((position - 0.5) * 2.0, quadDepth, 1.0);
 
-	// "Resurrected" columns are in the green channel, 
-	// and are vertically flipped (along with their glyphs)
 	vChannel = vec3(1.0, 0.0, 0.0);
-	if (volumetric && rand(vec2(aPosition.x, 0)) < resurrectingCodeRatio) {
-		pos.y = -pos.y;
-		vChannel = vec3(0.0, 1.0, 0.0);
-	}
 
 	// Convert the world space position to screen space
 	if (volumetric) {

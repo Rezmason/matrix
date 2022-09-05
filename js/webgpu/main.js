@@ -6,7 +6,6 @@ import makeBloomPass from "./bloomPass.js";
 import makePalettePass from "./palettePass.js";
 import makeStripePass from "./stripePass.js";
 import makeImagePass from "./imagePass.js";
-import makeResurrectionPass from "./resurrectionPass.js";
 import makeMirrorPass from "./mirrorPass.js";
 import makeEndPass from "./endPass.js";
 import { setupCamera, cameraCanvas, cameraAspectRatio, cameraSize } from "../camera.js";
@@ -29,8 +28,6 @@ const effects = {
 	transPride: makeStripePass,
 	trans: makeStripePass,
 	image: makeImagePass,
-	resurrection: makeResurrectionPass,
-	resurrections: makeResurrectionPass,
 	mirror: makeMirrorPass,
 };
 

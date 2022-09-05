@@ -7,7 +7,6 @@ struct Config {
 	glyphSequenceLength : i32,
 	glyphTextureGridSize : vec2<i32>,
 	glyphHeightToWidth : f32,
-	resurrectingCodeRatio : f32,
 	gridSize : vec2<f32>,
 	showComputationTexture : i32,
 
@@ -344,13 +343,7 @@ fn computeResult (isFirstFrame : bool, previousResult : vec4<f32>, glyphPos : ve
 	worldPosition /= quadGridSize;
 	worldPosition = (worldPosition - 0.5) * 2.0;
 
-	// "Resurrected" columns are in the green channel,
-	// and are vertically flipped (along with their glyphs)
 	var channel = vec3<f32>(1.0, 0.0, 0.0);
-	if (volumetric && randomFloat(vec2<f32>(quadPosition.x, 0.0)) < config.resurrectingCodeRatio) {
-		worldPosition.y = -worldPosition.y;
-		channel = vec3<f32>(0.0, 1.0, 0.0);
-	}
 
 	// Convert the vertex's world space position to screen space
 	var screenPosition = vec4<f32>(worldPosition, quadDepth, 1.0);

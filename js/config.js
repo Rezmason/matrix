@@ -56,7 +56,6 @@ const defaults = {
 	useCamera: false,
 	backgroundColor: [0, 0, 0], // The color "behind" the glyphs
 	volumetric: false, // A mode where the raindrops appear in perspective
-	resurrectingCodeRatio: 0, // The percent of columns that flow upward
 	animationSpeed: 1, // The global rate that all animations progress
 	forwardSpeed: 0.25, // The speed volumetric rain approaches the eye
 	bloomStrength: 0.7, // The intensity of the bloom
@@ -172,17 +171,7 @@ const versions = {
 		raindropLength: 0.4,
 	},
 	resurrections: {
-		resurrectingCodeRatio: 0.25,
-		glyphVerticalSpacing: 1.5,
-		effect: "resurrections",
-		numColumns: 100,
-		volumetric: true,
-		fallSpeed: 0.4,
-	},
-	updated: {
 		font: "resurrections",
-		bloomStrength:1,
-		bloomSize:0.6,
 		numColumns: 70,
 		cycleStyleName: "cycleRandomly",
 		cycleSpeed: 0.15,
@@ -191,9 +180,7 @@ const versions = {
 			{ hsl: [0.38, 1.0, 0.6], at: 0.92 },
 			{ hsl: [0.38, 1.0, 1.0], at: 1.0 },
 		],
-		raindropLength: 1.4,
-		highPassThreshold: 0.2,
-		cursorEffectThreshold: 0.8,
+		raindropLength: 1.4
 	},
 	palimpsest: {
 		font: "huberfishA",
@@ -253,6 +240,7 @@ const versions = {
 	},
 };
 versions.throwback = versions.operator;
+versions.updated = versions.resurrections;
 versions["1999"] = versions.operator;
 versions["2003"] = versions.classic;
 versions["2021"] = versions.resurrections;
