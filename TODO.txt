@@ -1,5 +1,10 @@
 TODO:
 
+Random cycling should actually be random
+  Compute shader should have separate channels for cycle and symbol
+  Move depth math to vertex shader, free that channel up
+    Pass it into fragment shader with varying
+
 Audio system
   Toggle (or number representing frequency)
   Load the sound effect
@@ -8,13 +13,6 @@ Audio system
     Random volume?
     Randomize pitch a little?
 
-Regenerate the MSDF for "updated" glyph set
-  Finalize database order
-  Rearrange
-  Generate SVGs
-  MSDF
-  Combine
-  Test
 
 Playdate version
   Regenerate texture
@@ -46,6 +44,8 @@ Reformulate the basis
 Resurrections
   Support random glyph order
   Support anomaly streaks
+    MSDF
+      They should line up in Photoshop without too much trouble, actually
     Texture
     Lighting
       Different parts of a streak glow at different intensities, at different times

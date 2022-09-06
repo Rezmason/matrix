@@ -175,12 +175,13 @@ const versions = {
 		numColumns: 70,
 		cycleStyleName: "cycleRandomly",
 		cycleSpeed: 0.15,
+		bloomStrength: 0.8,
+		fallSpeed: 0.2,
 		paletteEntries: [
 			{ hsl: [0.38, 0.9, 0.0], at: 0.0 },
 			{ hsl: [0.38, 1.0, 0.6], at: 0.92 },
 			{ hsl: [0.38, 1.0, 1.0], at: 1.0 },
 		],
-		raindropLength: 1.4
 	},
 	palimpsest: {
 		font: "huberfishA",
