@@ -239,6 +239,14 @@ const versions = {
 		density: 3,
 		useHoloplay: true,
 	},
+
+	['3d']: {
+		volumetric: true,
+		fallSpeed: 0.5,
+		baseBrightness: -0.9,
+		baseContrast: 1.5,
+		raindropLength: 0.3
+	}
 };
 versions.throwback = versions.operator;
 versions.updated = versions.resurrections;
