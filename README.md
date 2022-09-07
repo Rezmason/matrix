@@ -24,6 +24,7 @@
 - [Raw compute texture (`effect=none`) (_epilepsy warning_: lots of flickering)](https://rezmason.github.io/matrix/?effect=none)
 
 - [The free font (TrueType).](https://github.com/Rezmason/matrix/raw/master/assets/Matrix-Code.ttf)
+- [The unofficial glyph database.](https://docs.google.com/spreadsheets/d/1NRJP88EzQlj_ghBbtjkGi-NbluZzlWpAqVIAq1MDGJc)
 ---
 ### about
 
@@ -40,8 +41,9 @@ The way I see it, there's four kinds of Matrix effects people call ["digital rai
 
 While there have been a lot of attempts at #1 and #3, they're all missing important parts of #4 that make digital rain so iconic. Here are the requirements for my implementation:
 
-- **Get the right glyphs**. Like the actual ones. Everyone knows Matrix glyphs are some treatment of [Katakana](https://en.wikipedia.org/wiki/Katakana), but they also include a few characters from [Susan Kare's Chicago typeface](https://en.wikipedia.org/wiki/Chicago_(typeface)). The Matrix glyphs in *this* project come from the source: cleaned up vectors [from an old SWF](https://web.archive.org/web/20070914173039/http://www.atari.com:80/thematrixpathofneo/) for an official Matrix product, archived back in 2007. That's how deep this rabbit hole goes, friends.
+- **Get the right glyphs**. Like the actual ones. By now everyone's heard how the Matrix glyphs are some treatment of [Katakana](https://en.wikipedia.org/wiki/Katakana), but they also include a few characters from [Susan Kare's Chicago typeface](https://en.wikipedia.org/wiki/Chicago_(typeface)). The Matrix glyphs in *this* project come from the source: cleaned up vectors [from an old SWF](https://web.archive.org/web/20070914173039/http://www.atari.com:80/thematrixpathofneo/) for an official Matrix product, archived back in 2007. That's how deep this rabbit hole goes, friends.
 (Please support the [Internet Archive!](https://archive.org/about/))
+- **Get the new glyphs**. When *Resurrections* hit theaters, it debuted an expanded glyph set with a daunting *135 symbols*. Fortunately, in this age of higher resolution reference material and tie-in marketing, a decent sized sample of new glyphs were reverse-engineered from [a sparkly watch ad](https://www.hamiltonwatch.com/en-int/thematrixresurrections), and the rest were lovingly synthesized from frames of a [behind-the-scenes VFX video](https://buf.com/films/the-matrix-resurrections).
 - **Make it look sweet in 2D.** This is not a cop-out. There is just no scene in the movies as iconic as the digital rain itself, and while depth effects are cool, they take away from these other details that make the difference between a goodtrix and a *greatrix*.
 - **Make it look sweet in 3D, too.** This is not me caving to pressure! To facilitate future support of stereoscopic and holographic displays, it makes sense to nail down a 3D variation.
 - **The 2D glyphs are in a *fixed grid* and *don't move*.** The "raindrops" we see in the 2D effect are changes in the brightness of symbols that occupy a column. To get a closer look at this, try setting the `fallSpeed` to a number close to 0.

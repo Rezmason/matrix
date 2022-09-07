@@ -26,7 +26,7 @@ const fonts = {
 	resurrections: {
 		// The glyphs seen in the film trilogy
 		glyphTexURL: "assets/resurrections_msdf.png",
-		glyphSequenceLength: 133,
+		glyphSequenceLength: 135,
 		glyphTextureGridSize: [13, 12],
 	},
 	huberfishA: {
@@ -66,7 +66,7 @@ const defaults = {
 	cycleStyleName: "cycleFasterWhenDimmed", // The way glyphs cycle, either proportional to their brightness or randomly
 	cursorEffectThreshold: 1, // The minimum brightness for a glyph to still be lit up as a cursor at the bottom of a raindrop
 	baseBrightness: -0.5, // The brightness of the glyphs, before any effects are applied
-	baseContrast: 1.25, // The contrast of the glyphs, before any effects are applied
+	baseContrast: 1.1, // The contrast of the glyphs, before any effects are applied
 	brightnessOverride: 0.0, // A global override to the brightness of displayed glyphs. Only used if it is > 0.
 	brightnessThreshold: 0, // The minimum brightness for a glyph to still be considered visible
 	brightnessDecay: 1.0, // The rate at which glyphs light up and dim
@@ -108,13 +108,15 @@ const versions = {
 		width: 40,
 	},
 	operator: {
+		baseBrightness: -0.3,
+		baseContrast: 1,
 		bloomSize: 0.6,
 		bloomStrength: 0.75,
 		highPassThreshold: 0.0,
 		cycleSpeed: 0.2,
 		cycleFrameSkip: 8,
 		cycleStyleName: "cycleRandomly",
-		cursorEffectThreshold: 0.725,
+		cursorEffectThreshold: 0.69,
 		brightnessOverride: 0.22,
 		brightnessThreshold: 0,
 		fallSpeed: 0.6,
@@ -243,6 +245,7 @@ const versions = {
 	['3d']: {
 		volumetric: true,
 		fallSpeed: 0.5,
+		cycleSpeed: 1,
 		baseBrightness: -0.9,
 		baseContrast: 1.5,
 		raindropLength: 0.3

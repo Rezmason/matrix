@@ -12,6 +12,7 @@ uniform bool volumetric;
 varying vec2 vUV;
 varying vec3 vChannel;
 varying vec4 vGlyph;
+varying float vDepth;
 
 highp float rand( const in vec2 uv ) {
 	const highp float a = 12.9898, b = 78.233, c = 43758.5453;
@@ -27,8 +28,9 @@ void main() {
 	// Calculate the world space position
 	float quadDepth = 0.0;
 	if (volumetric) {
-		quadDepth = fract(vGlyph.b + time * animationSpeed * forwardSpeed);
-		vGlyph.b = quadDepth;
+		float startDepth = rand(vec2(aPosition.x, 0.));
+		quadDepth = fract(startDepth + time * animationSpeed * forwardSpeed);
+		vDepth = quadDepth;
 	}
 	vec2 position = (aPosition * vec2(1., glyphVerticalSpacing) + aCorner * vec2(density, 1.)) * quadSize;
 	vec4 pos = vec4((position - 0.5) * 2.0, quadDepth, 1.0);

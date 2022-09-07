@@ -2,8 +2,8 @@ TODO:
 
 Random cycling should actually be random
   Compute shader should have separate channels for cycle and symbol
-  Move depth math to vertex shader, free that channel up
-    Pass it into fragment shader with varying
+
+Try to identify cursors more consistently
 
 Audio system
   Toggle (or number representing frequency)
@@ -12,7 +12,6 @@ Audio system
     Random pan
     Random volume?
     Randomize pitch a little?
-
 
 Playdate version
   Regenerate texture

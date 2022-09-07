@@ -18,15 +18,21 @@ uniform bool volumetric;
 varying vec2 vUV;
 varying vec3 vChannel;
 varying vec4 vGlyph;
+varying float vDepth;
 
 float median3(vec3 i) {
 	return max(min(i.r, i.g), min(max(i.r, i.g), i.b));
 }
 
+float modI(float a, float b) {
+	float m = a - floor((a + 0.5) / b) * b;
+	return floor(m + 0.5);
+}
+
 vec2 getSymbolUV(float glyphCycle) {
-	float symbol = floor((glyphSequenceLength) * glyphCycle) + 1.0;
-	float symbolX = mod(symbol, glyphTextureGridSize.x);
-	float symbolY = mod(floor(symbol / glyphTextureGridSize.x), glyphTextureGridSize.y);
+	float symbol = floor((glyphSequenceLength) * glyphCycle);
+	float symbolX = modI(symbol, glyphTextureGridSize.x);
+	float symbolY = (symbol - symbolX) / glyphTextureGridSize.x;
 	symbolY = glyphTextureGridSize.y - symbolY - 1.0;
 	return vec2(symbolX, symbolY);
 }
@@ -59,13 +65,12 @@ void main() {
 	vec4 glyph = volumetric ? vGlyph : texture2D(state, uv);
 	float brightness = glyph.r;
 	vec2 symbolUV = getSymbolUV(glyph.g);
-	float quadDepth = glyph.b;
 	float effect = glyph.a;
 
 	brightness = max(effect, brightness);
 	// In volumetric mode, distant glyphs are dimmer
 	if (volumetric) {
-		brightness = brightness * min(1.0, quadDepth);
+		brightness = brightness * min(1.0, vDepth);
 	}
 
 	// resolve UV to cropped position of glyph in MSDF texture

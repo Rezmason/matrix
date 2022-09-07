@@ -3,7 +3,7 @@ precision highp float;
 // This shader is the star of the show. For each glyph, it determines its:
 // 		R: brightness
 // 		G: progress through the glyph sequence
-// 		B: depth, aka distance from the screen
+// 		B: unused!
 // 		A: additional brightness for effects
 
 // Listen.
@@ -24,7 +24,7 @@ uniform bool hasSun, hasThunder, loops;
 uniform bool showComputationTexture;
 uniform float brightnessOverride, brightnessThreshold, brightnessDecay;
 uniform float baseContrast, baseBrightness;
-uniform float raindropLength, glyphHeightToWidth;
+uniform float raindropLength, glyphHeightToWidth, glyphSequenceLength;
 uniform int cycleStyle, rippleType;
 uniform float rippleScale, rippleSpeed, rippleThickness;
 uniform float cursorEffectThreshold;
@@ -188,10 +188,7 @@ vec4 computeResult(bool isFirstFrame, vec4 previousResult, vec2 glyphPos, vec2 s
 		brightness = mix(previousBrightness, brightness, brightnessDecay);
 	}
 
-	// Determine the glyph depth. This is a static value for each column.
-	float depth = randomFloat(vec2(screenPos.x, 0.));
-
-	vec4 result = vec4(brightness, cycle, depth, effect);
+	vec4 result = vec4(brightness, cycle, 0.0, effect);
 
 	// Better use of the alpha channel, for demonstrating how the glyph cycle works
 	if (showComputationTexture) {
