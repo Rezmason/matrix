@@ -4,10 +4,11 @@
 #endif
 precision lowp float;
 
-uniform sampler2D state;
+uniform sampler2D shineState, symbolState;
 uniform float numColumns, numRows;
 uniform sampler2D glyphTex;
 uniform float glyphHeightToWidth, glyphSequenceLength, glyphEdgeCrop;
+uniform float brightnessOverride, brightnessThreshold, cursorBrightness;
 uniform vec2 glyphTextureGridSize;
 uniform vec2 slantVec;
 uniform float slantScale;
@@ -17,7 +18,7 @@ uniform bool volumetric;
 
 varying vec2 vUV;
 varying vec3 vChannel;
-varying vec4 vGlyph;
+varying vec4 vShine, vSymbol;
 varying float vDepth;
 
 float median3(vec3 i) {
@@ -29,11 +30,10 @@ float modI(float a, float b) {
 	return floor(m + 0.5);
 }
 
-vec2 getSymbolUV(float glyphCycle) {
-	float symbol = floor((glyphSequenceLength) * glyphCycle);
+vec2 getSymbolUV(float symbol) {
 	float symbolX = modI(symbol, glyphTextureGridSize.x);
 	float symbolY = (symbol - symbolX) / glyphTextureGridSize.x;
-	symbolY = glyphTextureGridSize.y - symbolY - 1.0;
+	symbolY = glyphTextureGridSize.y - symbolY - 1.;
 	return vec2(symbolX, symbolY);
 }
 
@@ -61,38 +61,45 @@ void main() {
 		uv.y /= glyphHeightToWidth;
 	}
 
-	// Unpack the values from the data texture
-	vec4 glyph = volumetric ? vGlyph : texture2D(state, uv);
-	float brightness = glyph.r;
-	vec2 symbolUV = getSymbolUV(glyph.g);
-	float effect = glyph.a;
+	// Unpack the values from the data textures
+	vec4 shine = volumetric ? vShine : texture2D(shineState, uv);
+	vec4 symbol = volumetric ? vSymbol : texture2D(symbolState, uv);
+	vec2 symbolUV = getSymbolUV(symbol.r);
 
-	brightness = max(effect, brightness);
+	float brightness = shine.r;
+
+	// Modes that don't fade glyphs set their actual brightness here
+	if (brightnessOverride > 0. && brightness > brightnessThreshold) {
+		brightness = brightnessOverride;
+	}
+
+	brightness = max(shine.b * cursorBrightness, brightness);
+	brightness = max(shine.a, brightness);
 	// In volumetric mode, distant glyphs are dimmer
 	if (volumetric) {
-		brightness = brightness * min(1.0, vDepth);
+		brightness = brightness * min(1., vDepth);
 	}
 
 	// resolve UV to cropped position of glyph in MSDF texture
 	vec2 glyphUV = fract(uv * vec2(numColumns, numRows));
 	glyphUV -= 0.5;
-	glyphUV *= clamp(1.0 - glyphEdgeCrop, 0.0, 1.0);
+	glyphUV *= clamp(1. - glyphEdgeCrop, 0., 1.);
 	glyphUV += 0.5;
 	vec2 msdfUV = (glyphUV + symbolUV) / glyphTextureGridSize;
 
 	// MSDF: calculate brightness of fragment based on distance to shape
 	vec3 dist = texture2D(glyphTex, msdfUV).rgb;
 	float sigDist = median3(dist) - 0.5;
-	float alpha = clamp(sigDist/fwidth(sigDist) + 0.5, 0.0, 1.0);
+	float alpha = clamp(sigDist/fwidth(sigDist) + 0.5, 0., 1.);
 
 	if (showComputationTexture) {
-		vec4 debugColor = vec4(glyph.r - alpha, glyph.g * alpha, glyph.a - alpha, 1.0);
+		vec4 debugColor = vec4(shine.r - alpha, shine.g * alpha, shine.a - alpha, 1.);
 		if (volumetric) {
 			debugColor.g = debugColor.g * 0.9 + 0.1;
 		}
 		gl_FragColor = debugColor;
 	} else {
-		gl_FragColor = vec4(vChannel * brightness * alpha, 1.0);
+		gl_FragColor = vec4(vChannel * brightness * alpha, 1.);
 	}
 
 }

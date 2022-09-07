@@ -55,16 +55,16 @@ const defaults = {
 	font: "matrixcode",
 	useCamera: false,
 	backgroundColor: [0, 0, 0], // The color "behind" the glyphs
+	cursorBrightness: 0, // The brightness of the "cursor" at the bottom of a raindrop
 	volumetric: false, // A mode where the raindrops appear in perspective
 	animationSpeed: 1, // The global rate that all animations progress
 	forwardSpeed: 0.25, // The speed volumetric rain approaches the eye
 	bloomStrength: 0.7, // The intensity of the bloom
 	bloomSize: 0.4, // The amount the bloom calculation is scaled
 	highPassThreshold: 0.1, // The minimum brightness that is still blurred
-	cycleSpeed: 0.5, // The speed glyphs change
+	cycleSpeed: 0.2, // The speed glyphs change
 	cycleFrameSkip: 1, // The global minimum number of frames between glyphs cycling
 	cycleStyleName: "cycleFasterWhenDimmed", // The way glyphs cycle, either proportional to their brightness or randomly
-	cursorEffectThreshold: 1, // The minimum brightness for a glyph to still be lit up as a cursor at the bottom of a raindrop
 	baseBrightness: -0.5, // The brightness of the glyphs, before any effects are applied
 	baseContrast: 1.1, // The contrast of the glyphs, before any effects are applied
 	brightnessOverride: 0.0, // A global override to the brightness of displayed glyphs. Only used if it is > 0.
@@ -108,15 +108,13 @@ const versions = {
 		width: 40,
 	},
 	operator: {
-		baseBrightness: -0.3,
-		baseContrast: 1,
+		cursorBrightness: 1,
 		bloomSize: 0.6,
 		bloomStrength: 0.75,
 		highPassThreshold: 0.0,
-		cycleSpeed: 0.2,
+		cycleSpeed: 0.01,
 		cycleFrameSkip: 8,
 		cycleStyleName: "cycleRandomly",
-		cursorEffectThreshold: 0.69,
 		brightnessOverride: 0.22,
 		brightnessThreshold: 0,
 		fallSpeed: 0.6,
@@ -134,12 +132,12 @@ const versions = {
 	nightmare: {
 		font: "gothic",
 		highPassThreshold: 0.7,
-		baseBrightness: -0.9,
+		baseBrightness: -0.8,
 		brightnessDecay: 0.75,
 		fallSpeed: 1.2,
 		hasThunder: true,
 		numColumns: 60,
-		cycleSpeed: 1,
+		cycleSpeed: 0.35,
 		paletteEntries: [
 			{ hsl: [0.0, 1.0, 0.0], at: 0.0 },
 			{ hsl: [0.0, 1.0, 0.2], at: 0.2 },
@@ -154,7 +152,7 @@ const versions = {
 		font: "coptic",
 		bloomStrength: 1,
 		highPassThreshold: 0,
-		cycleSpeed: 0.1,
+		cycleSpeed: 0.05,
 		baseBrightness: -0.1,
 		brightnessDecay: 0.05,
 		fallSpeed: 0.04,
@@ -174,11 +172,16 @@ const versions = {
 	},
 	resurrections: {
 		font: "resurrections",
+		glyphEdgeCrop: 0.1,
+		cursorBrightness: 1,
+		baseBrightness: -0.7,
+		baseContrast: 1.17,
+		highPassThreshold: 0,
 		numColumns: 70,
 		cycleStyleName: "cycleRandomly",
-		cycleSpeed: 0.15,
-		bloomStrength: 0.8,
-		fallSpeed: 0.2,
+		cycleSpeed: 0.05,
+		bloomStrength: 0.7,
+		fallSpeed: 0.3,
 		paletteEntries: [
 			{ hsl: [0.38, 0.9, 0.0], at: 0.0 },
 			{ hsl: [0.38, 1.0, 0.6], at: 0.92 },
@@ -222,7 +225,7 @@ const versions = {
 		numColumns: 20,
 		fallSpeed: 0.35,
 		cycleStyleName: "cycleRandomly",
-		cycleSpeed: 0.8,
+		cycleSpeed: 0.3,
 		glyphEdgeCrop: 0.1,
 		ditherMagnitude: 0,
 		paletteEntries: [
@@ -232,7 +235,6 @@ const versions = {
 		],
 		raindropLength: 1.4,
 		highPassThreshold: 0.2,
-		cursorEffectThreshold: 0.8,
 
 		renderer: "regl",
 		bloomStrength: 0,
@@ -242,14 +244,14 @@ const versions = {
 		useHoloplay: true,
 	},
 
-	['3d']: {
+	["3d"]: {
 		volumetric: true,
 		fallSpeed: 0.5,
-		cycleSpeed: 1,
+		cycleSpeed: 0.35,
 		baseBrightness: -0.9,
 		baseContrast: 1.5,
-		raindropLength: 0.3
-	}
+		raindropLength: 0.3,
+	},
 };
 versions.throwback = versions.operator;
 versions.updated = versions.resurrections;

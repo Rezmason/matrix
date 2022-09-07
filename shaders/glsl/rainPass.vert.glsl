@@ -1,7 +1,7 @@
 #define PI 3.14159265359
 precision lowp float;
 attribute vec2 aPosition, aCorner;
-uniform sampler2D state;
+uniform sampler2D shineState, symbolState;
 uniform float density;
 uniform vec2 quadSize;
 uniform float glyphHeightToWidth, glyphVerticalSpacing;
@@ -11,7 +11,7 @@ uniform float time, animationSpeed, forwardSpeed;
 uniform bool volumetric;
 varying vec2 vUV;
 varying vec3 vChannel;
-varying vec4 vGlyph;
+varying vec4 vShine, vSymbol;
 varying float vDepth;
 
 highp float rand( const in vec2 uv ) {
@@ -23,7 +23,8 @@ highp float rand( const in vec2 uv ) {
 void main() {
 
 	vUV = (aPosition + aCorner) * quadSize;
-	vGlyph = texture2D(state, aPosition * quadSize);
+	vShine = texture2D(shineState, aPosition * quadSize);
+	vSymbol = texture2D(symbolState, aPosition * quadSize);
 
 	// Calculate the world space position
 	float quadDepth = 0.0;

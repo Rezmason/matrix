@@ -53,24 +53,19 @@ export default ({ regl, config, lkg }) => {
 
 	// This double buffer is smaller than the screen, because its pixels correspond
 	// with glyphs in the final image, and the glyphs are much larger than a pixel.
-	const doubleBuffer = makeDoubleBuffer(regl, {
+	const shineDoubleBuffer = makeDoubleBuffer(regl, {
 		width: numColumns,
 		height: numRows,
 		wrapT: "clamp",
 		type: "half float",
 	});
-	const rainPassCompute = loadText("shaders/glsl/rainPass.compute.frag.glsl");
-	const computeUniforms = {
+	const rainPassShine = loadText("shaders/glsl/rainPass.shine.frag.glsl");
+	const shineUniforms = {
 		...commonUniforms,
 		...extractEntries(config, [
-			"brightnessThreshold",
-			"brightnessOverride",
 			"baseBrightness",
 			"baseContrast",
 			"brightnessDecay",
-			"cursorEffectThreshold",
-			"cycleSpeed",
-			"cycleFrameSkip",
 			"fallSpeed",
 			"hasSun",
 			"hasThunder",
@@ -80,17 +75,39 @@ export default ({ regl, config, lkg }) => {
 			"rippleThickness",
 			"loops",
 		]),
-		cycleStyle,
 		rippleType,
 	};
-	const compute = regl({
+	const shine = regl({
 		frag: regl.prop("frag"),
 		uniforms: {
-			...computeUniforms,
-			previousState: doubleBuffer.back,
+			...shineUniforms,
+			previousShineState: shineDoubleBuffer.back,
 		},
 
-		framebuffer: doubleBuffer.front,
+		framebuffer: shineDoubleBuffer.front,
+	});
+
+	const symbolDoubleBuffer = makeDoubleBuffer(regl, {
+		width: numColumns,
+		height: numRows,
+		wrapT: "clamp",
+		type: "half float",
+	});
+	const rainPassSymbol = loadText("shaders/glsl/rainPass.symbol.frag.glsl");
+	const symbolUniforms = {
+		...commonUniforms,
+		...extractEntries(config, ["cycleSpeed", "cycleFrameSkip", "loops"]),
+		cycleStyle,
+	};
+	const symbol = regl({
+		frag: regl.prop("frag"),
+		uniforms: {
+			...symbolUniforms,
+			shineState: shineDoubleBuffer.front,
+			previousSymbolState: symbolDoubleBuffer.back,
+		},
+
+		framebuffer: symbolDoubleBuffer.front,
 	});
 
 	const quadPositions = Array(numQuadRows)
@@ -113,6 +130,9 @@ export default ({ regl, config, lkg }) => {
 			"forwardSpeed",
 			"glyphVerticalSpacing",
 			// fragment
+			"brightnessThreshold",
+			"brightnessOverride",
+			"cursorBrightness",
 			"glyphEdgeCrop",
 			"isPolar",
 		]),
@@ -138,7 +158,8 @@ export default ({ regl, config, lkg }) => {
 		uniforms: {
 			...renderUniforms,
 
-			state: doubleBuffer.front,
+			shineState: shineDoubleBuffer.front,
+			symbolState: symbolDoubleBuffer.front,
 			glyphTex: msdf.texture,
 
 			camera: regl.prop("camera"),
@@ -181,7 +202,7 @@ export default ({ regl, config, lkg }) => {
 		{
 			primary: output,
 		},
-		Promise.all([msdf.loaded, rainPassCompute.loaded, rainPassVert.loaded, rainPassFrag.loaded]),
+		Promise.all([msdf.loaded, rainPassShine.loaded, rainPassVert.loaded, rainPassFrag.loaded]),
 		(w, h) => {
 			output.resize(w, h);
 			const aspectRatio = w / h;
@@ -231,7 +252,8 @@ export default ({ regl, config, lkg }) => {
 			[screenSize[0], screenSize[1]] = aspectRatio > 1 ? [1, aspectRatio] : [1 / aspectRatio, 1];
 		},
 		() => {
-			compute({ frag: rainPassCompute.text() });
+			shine({ frag: rainPassShine.text() });
+			symbol({ frag: rainPassSymbol.text() });
 			regl.clear({
 				depth: 1,
 				color: [0, 0, 0, 1],

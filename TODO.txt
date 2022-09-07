@@ -1,9 +1,18 @@
 TODO:
 
-Random cycling should actually be random
-  Compute shader should have separate channels for cycle and symbol
+Update WebGPU
+  Compute shine and symbol in separate methods of compute shader
 
-Try to identify cursors more consistently
+Reformulate the basis
+  https://buf.com/films/the-matrix-resurrections
+  Base cursors and other colors on BUF clip
+    Show this stuff for showComputationTexture
+    Pixel grill?
+  Tune the colors
+  Maybe glow can be an SDF-derived effect instead, look into it
+
+  Migrate the rest of the project over
+  Migrate WebGPU
 
 Audio system
   Toggle (or number representing frequency)
@@ -27,21 +36,7 @@ Create a Resurrections font
   Icomoon
   Unicode PUA
 
-Reformulate the basis
-  https://buf.com/films/the-matrix-resurrections
-  Why does my existing affect feel *sparser* than these?
-  Softer edges— base them on fwidth still, just soften them
-  Base cursors and other colors on BUF clip
-    Pixel grill?
-  Tighten the threshold
-  Tweak the colors
-  Maybe glow can be an SDF-derived effect instead, look into it
-
-  Migrate the rest of the project over
-  Migrate WebGPU
-
 Resurrections
-  Support random glyph order
   Support anomaly streaks
     MSDF
       They should line up in Photoshop without too much trouble, actually
@@ -55,8 +50,6 @@ Resurrections
     Get the "normals" and color right
       Note: even completely dark glyphs can have glint on their edges
       "Golden hour"
-  Eventually improve expanded new glyph set
-    Make font
 
 WebGPU
   Why is it brighter than the regl version?

@@ -1,10 +1,11 @@
 precision highp float;
 
-// This shader is the star of the show. For each glyph, it determines its:
+// This shader is the star of the show.
+// It writes falling rain to four channels of a data texture:
 // 		R: brightness
-// 		G: progress through the glyph sequence
-// 		B: unused!
-// 		A: additional brightness for effects
+// 		G: unused
+// 		B: whether the cell is a "cursor"
+// 		A: some other effect, such as a ripple
 
 // Listen.
 // I understand if this shader looks confusing. Please don't be discouraged!
@@ -15,19 +16,17 @@ precision highp float;
 #define SQRT_2 1.4142135623730951
 #define SQRT_5 2.23606797749979
 
-uniform sampler2D previousState;
+uniform sampler2D previousShineState;
 uniform float numColumns, numRows;
-uniform float time, tick, cycleFrameSkip;
-uniform float animationSpeed, fallSpeed, cycleSpeed;
+uniform float time, tick;
+uniform float animationSpeed, fallSpeed;
 
 uniform bool hasSun, hasThunder, loops;
-uniform bool showComputationTexture;
-uniform float brightnessOverride, brightnessThreshold, brightnessDecay;
+uniform float brightnessDecay;
 uniform float baseContrast, baseBrightness;
-uniform float raindropLength, glyphHeightToWidth, glyphSequenceLength;
-uniform int cycleStyle, rippleType;
+uniform float raindropLength, glyphHeightToWidth;
+uniform int rippleType;
 uniform float rippleScale, rippleSpeed, rippleThickness;
-uniform float cursorEffectThreshold;
 
 // Helper functions for generating randomness, borrowed from elsewhere
 
@@ -65,16 +64,6 @@ float getBrightness(float rainTime) {
 		value = 1. - fract(rainTime);
 	}
 	return value * baseContrast + baseBrightness;
-}
-
-float getCycleSpeed(float rainTime, float brightness) {
-	float localCycleSpeed = 0.;
-	if (cycleStyle == 0 && brightness > 0.) {
-		localCycleSpeed = pow(1. - brightness, 4.);
-	} else if (cycleStyle == 1) {
-		localCycleSpeed = fract(rainTime);
-	}
-	return animationSpeed * cycleSpeed * localCycleSpeed;
 }
 
 // Additional effects
@@ -131,77 +120,44 @@ float applyRippleEffect(float effect, float simTime, vec2 screenPos) {
 	return effect;
 }
 
-float applyCursorEffect(float effect, float brightness) {
-	if (brightness >= cursorEffectThreshold) {
-		effect = 1.;
-	}
-	return effect;
-}
-
 // Main function
 
-vec4 computeResult(bool isFirstFrame, vec4 previousResult, vec2 glyphPos, vec2 screenPos) {
+vec4 computeResult(float simTime, bool isFirstFrame, vec2 glyphPos, vec2 screenPos, vec4 previous, vec4 previousBelow) {
 
 	// Determine the glyph's local time.
-	float simTime = time * animationSpeed;
 	float rainTime = getRainTime(simTime, glyphPos);
 
 	// Rain time is the backbone of this effect.
 
 	// Determine the glyph's brightness.
-	float previousBrightness = previousResult.r;
 	float brightness = getBrightness(rainTime);
-	if (hasSun) {
-		brightness = applySunShowerBrightness(brightness, screenPos);
-	}
-	if (hasThunder) {
-		brightness = applyThunderBrightness(brightness, simTime, screenPos);
-	}
 
-	// Determine the glyph's cycle— the percent this glyph has progressed through the glyph sequence
-	float previousCycle = previousResult.g;
-	bool resetGlyph = isFirstFrame;
-	if (loops) {
-		resetGlyph = resetGlyph || previousBrightness <= 0.;
-	}
-	if (resetGlyph) {
-		previousCycle = showComputationTexture ? 0. : randomFloat(screenPos);
-	}
-	float localCycleSpeed = getCycleSpeed(rainTime, brightness);
-	float cycle = previousCycle;
-	if (mod(tick, cycleFrameSkip) == 0.) {
-		cycle = fract(previousCycle + 0.005 * localCycleSpeed * cycleFrameSkip);
-	}
+	if (hasSun) brightness = applySunShowerBrightness(brightness, screenPos);
+	if (hasThunder) brightness = applyThunderBrightness(brightness, simTime, screenPos);
 
 	// Determine the glyph's effect— the amount the glyph lights up for other reasons
 	float effect = 0.;
 	effect = applyRippleEffect(effect, simTime, screenPos); // Round or square ripples across the grid
-	effect = applyCursorEffect(effect, brightness); // The bright glyphs at the "bottom" of raindrops
 
-	// Modes that don't fade glyphs set their actual brightness here
-	if (brightnessOverride > 0. && brightness > brightnessThreshold) {
-		brightness = brightnessOverride;
-	}
+	float previousBrightnessBelow = previousBelow.r;
+	float cursor = brightness > previousBrightnessBelow ? 1.0 : 0.0;
 
 	// Blend the glyph's brightness with its previous brightness, so it winks on and off organically
 	if (!isFirstFrame) {
+		float previousBrightness = previous.r;
 		brightness = mix(previousBrightness, brightness, brightnessDecay);
 	}
 
-	vec4 result = vec4(brightness, cycle, 0.0, effect);
-
-	// Better use of the alpha channel, for demonstrating how the glyph cycle works
-	if (showComputationTexture) {
-		result.a = min(1., localCycleSpeed);
-	}
-
+	vec4 result = vec4(brightness, 0., cursor, effect);
 	return result;
 }
 
 void main()	{
+	float simTime = time * animationSpeed;
 	bool isFirstFrame = tick <= 1.;
 	vec2 glyphPos = gl_FragCoord.xy;
 	vec2 screenPos = glyphPos / vec2(numColumns, numRows);
-	vec4 previousResult = texture2D( previousState, screenPos );
-	gl_FragColor = computeResult(isFirstFrame, previousResult, glyphPos, screenPos);
+	vec4 previous = texture2D( previousShineState, screenPos );
+	vec4 previousBelow = texture2D( previousShineState, screenPos + vec2(0., -1. / numRows));
+	gl_FragColor = computeResult(simTime, isFirstFrame, glyphPos, screenPos, previous, previousBelow);
 }
