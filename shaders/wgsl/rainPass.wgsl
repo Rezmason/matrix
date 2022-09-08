@@ -16,7 +16,7 @@ struct Config {
 	brightnessDecay : f32,
 	baseBrightness : f32,
 	baseContrast : f32,
-	cursorEffectThreshold : f32,
+	cursorBrightness : f32,
 	cycleSpeed : f32,
 	cycleFrameSkip : i32,
 	fallSpeed : f32,
@@ -209,7 +209,7 @@ fn applyRippleEffect(effect : f32, simTime : f32, screenPos : vec2<f32>) -> f32 
 }
 
 fn applyCursorEffect(effect : f32, brightness : f32) -> f32 {
-	if (brightness >= config.cursorEffectThreshold) {
+	if (brightness >= config.cursorBrightness) {
 		return 1.0;
 	}
 	return effect;

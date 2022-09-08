@@ -202,7 +202,7 @@ export default ({ regl, config, lkg }) => {
 		{
 			primary: output,
 		},
-		Promise.all([msdf.loaded, rainPassShine.loaded, rainPassVert.loaded, rainPassFrag.loaded]),
+		Promise.all([msdf.loaded, rainPassShine.loaded, rainPassSymbol.loaded, rainPassVert.loaded, rainPassFrag.loaded]),
 		(w, h) => {
 			output.resize(w, h);
 			const aspectRatio = w / h;
