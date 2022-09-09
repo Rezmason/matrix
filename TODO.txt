@@ -1,9 +1,13 @@
 TODO:
 
+Create a Resurrections font
+  Icomoon
+  Unicode PUA
+
 Reformulate the basis
   https://buf.com/films/the-matrix-resurrections
   Base cursors and other colors on BUF clip
-    Show this stuff for showComputationTexture
+    Show this stuff for showDebugView
     Pixel grill?
   Tune the colors
   Maybe glow can be an SDF-derived effect instead, look into it
@@ -28,10 +32,6 @@ Playdate version
     Record 3D footage off web version with text in front of it
     https://sdk.play.date/1.12.3/Inside%20Playdate.html#pdxinfo
   Menu later?
-
-Create a Resurrections font
-  Icomoon
-  Unicode PUA
 
 Resurrections
   Support anomaly streaks

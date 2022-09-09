@@ -13,7 +13,7 @@ uniform vec2 glyphTextureGridSize;
 uniform vec2 slantVec;
 uniform float slantScale;
 uniform bool isPolar;
-uniform bool showComputationTexture;
+uniform bool showDebugView;
 uniform bool volumetric;
 
 varying vec2 vUV;
@@ -76,7 +76,7 @@ void main() {
 	brightness = max(shine.b * cursorBrightness, brightness);
 	brightness = max(shine.a, brightness);
 	// In volumetric mode, distant glyphs are dimmer
-	if (volumetric) {
+	if (volumetric && !showDebugView) {
 		brightness = brightness * min(1., vDepth);
 	}
 
@@ -92,12 +92,18 @@ void main() {
 	float sigDist = median3(dist) - 0.5;
 	float alpha = clamp(sigDist/fwidth(sigDist) + 0.5, 0., 1.);
 
-	if (showComputationTexture) {
-		vec4 debugColor = vec4(shine.r - alpha, shine.g * alpha, shine.a - alpha, 1.);
-		if (volumetric) {
-			debugColor.g = debugColor.g * 0.9 + 0.1;
-		}
-		gl_FragColor = debugColor;
+	if (showDebugView) {
+		brightness *= 2.;
+		gl_FragColor = vec4(
+			vec3(
+				shine.b,
+				vec2(
+					brightness,
+					clamp(0., 1., pow(brightness * 0.9, 6.0))
+				) * (1.0 - shine.b)
+			) * alpha,
+			1.
+		);
 	} else {
 		gl_FragColor = vec4(vChannel * brightness * alpha, 1.);
 	}

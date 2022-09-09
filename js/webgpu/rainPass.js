@@ -18,7 +18,7 @@ const makeConfigBuffer = (device, configUniforms, config, density, gridSize) => 
 		...config,
 		gridSize,
 		density,
-		showComputationTexture: config.effect === "none",
+		showDebugView: config.effect === "none",
 		cycleStyle: config.cycleStyleName in cycleStyles ? cycleStyles[config.cycleStyleName] : 0,
 		rippleType: config.rippleTypeName in rippleTypes ? rippleTypes[config.rippleTypeName] : -1,
 		slantScale: 1 / (Math.abs(Math.sin(2 * config.slant)) * (Math.sqrt(2) - 1) + 1),
@@ -45,7 +45,7 @@ export default ({ config, device, timeBuffer }) => {
 	const numQuads = config.volumetric ? numCells : 1;
 
 	const transform = mat4.create();
-	if (config.effect === "none") {
+	if (config.volumetric && config.isometric) {
 		mat4.rotateX(transform, transform, (Math.PI * 1) / 8);
 		mat4.rotateY(transform, transform, (Math.PI * 1) / 4);
 		mat4.translate(transform, transform, vec3.fromValues(0, 0, -1));
@@ -153,7 +153,7 @@ export default ({ config, device, timeBuffer }) => {
 	const build = (size) => {
 		// Update scene buffer: camera and transform math for the volumetric mode
 		const aspectRatio = size[0] / size[1];
-		if (config.effect === "none") {
+		if (config.volumetric && config.isometric) {
 			if (aspectRatio > 1) {
 				mat4.orthoZO(camera, -1.5 * aspectRatio, 1.5 * aspectRatio, -1.5, 1.5, -1000, 1000);
 			} else {

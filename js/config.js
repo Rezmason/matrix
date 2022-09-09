@@ -96,6 +96,7 @@ const defaults = {
 	resolution: 0.75, // An overall scale multiplier
 	useHalfFloat: false,
 	renderer: "webgpu", // The preferred web graphics API
+	isometric: false,
 	useHoloplay: false,
 	loops: false,
 };
@@ -308,6 +309,7 @@ const paramMapping = {
 	loops: { key: "loops", parser: (s) => s.toLowerCase().includes("true") },
 	renderer: { key: "renderer", parser: (s) => s },
 	once: { key: "once", parser: (s) => s.toLowerCase().includes("true") },
+	isometric: { key: "isometric", parser: (s) => s.toLowerCase().includes("true") },
 };
 paramMapping.dropLength = paramMapping.raindropLength;
 paramMapping.angle = paramMapping.slant;

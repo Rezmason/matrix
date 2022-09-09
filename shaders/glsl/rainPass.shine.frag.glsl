@@ -55,11 +55,11 @@ float getRainTime(float simTime, vec2 glyphPos) {
 		columnSpeedOffset = 0.5;
 	}
 	float columnTime = columnTimeOffset + simTime * fallSpeed * columnSpeedOffset;
-	return (glyphPos.y * 0.01 + columnTime) / raindropLength;
+	return wobble((glyphPos.y * 0.01 + columnTime) / raindropLength);
 }
 
 float getBrightness(float rainTime) {
-	float value = 1. - fract(wobble(rainTime));
+	float value = 1. - fract(rainTime);
 	if (loops) {
 		value = 1. - fract(rainTime);
 	}
@@ -122,10 +122,12 @@ float applyRippleEffect(float effect, float simTime, vec2 screenPos) {
 
 // Main function
 
-vec4 computeResult(float simTime, bool isFirstFrame, vec2 glyphPos, vec2 screenPos, vec4 previous, vec4 previousBelow) {
+vec4 computeResult(float simTime, bool isFirstFrame, vec2 glyphPos, vec2 screenPos, vec4 previous) {
 
 	// Determine the glyph's local time.
 	float rainTime = getRainTime(simTime, glyphPos);
+	float rainTimeBelow = getRainTime(simTime, glyphPos + vec2(0., -1.));
+	float cursor = fract(rainTime) < fract(rainTimeBelow) ? 1.0 : 0.0;
 
 	// Rain time is the backbone of this effect.
 
@@ -138,9 +140,6 @@ vec4 computeResult(float simTime, bool isFirstFrame, vec2 glyphPos, vec2 screenP
 	// Determine the glyph's effect— the amount the glyph lights up for other reasons
 	float effect = 0.;
 	effect = applyRippleEffect(effect, simTime, screenPos); // Round or square ripples across the grid
-
-	float previousBrightnessBelow = previousBelow.r;
-	float cursor = brightness > previousBrightnessBelow ? 1.0 : 0.0;
 
 	// Blend the glyph's brightness with its previous brightness, so it winks on and off organically
 	if (!isFirstFrame) {
@@ -158,6 +157,5 @@ void main()	{
 	vec2 glyphPos = gl_FragCoord.xy;
 	vec2 screenPos = glyphPos / vec2(numColumns, numRows);
 	vec4 previous = texture2D( previousShineState, screenPos );
-	vec4 previousBelow = texture2D( previousShineState, screenPos + vec2(0., -1. / numRows));
-	gl_FragColor = computeResult(simTime, isFirstFrame, glyphPos, screenPos, previous, previousBelow);
+	gl_FragColor = computeResult(simTime, isFirstFrame, glyphPos, screenPos, previous);
 }

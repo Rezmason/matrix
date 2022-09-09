@@ -13,7 +13,7 @@ uniform sampler2D previousSymbolState, shineState;
 uniform float numColumns, numRows;
 uniform float time, tick, cycleFrameSkip;
 uniform float animationSpeed, cycleSpeed;
-uniform bool loops, showComputationTexture;
+uniform bool loops, showDebugView;
 uniform float glyphSequenceLength;
 uniform int cycleStyle;
 

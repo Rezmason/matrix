@@ -37,13 +37,13 @@ export default ({ regl, config, lkg }) => {
 	const cycleStyle = config.cycleStyleName in cycleStyles ? cycleStyles[config.cycleStyleName] : 0;
 	const slantVec = [Math.cos(config.slant), Math.sin(config.slant)];
 	const slantScale = 1 / (Math.abs(Math.sin(2 * config.slant)) * (Math.sqrt(2) - 1) + 1);
-	const showComputationTexture = config.effect === "none";
+	const showDebugView = config.effect === "none";
 
 	const commonUniforms = {
 		...extractEntries(config, ["animationSpeed", "glyphHeightToWidth", "glyphSequenceLength", "glyphTextureGridSize"]),
 		numColumns,
 		numRows,
-		showComputationTexture,
+		showDebugView,
 	};
 
 	// These two framebuffers are used to compute the raining code.
@@ -182,7 +182,7 @@ export default ({ regl, config, lkg }) => {
 	const screenSize = [1, 1];
 	const { mat4, vec3 } = glMatrix;
 	const transform = mat4.create();
-	if (config.effect === "none") {
+	if (volumetric && config.isometric) {
 		mat4.rotateX(transform, transform, (Math.PI * 1) / 8);
 		mat4.rotateY(transform, transform, (Math.PI * 1) / 4);
 		mat4.translate(transform, transform, vec3.fromValues(0, 0, -1));
@@ -217,7 +217,7 @@ export default ({ regl, config, lkg }) => {
 					const index = column + row * numTileColumns;
 					const camera = mat4.create();
 
-					if (config.effect === "none") {
+					if (volumetric && config.isometric) {
 						if (aspectRatio > 1) {
 							mat4.ortho(camera, -1.5 * aspectRatio, 1.5 * aspectRatio, -1.5, 1.5, -1000, 1000);
 						} else {

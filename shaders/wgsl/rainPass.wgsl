@@ -8,7 +8,7 @@ struct Config {
 	glyphTextureGridSize : vec2<i32>,
 	glyphHeightToWidth : f32,
 	gridSize : vec2<f32>,
-	showComputationTexture : i32,
+	showDebugView : i32,
 
 	// compute-specific properties
 	brightnessThreshold : f32,
@@ -138,11 +138,11 @@ fn getRainTime(simTime : f32, glyphPos : vec2<f32>) -> f32 {
 		columnSpeedOffset = 0.5;
 	}
 	var columnTime = columnTimeOffset + simTime * config.fallSpeed * columnSpeedOffset;
-	return (glyphPos.y * 0.01 + columnTime) / config.raindropLength;
+	return wobble((glyphPos.y * 0.01 + columnTime) / config.raindropLength);
 }
 
 fn getBrightness(rainTime : f32) -> f32 {
-	var value = 1.0 - fract(wobble(rainTime));
+	var value = 1.0 - fract(rainTime);
 	if (bool(config.loops)) {
 		value = 1.0 - fract(rainTime);
 	}
@@ -213,10 +213,12 @@ fn applyRippleEffect(effect : f32, simTime : f32, screenPos : vec2<f32>) -> f32 
 
 // Compute shader main functions
 
-fn computeShine (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, screenPos : vec2<f32>, previous : vec4<f32>, previousBelow : vec4<f32>) -> vec4<f32> {
+fn computeShine (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, screenPos : vec2<f32>, previous : vec4<f32>) -> vec4<f32> {
 
 	// Determine the glyph's local time.
 	var rainTime = getRainTime(simTime, glyphPos);
+	var rainTimeBelow = getRainTime(simTime, glyphPos + vec2<f32>(0., -1.));
+	var cursor = select(0.0, 1.0, fract(rainTime) < fract(rainTimeBelow));
 
 	// Rain time is the backbone of this effect.
 
@@ -234,8 +236,6 @@ fn computeShine (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, scree
 	var effect = 0.0;
 	effect = applyRippleEffect(effect, simTime, screenPos); // Round or square ripples across the grid
 
-	var previousBrightnessBelow = previousBelow.r;
-	var cursor = select(0.0, 1.0, brightness > previousBrightnessBelow);
 
 	// Blend the glyph's brightness with its previous brightness, so it winks on and off organically
 	if (!isFirstFrame) {
@@ -290,17 +290,16 @@ fn computeSymbol (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, scre
 	}
 
 	var i = row * i32(config.gridSize.x) + column;
-	var below = (row - 1) * i32(config.gridSize.x) + column;
 
 	var simTime = time.seconds * config.animationSpeed;
+	var isFirstFrame = time.frames == 0;
 
 	// Update the cell
-	var isFirstFrame = time.frames == 0;
 	var glyphPos = vec2<f32>(f32(column), f32(row));
 	var screenPos = glyphPos / config.gridSize;
 
 	var cell = cells_RW.cells[i];
-	cell.shine = computeShine(simTime, isFirstFrame, glyphPos, screenPos, cell.shine, cells_RW.cells[below].shine);
+	cell.shine = computeShine(simTime, isFirstFrame, glyphPos, screenPos, cell.shine);
 	cell.symbol = computeSymbol(simTime, isFirstFrame, glyphPos, screenPos, cell.symbol, cell.shine);
 	cells_RW.cells[i] = cell;
 }
@@ -442,11 +441,18 @@ fn getSymbolUV(symbol : i32) -> vec2<f32> {
 
 	var output : FragOutput;
 
-	if (bool(config.showComputationTexture)) {
-		output.color = vec4<f32>(cell.shine.r - alpha, cell.shine.g * alpha, cell.shine.a - alpha, 1.0);
-		if (volumetric) {
-			output.color.g *= 0.9 + 0.1;
-		}
+	if (bool(config.showDebugView)) {
+		brightness *= 2.0;
+		output.color = vec4<f32>(
+			vec3<f32>(
+				cell.shine.b,
+				vec2<f32>(
+					brightness,
+					clamp(0.0, 1.0, pow(brightness * 0.9, 6.0))
+				) * (1.0 - cell.shine.b)
+			) * alpha,
+			1.0
+		);
 	} else {
 		output.color = vec4<f32>(input.channel * brightness * alpha, 1.0);
 	}
