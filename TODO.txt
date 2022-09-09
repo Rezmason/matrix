@@ -1,9 +1,5 @@
 TODO:
 
-Create a Resurrections font
-  Icomoon
-  Unicode PUA
-
 Reformulate the basis
   https://buf.com/films/the-matrix-resurrections
   Base cursors and other colors on BUF clip
