@@ -1,8 +1,5 @@
 TODO:
 
-Update WebGPU
-  Compute shine and symbol in separate methods of compute shader
-
 Reformulate the basis
   https://buf.com/films/the-matrix-resurrections
   Base cursors and other colors on BUF clip

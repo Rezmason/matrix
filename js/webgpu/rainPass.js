@@ -1,4 +1,4 @@
-import { structs, byteSizeOf } from "../../lib/gpu-buffer.js";
+import { structs } from "../../lib/gpu-buffer.js";
 import { makeRenderTarget, loadTexture, loadShader, makeUniformBuffer, makeBindGroup, makePass } from "./utils.js";
 
 const rippleTypes = {
@@ -44,11 +44,6 @@ export default ({ config, device, timeBuffer }) => {
 	// rather than a single quad for our geometry
 	const numQuads = config.volumetric ? numCells : 1;
 
-	const cellsBuffer = device.createBuffer({
-		size: numCells * byteSizeOf("vec4<f32>"),
-		usage: GPUBufferUsage.STORAGE,
-	});
-
 	const transform = mat4.create();
 	if (config.effect === "none") {
 		mat4.rotateX(transform, transform, (Math.PI * 1) / 8);
@@ -60,8 +55,9 @@ export default ({ config, device, timeBuffer }) => {
 	}
 	const camera = mat4.create();
 
-	// It's handy to have multiple channels, in case we have
-	// multiple varieties of code, such as downward and upward flowing
+	// TODO: vantage points, multiple renders
+
+	// We use the different channels for different parts of the raindrop
 	const renderFormat = "rgba8unorm";
 
 	const linearSampler = device.createSampler({
@@ -99,6 +95,11 @@ export default ({ config, device, timeBuffer }) => {
 
 		const rainShaderUniforms = structs.from(rainShader.code);
 		configBuffer = makeConfigBuffer(device, rainShaderUniforms.Config, config, density, gridSize);
+
+		const cellsBuffer = device.createBuffer({
+			size: numCells * rainShaderUniforms.Cell.minSize,
+			usage: GPUBufferUsage.STORAGE,
+		});
 
 		sceneUniforms = rainShaderUniforms.Scene;
 		sceneBuffer = makeUniformBuffer(device, sceneUniforms);

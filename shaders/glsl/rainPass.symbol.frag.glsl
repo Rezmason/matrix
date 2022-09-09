@@ -48,7 +48,7 @@ vec4 computeResult(float simTime, bool isFirstFrame, vec2 glyphPos, vec2 screenP
 		resetGlyph = resetGlyph || brightness <= 0.;
 	}
 	if (resetGlyph) {
-		previousAge = randomFloat(screenPos + vec2(0.5));
+		previousAge = randomFloat(screenPos + 0.5);
 		previousSymbol = floor(glyphSequenceLength * randomFloat(screenPos));
 	}
 	float cycleSpeed = getCycleSpeed(brightness);
@@ -61,7 +61,7 @@ vec4 computeResult(float simTime, bool isFirstFrame, vec2 glyphPos, vec2 screenP
 		if (cycleStyle == 0) {
 			symbol = mod(symbol + advance, glyphSequenceLength);
 		} else if (cycleStyle == 1 && advance > 0.) {
-			symbol = floor(glyphSequenceLength * randomFloat(screenPos + vec2(simTime)));
+			symbol = floor(glyphSequenceLength * randomFloat(screenPos + simTime));
 		}
 	}
 
