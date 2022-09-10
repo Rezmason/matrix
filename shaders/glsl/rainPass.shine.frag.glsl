@@ -55,7 +55,11 @@ float getRainTime(float simTime, vec2 glyphPos) {
 		columnSpeedOffset = 0.5;
 	}
 	float columnTime = columnTimeOffset + simTime * fallSpeed * columnSpeedOffset;
-	return wobble((glyphPos.y * 0.01 + columnTime) / raindropLength);
+	float rainTime = (glyphPos.y * 0.01 + columnTime) / raindropLength;
+	if (!loops) {
+		rainTime = wobble(rainTime);
+	}
+	return rainTime;
 }
 
 float getBrightness(float rainTime) {

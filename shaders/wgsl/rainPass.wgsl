@@ -138,14 +138,15 @@ fn getRainTime(simTime : f32, glyphPos : vec2<f32>) -> f32 {
 		columnSpeedOffset = 0.5;
 	}
 	var columnTime = columnTimeOffset + simTime * config.fallSpeed * columnSpeedOffset;
-	return wobble((glyphPos.y * 0.01 + columnTime) / config.raindropLength);
+	var rainTime = (glyphPos.y * 0.01 + columnTime) / config.raindropLength;
+	if (!bool(config.loops)) {
+		rainTime = wobble(rainTime);
+	}
+	return rainTime;
 }
 
 fn getBrightness(rainTime : f32) -> f32 {
 	var value = 1.0 - fract(rainTime);
-	if (bool(config.loops)) {
-		value = 1.0 - fract(rainTime);
-	}
 	return value * config.baseContrast + config.baseBrightness;
 }
 
