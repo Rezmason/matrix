@@ -30,7 +30,7 @@ static int numColumns;
 static int numRows;
 static int numCells;
 
-static const int numStandardGlyphs = 133;
+static const int numStandardGlyphs = 135;
 static const int numPDGlyphs = 10;
 static const int numTotalGlyphs = numStandardGlyphs + numPDGlyphs;
 static const int numFades = 32;
@@ -141,7 +141,7 @@ static int update(void* ud)
 		if (speed < minSpeed) {
 			speed = minSpeed;
 		}
-		delta = sys->getElapsedTime() * speed + sys->getCrankChange() * 2 / 360;
+		delta = sys->getElapsedTime() * speed + sys->getCrankChange() * 5 / 360;
 	}
 	sys->resetElapsedTime();
 	time += delta;

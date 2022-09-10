@@ -20,7 +20,6 @@ Audio system
     Randomize pitch a little?
 
 Playdate version
-  Regenerate texture
   At this point, pay someone to make the sound effect or something
     Audio toggle in system menu
   Launcher card
@@ -46,6 +45,16 @@ Resurrections
 
 WebGPU
   Why is it brighter than the regl version?
+    Create a project that tests them side-by-side
+      That's right, two canvases, one regl and one webgpu
+      program them both to do the same basic ops in a floating point texture
+      display that texture
+      Retrieve the texture from the GPU and spit it out
+    Possible causes of difference
+      Color space
+      Floating point math
+      Texture interpolation
+      Blur implementation
   Try https://github.com/brendan-duncan/wgsl_reflect
   Get rid of end pass once it's possible to copy a bgra8unorm to a canvas texture
   Switch to rgba32float somehow?

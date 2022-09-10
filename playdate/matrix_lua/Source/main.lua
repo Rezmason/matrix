@@ -17,7 +17,7 @@ local numColumns <const> = floor(screenWidth / glyphWidth)
 local numRows <const> = floor(screenHeight / glyphWidth)
 local numCells <const> = numColumns * numRows
 
-local numStandardGlyphs <const> = 133
+local numStandardGlyphs <const> = 135
 local numPDGlyphs <const> = 10
 local numTotalGlyphs <const> = numStandardGlyphs + numPDGlyphs
 local numFades <const> = 32
@@ -115,7 +115,7 @@ function playdate.update()
 			mustDraw = true
 		end
 
-		cell.glyphCycle = cell.glyphCycle + delta * 2
+		cell.glyphCycle = cell.glyphCycle + delta * 5
 		if cell.glyphCycle > 1 then
 			cell.glyphCycle = cell.glyphCycle % 1
 			local lastGlyphIndex = cell.glyphIndex
