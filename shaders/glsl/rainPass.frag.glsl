@@ -93,13 +93,12 @@ void main() {
 	float alpha = clamp(sigDist/fwidth(sigDist) + 0.5, 0., 1.);
 
 	if (showDebugView) {
-		brightness *= 2.;
 		gl_FragColor = vec4(
 			vec3(
 				shine.b,
 				vec2(
-					brightness,
-					clamp(0., 1., pow(brightness * 0.9, 6.0))
+					1.0 - (shine.g * 3.0),
+					1.0 - (shine.g * 10.0)
 				) * (1.0 - shine.b)
 			) * alpha,
 			1.

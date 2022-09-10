@@ -62,7 +62,7 @@ const defaults = {
 	bloomStrength: 0.7, // The intensity of the bloom
 	bloomSize: 0.4, // The amount the bloom calculation is scaled
 	highPassThreshold: 0.1, // The minimum brightness that is still blurred
-	cycleSpeed: 0.2, // The speed glyphs change
+	cycleSpeed: 0.4, // The speed glyphs change
 	cycleFrameSkip: 1, // The global minimum number of frames between glyphs cycling
 	cycleStyleName: "cycleFasterWhenDimmed", // The way glyphs cycle, either proportional to their brightness or randomly
 	baseBrightness: -0.5, // The brightness of the glyphs, before any effects are applied

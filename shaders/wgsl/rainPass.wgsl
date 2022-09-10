@@ -146,8 +146,7 @@ fn getRainTime(simTime : f32, glyphPos : vec2<f32>) -> f32 {
 }
 
 fn getBrightness(rainTime : f32) -> f32 {
-	var value = 1.0 - fract(rainTime);
-	return value * config.baseContrast + config.baseBrightness;
+	return (1.0 - fract(rainTime)) * config.baseContrast + config.baseBrightness;
 }
 
 fn getCycleSpeed(brightness : f32) -> f32 {
@@ -244,7 +243,7 @@ fn computeShine (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, scree
 		brightness = mix(previousBrightness, brightness, config.brightnessDecay);
 	}
 
-	var result = vec4<f32>(brightness, 0.0, cursor, effect);
+	var result = vec4<f32>(brightness, fract(rainTime), cursor, effect);
 	return result;
 }
 
@@ -443,16 +442,15 @@ fn getSymbolUV(symbol : i32) -> vec2<f32> {
 	var output : FragOutput;
 
 	if (bool(config.showDebugView)) {
-		brightness *= 2.0;
 		output.color = vec4<f32>(
 			vec3<f32>(
 				cell.shine.b,
 				vec2<f32>(
-					brightness,
-					clamp(0.0, 1.0, pow(brightness * 0.9, 6.0))
+					1.0 - (cell.shine.g * 3.0),
+					1.0 - (cell.shine.g * 10.0)
 				) * (1.0 - cell.shine.b)
 			) * alpha,
-			1.0
+			1.
 		);
 	} else {
 		output.color = vec4<f32>(input.channel * brightness * alpha, 1.0);

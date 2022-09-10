@@ -63,11 +63,7 @@ float getRainTime(float simTime, vec2 glyphPos) {
 }
 
 float getBrightness(float rainTime) {
-	float value = 1. - fract(rainTime);
-	if (loops) {
-		value = 1. - fract(rainTime);
-	}
-	return value * baseContrast + baseBrightness;
+	return (1. - fract(rainTime)) * baseContrast + baseBrightness;
 }
 
 // Additional effects
@@ -151,7 +147,7 @@ vec4 computeResult(float simTime, bool isFirstFrame, vec2 glyphPos, vec2 screenP
 		brightness = mix(previousBrightness, brightness, brightnessDecay);
 	}
 
-	vec4 result = vec4(brightness, 0., cursor, effect);
+	vec4 result = vec4(brightness, fract(rainTime), cursor, effect);
 	return result;
 }
 
