@@ -20,13 +20,12 @@ Audio system
     Randomize pitch a little?
 
 Playdate version
-  At this point, pay someone to make the sound effect or something
-    Audio toggle in system menu
-  Launcher card
-    Resurrecta title
-    Record 3D footage off web version with text in front of it
-    https://sdk.play.date/1.12.3/Inside%20Playdate.html#pdxinfo
-  Menu later?
+  Audio system
+    Falling sound
+    Launch sound
+    Undocking sound
+    Docking sound
+    Maybe crank sounds? Not sure yet
 
 Resurrections
   Support anomaly streaks
