@@ -65,7 +65,8 @@ export default ({ config, device, timeBuffer }) => {
 	const loaded = (async () => {
 		const [stripeShader] = await Promise.all(assets);
 
-		computePipeline = device.createComputePipeline({
+		computePipeline = await device.createComputePipelineAsync({
+			layout: "auto",
 			compute: {
 				module: stripeShader.module,
 				entryPoint: "computeMain",
@@ -110,5 +111,5 @@ export default ({ config, device, timeBuffer }) => {
 		computePass.end();
 	};
 
-	return makePass(loaded, build, run);
+	return makePass("Stripe", loaded, build, run);
 };

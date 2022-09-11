@@ -104,47 +104,49 @@ export default ({ config, device, timeBuffer }) => {
 		sceneUniforms = rainShaderUniforms.Scene;
 		sceneBuffer = makeUniformBuffer(device, sceneUniforms);
 
-		computePipeline = device.createComputePipeline({
-			layout: "auto",
-			compute: {
-				module: rainShader.module,
-				entryPoint: "computeMain",
-			},
-		});
-
 		const additiveBlendComponent = {
 			operation: "add",
 			srcFactor: "one",
 			dstFactor: "one",
 		};
 
-		renderPipeline = device.createRenderPipeline({
-			layout: "auto",
-			vertex: {
-				module: rainShader.module,
-				entryPoint: "vertMain",
-			},
-			fragment: {
-				module: rainShader.module,
-				entryPoint: "fragMain",
-				targets: [
-					{
-						format: renderFormat,
-						blend: {
-							color: additiveBlendComponent,
-							alpha: additiveBlendComponent,
+		[computePipeline, renderPipeline] = await Promise.all([
+			device.createComputePipelineAsync({
+				layout: "auto",
+				compute: {
+					module: rainShader.module,
+					entryPoint: "computeMain",
+				},
+			}),
+
+			device.createRenderPipelineAsync({
+				layout: "auto",
+				vertex: {
+					module: rainShader.module,
+					entryPoint: "vertMain",
+				},
+				fragment: {
+					module: rainShader.module,
+					entryPoint: "fragMain",
+					targets: [
+						{
+							format: renderFormat,
+							blend: {
+								color: additiveBlendComponent,
+								alpha: additiveBlendComponent,
+							},
 						},
-					},
-					{
-						format: renderFormat,
-						blend: {
-							color: additiveBlendComponent,
-							alpha: additiveBlendComponent,
+						{
+							format: renderFormat,
+							blend: {
+								color: additiveBlendComponent,
+								alpha: additiveBlendComponent,
+							},
 						},
-					},
-				],
-			},
-		});
+					],
+				},
+			}),
+		]);
 
 		computeBindGroup = makeBindGroup(device, computePipeline, 0, [configBuffer, timeBuffer, cellsBuffer]);
 		renderBindGroup = makeBindGroup(device, renderPipeline, 0, [configBuffer, timeBuffer, sceneBuffer, linearSampler, msdfTexture.createView(), cellsBuffer]);
@@ -196,5 +198,5 @@ export default ({ config, device, timeBuffer }) => {
 		renderPass.end();
 	};
 
-	return makePass(loaded, build, run);
+	return makePass("Rain", loaded, build, run);
 };

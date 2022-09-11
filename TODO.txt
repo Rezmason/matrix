@@ -59,14 +59,9 @@ WebGPU
   Get rid of end pass once it's possible to copy a bgra8unorm to a canvas texture
   Switch to rgba32float somehow?
     Why isn't this straightforward?
-
-  Best practices
-    https://www.youtube.com/watch?v=wYAvVUFQP2M&t=1360s
-    Use labels and debug groups everywhere
-    Create pipelines async-await
-    Use implicit pipeline layouts sparingly
-      I'm using implicit pipeline layouts
-      What would explicit layouts look like?
+  Try shorthand
+  Share a bind group and layout just for time?
+  Try using a buffer for the stripe pass 1D texture
 
 Improve loop support
 
@@ -89,5 +84,7 @@ Deja vu effect: flashing rows
   Then use a thunder-like pattern to show and hide the flash
 
 gpu-buffer, working title
+  Support type aliasing (type Q = array<i32, 5>)
+  Support shorthand (vec4f)
   Build mocha tests, example project
   Give it its own repo, microsite

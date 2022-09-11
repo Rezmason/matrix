@@ -1,4 +1,6 @@
 /*
+// TODO: switch back to this impl once it doesn't break on FF Nightly
+
 const loadTexture = async (device, url) => {
 	const response = await fetch(url);
 	const data = await response.blob();
@@ -105,10 +107,14 @@ const makeBindGroup = (device, pipeline, index, entries) =>
 			})),
 	});
 
-const makePass = (loaded, build, run) => ({
+const makePass = (name, loaded, build, run) => ({
 	loaded: loaded ?? Promise.resolve(),
 	build: build ?? ((size, inputs) => inputs),
-	run: run ?? (() => {}),
+	run: (encoder) => {
+		encoder.pushDebugGroup(`Pass "${name}"`);
+		run?.(encoder);
+		encoder.popDebugGroup();
+	},
 });
 
 const makePipeline = async (context, steps) => {

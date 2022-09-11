@@ -18,14 +18,6 @@ window.onclick = (e) => {
 	touchesChanged = true;
 };
 
-/*
-uniforms: {
-	touches: () => touches,
-	aspectRatio: () => aspectRatio,
-	cameraAspectRatio,
-}
-*/
-
 export default ({ config, device, cameraTex, cameraAspectRatio, timeBuffer }) => {
 	const assets = [loadShader(device, "shaders/wgsl/mirrorPass.wgsl")];
 
@@ -47,7 +39,7 @@ export default ({ config, device, cameraTex, cameraAspectRatio, timeBuffer }) =>
 	const loaded = (async () => {
 		const [mirrorShader] = await Promise.all(assets);
 
-		computePipeline = device.createComputePipeline({
+		computePipeline = await device.createComputePipelineAsync({
 			layout: "auto",
 			compute: {
 				module: mirrorShader.module,
@@ -105,5 +97,5 @@ export default ({ config, device, cameraTex, cameraAspectRatio, timeBuffer }) =>
 
 	start = Date.now();
 
-	return makePass(loaded, build, run);
+	return makePass("Mirror", loaded, build, run);
 };

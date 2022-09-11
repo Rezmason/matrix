@@ -26,7 +26,7 @@ export default ({ config, device }) => {
 
 		backgroundTex = bgTex;
 
-		computePipeline = device.createComputePipeline({
+		computePipeline = await device.createComputePipelineAsync({
 			layout: "auto",
 			compute: {
 				module: imageShader.module,
@@ -61,5 +61,5 @@ export default ({ config, device }) => {
 		computePass.end();
 	};
 
-	return makePass(loaded, build, run);
+	return makePass("Image", loaded, build, run);
 };

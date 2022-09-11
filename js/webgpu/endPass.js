@@ -26,7 +26,7 @@ export default ({ device, canvasFormat, canvasContext }) => {
 	const loaded = (async () => {
 		const [imageShader] = await Promise.all(assets);
 
-		renderPipeline = device.createRenderPipeline({
+		renderPipeline = await device.createRenderPipelineAsync({
 			layout: "auto",
 			vertex: {
 				module: imageShader.module,
@@ -58,5 +58,5 @@ export default ({ device, canvasFormat, canvasContext }) => {
 		renderPass.end();
 	};
 
-	return makePass(loaded, build, run);
+	return makePass("End", loaded, build, run);
 };

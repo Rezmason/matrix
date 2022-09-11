@@ -44,7 +44,7 @@ export default ({ config, device }) => {
 	// If there's no bloom to apply, return a no-op pass with an empty bloom texture
 	if (!enabled) {
 		const emptyTexture = makeComputeTarget(device, [1, 1]);
-		return makePass(null, (size, inputs) => ({ ...inputs, bloom: emptyTexture }));
+		return makePass("No Bloom", null, (size, inputs) => ({ ...inputs, bloom: emptyTexture }));
 	}
 
 	const assets = [loadShader(device, "shaders/wgsl/bloomBlur.wgsl"), loadShader(device, "shaders/wgsl/bloomCombine.wgsl")];
@@ -74,21 +74,23 @@ export default ({ config, device }) => {
 	const loaded = (async () => {
 		const [blurShader, combineShader] = await Promise.all(assets);
 
-		blurPipeline = device.createComputePipeline({
-			layout: "auto",
-			compute: {
-				module: blurShader.module,
-				entryPoint: "computeMain",
-			},
-		});
+		[blurPipeline, combinePipeline] = await Promise.all([
+			device.createComputePipeline({
+				layout: "auto",
+				compute: {
+					module: blurShader.module,
+					entryPoint: "computeMain",
+				},
+			}),
 
-		combinePipeline = device.createComputePipeline({
-			layout: "auto",
-			compute: {
-				module: combineShader.module,
-				entryPoint: "computeMain",
-			},
-		});
+			device.createComputePipeline({
+				layout: "auto",
+				compute: {
+					module: combineShader.module,
+					entryPoint: "computeMain",
+				},
+			}),
+		]);
 
 		const blurUniforms = structs.from(blurShader.code).Config;
 		hBlurBuffer = makeUniformBuffer(device, blurUniforms, { bloomRadius, direction: [1, 0] });
@@ -152,5 +154,5 @@ export default ({ config, device }) => {
 		computePass.end();
 	};
 
-	return makePass(loaded, build, run);
+	return makePass("Bloom", loaded, build, run);
 };
