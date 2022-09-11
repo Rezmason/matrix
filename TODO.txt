@@ -2,9 +2,9 @@ TODO:
 
 Reformulate the basis
   https://buf.com/films/the-matrix-resurrections
-  Base cursors and other colors on BUF clip
-    Show this stuff for showDebugView
-    Pixel grill?
+  Rain pass frag's output should match its debug view output
+  The channels get individually blurred
+  Then the other passes use the red, green and blue channels for separate things
   Tune the colors
   Maybe glow can be an SDF-derived effect instead, look into it
 
@@ -32,6 +32,7 @@ Resurrections
     MSDF
       They should line up in Photoshop without too much trouble, actually
     Texture
+      Maybe give normal Matrix code a pixel grill texture
     Lighting
       Different parts of a streak glow at different intensities, at different times
       The streaks often dim slower, ie. are brighter, than the glyphs beneath them
@@ -59,7 +60,15 @@ WebGPU
   Switch to rgba32float somehow?
     Why isn't this straightforward?
 
-Support looping
+  Best practices
+    https://www.youtube.com/watch?v=wYAvVUFQP2M&t=1360s
+    Use labels and debug groups everywhere
+    Create pipelines async-await
+    Use implicit pipeline layouts sparingly
+      I'm using implicit pipeline layouts
+      What would explicit layouts look like?
+
+Improve loop support
 
 Write an explanation of the rain pass (and include images)
   Compute
@@ -67,35 +76,18 @@ Write an explanation of the rain pass (and include images)
   Fullscreen quad and spacial mapping
   MSDFs
 
-gpu-buffer, working title
-  Try and use it for the palette color buffer
-  Test it
-  Demo it to others
-  Make improvements
-  Capture expected requirements down the road, make roadmap
-  License it and put it somewhere else
-
 Zion Control's matrix variant
   From Reloaded
-
-Audio
-  Synthesize raindrop sound
-    https://www.instagram.com/tv/CWGodRcoq7T/?utm_medium=copy_link
-  Use WebAudio to mess with it
 
 Idea: Build a UI
   Changes some uniforms
   Effect selection would swap out the desired effect pass, somehow
   The color palette stuff would be hard
 
-
-Experiment with varying the colors in the palette pass
-  Maybe a separate palette for the non-bloom
-  Maybe dim and widen the bloom
-  Just make sure the changes to non-default configurations are acceptable
-
-  Maybe try and accomplish the effect in Photoshop, to get a sense of what's going on
-
 Deja vu effect: flashing rows
   Make them flash all the time
   Then use a thunder-like pattern to show and hide the flash
+
+gpu-buffer, working title
+  Build mocha tests, example project
+  Give it its own repo, microsite
