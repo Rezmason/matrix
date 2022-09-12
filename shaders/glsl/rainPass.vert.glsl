@@ -10,7 +10,6 @@ uniform vec2 screenSize;
 uniform float time, animationSpeed, forwardSpeed;
 uniform bool volumetric;
 varying vec2 vUV;
-varying vec3 vChannel;
 varying vec4 vShine, vSymbol;
 varying float vDepth;
 
@@ -35,8 +34,6 @@ void main() {
 	}
 	vec2 position = (aPosition * vec2(1., glyphVerticalSpacing) + aCorner * vec2(density, 1.)) * quadSize;
 	vec4 pos = vec4((position - 0.5) * 2.0, quadDepth, 1.0);
-
-	vChannel = vec3(1.0, 0.0, 0.0);
 
 	// Convert the world space position to screen space
 	if (volumetric) {

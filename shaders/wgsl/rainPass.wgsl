@@ -91,8 +91,7 @@ struct VertInput {
 struct VertOutput {
 	@builtin(position) Position : vec4<f32>,
 	@location(0) uv : vec2<f32>,
-	@location(1) channel : vec3<f32>,
-	@location(2) quadDepth : f32,
+	@location(1) quadDepth : f32,
 };
 
 struct FragOutput {
@@ -346,8 +345,6 @@ fn computeSymbol (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, scre
 	worldPosition /= quadGridSize;
 	worldPosition = (worldPosition - 0.5) * 2.0;
 
-	var channel = vec3<f32>(1.0, 0.0, 0.0);
-
 	// Convert the vertex's world space position to screen space
 	var screenPosition = vec4<f32>(worldPosition, quadDepth, 1.0);
 	if (volumetric) {
@@ -360,7 +357,6 @@ fn computeSymbol (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, scre
 	return VertOutput(
 		screenPosition,
 		uv,
-		channel,
 		quadDepth
 	);
 }
@@ -453,7 +449,7 @@ fn getSymbolUV(symbol : i32) -> vec2<f32> {
 			1.
 		);
 	} else {
-		output.color = vec4<f32>(input.channel * brightness * alpha, 1.0);
+		output.color = vec4<f32>(brightness * alpha, 0., 0., 1.0);
 	}
 
 	var highPassColor = output.color;

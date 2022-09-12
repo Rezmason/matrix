@@ -17,7 +17,6 @@ uniform bool showDebugView;
 uniform bool volumetric;
 
 varying vec2 vUV;
-varying vec3 vChannel;
 varying vec4 vShine, vSymbol;
 varying float vDepth;
 
@@ -104,7 +103,7 @@ void main() {
 			1.
 		);
 	} else {
-		gl_FragColor = vec4(vChannel * brightness * alpha, 1.);
+		gl_FragColor = vec4(brightness * alpha, 0., 0., 1.);
 	}
 
 }
