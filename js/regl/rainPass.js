@@ -7,11 +7,6 @@ const rippleTypes = {
 	circle: 1,
 };
 
-const cycleStyles = {
-	cycleFasterWhenDimmed: 0,
-	cycleRandomly: 1,
-};
-
 // These compute buffers are used to compute the properties of cells in the grid.
 // They take turns being the source and destination of a "compute" shader.
 // The half float data type is crucial! It lets us store almost any real number,
@@ -49,7 +44,6 @@ export default ({ regl, config, lkg }) => {
 
 	// Various effect-related values
 	const rippleType = config.rippleTypeName in rippleTypes ? rippleTypes[config.rippleTypeName] : -1;
-	const cycleStyle = config.cycleStyleName in cycleStyles ? cycleStyles[config.cycleStyleName] : 0;
 	const slantVec = [Math.cos(config.slant), Math.sin(config.slant)];
 	const slantScale = 1 / (Math.abs(Math.sin(2 * config.slant)) * (Math.sqrt(2) - 1) + 1);
 	const showDebugView = config.effect === "none";
@@ -82,7 +76,6 @@ export default ({ regl, config, lkg }) => {
 	const symbolUniforms = {
 		...commonUniforms,
 		...extractEntries(config, ["cycleSpeed", "cycleFrameSkip", "loops"]),
-		cycleStyle,
 	};
 	const symbol = regl({
 		frag: regl.prop("frag"),

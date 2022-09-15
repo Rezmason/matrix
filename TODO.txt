@@ -16,6 +16,8 @@ Reformulate the basis
   Find a way to support the old stuff?
   Migrate to WebGPU
 
+Update the README
+
 Audio system
   Toggle (or number representing frequency)
   Load the sound effect
@@ -25,6 +27,7 @@ Audio system
     Randomize pitch a little?
 
 Playdate version
+  Separate glyph cycling from brightness
   Audio system
     Falling sound
     Launch sound

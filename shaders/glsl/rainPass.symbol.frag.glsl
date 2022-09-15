@@ -15,7 +15,6 @@ uniform float time, tick, cycleFrameSkip;
 uniform float animationSpeed, cycleSpeed;
 uniform bool loops, showDebugView;
 uniform float glyphSequenceLength;
-uniform int cycleStyle;
 
 // Helper functions for generating randomness, borrowed from elsewhere
 
@@ -25,44 +24,30 @@ highp float randomFloat( const in vec2 uv ) {
 	return fract(sin(sn) * c);
 }
 
-// Core functions
-
-float getCycleSpeed(float brightness) {
-	float localCycleSpeed = 1.;
-	if (cycleStyle == 0 && brightness > 0.) {
-		localCycleSpeed = pow(1. - brightness, 4.);
-	}
-	return animationSpeed * cycleSpeed * localCycleSpeed;
-}
-
 // Main function
 
 vec4 computeResult(float simTime, bool isFirstFrame, vec2 glyphPos, vec2 screenPos, vec4 previous, vec4 shine) {
-
-	float brightness = shine.r;
 
 	float previousSymbol = previous.r;
 	float previousAge = previous.g;
 	bool resetGlyph = isFirstFrame;
 	if (loops) {
-		resetGlyph = resetGlyph || brightness <= 0.;
+		resetGlyph = resetGlyph || shine.r <= 0.;
 	}
 	if (resetGlyph) {
 		previousAge = randomFloat(screenPos + 0.5);
 		previousSymbol = floor(glyphSequenceLength * randomFloat(screenPos));
 	}
-	float cycleSpeed = getCycleSpeed(brightness);
+	float cycleSpeed = animationSpeed * cycleSpeed;
 	float age = previousAge;
 	float symbol = previousSymbol;
 	if (mod(tick, cycleFrameSkip) == 0.) {
 		age += cycleSpeed * cycleFrameSkip;
 		float advance = floor(age);
-		age = fract(age);
-		if (cycleStyle == 0) {
-			symbol = mod(symbol + advance, glyphSequenceLength);
-		} else if (cycleStyle == 1 && advance > 0.) {
+		if (advance > 0.) {
 			symbol = floor(glyphSequenceLength * randomFloat(screenPos + simTime));
 		}
+		age = fract(age);
 	}
 
 	vec4 result = vec4(symbol, age, 0., 0.);

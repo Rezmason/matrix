@@ -62,9 +62,8 @@ const defaults = {
 	bloomStrength: 0.7, // The intensity of the bloom
 	bloomSize: 0.4, // The amount the bloom calculation is scaled
 	highPassThreshold: 0.1, // The minimum brightness that is still blurred
-	cycleSpeed: 0.2, // The speed glyphs change
+	cycleSpeed: 0.03, // The speed glyphs change
 	cycleFrameSkip: 1, // The global minimum number of frames between glyphs cycling
-	cycleStyleName: "cycleFasterWhenDimmed", // The way glyphs cycle, either proportional to their brightness or randomly
 	baseBrightness: -0.5, // The brightness of the glyphs, before any effects are applied
 	baseContrast: 1.1, // The contrast of the glyphs, before any effects are applied
 	brightnessOverride: 0.0, // A global override to the brightness of displayed glyphs. Only used if it is > 0.
@@ -114,7 +113,6 @@ const versions = {
 		highPassThreshold: 0.0,
 		cycleSpeed: 0.01,
 		cycleFrameSkip: 8,
-		cycleStyleName: "cycleRandomly",
 		brightnessOverride: 0.22,
 		brightnessThreshold: 0,
 		fallSpeed: 0.6,
@@ -178,7 +176,6 @@ const versions = {
 		baseContrast: 1.17,
 		highPassThreshold: 0,
 		numColumns: 70,
-		cycleStyleName: "cycleRandomly",
 		cycleSpeed: 0.05,
 		bloomStrength: 0.7,
 		fallSpeed: 0.3,
@@ -195,7 +192,6 @@ const versions = {
 		raindropLength: 1.2,
 		cycleFrameSkip: 3,
 		fallSpeed: 0.5,
-		cycleStyleName: "cycleRandomly",
 		slant: Math.PI * -0.0625,
 		paletteEntries: [
 			{ hsl: [0.15, 0.25, 0.9], at: 0.0 },
@@ -208,7 +204,6 @@ const versions = {
 		numColumns: 50,
 		raindropLength: 0.9,
 		fallSpeed: 0.1,
-		cycleStyleName: "cycleRandomly",
 		highPassThreshold: 0.0,
 		paletteEntries: [
 			{ hsl: [0.6, 1.0, 0.05], at: 0.0 },
@@ -223,7 +218,6 @@ const versions = {
 		font: "resurrections",
 		numColumns: 20,
 		fallSpeed: 0.35,
-		cycleStyleName: "cycleRandomly",
 		cycleSpeed: 0.3,
 		glyphEdgeCrop: 0.1,
 		ditherMagnitude: 0,
