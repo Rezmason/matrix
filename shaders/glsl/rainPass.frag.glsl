@@ -4,7 +4,7 @@
 #endif
 precision lowp float;
 
-uniform sampler2D shineState, symbolState;
+uniform sampler2D shineState, symbolState, effectState;
 uniform float numColumns, numRows;
 uniform sampler2D glyphTex;
 uniform float glyphHeightToWidth, glyphSequenceLength, glyphEdgeCrop;
@@ -17,7 +17,7 @@ uniform bool showDebugView;
 uniform bool volumetric;
 
 varying vec2 vUV;
-varying vec4 vShine, vSymbol;
+varying vec4 vShine, vSymbol, vEffect;
 varying float vDepth;
 
 float median3(vec3 i) {
@@ -63,6 +63,7 @@ void main() {
 	// Unpack the values from the data textures
 	vec4 shine = volumetric ? vShine : texture2D(shineState, uv);
 	vec4 symbol = volumetric ? vSymbol : texture2D(symbolState, uv);
+	vec4 effect = volumetric ? vEffect : texture2D(effectState, uv);
 	vec2 symbolUV = getSymbolUV(symbol.r);
 
 	float brightness = shine.r;
@@ -72,8 +73,10 @@ void main() {
 		brightness = brightnessOverride;
 	}
 
+	brightness *= effect.r; // multiplied effects
+	brightness += effect.g; // added effects
 	brightness = max(shine.b * cursorBrightness, brightness);
-	brightness = max(shine.a, brightness);
+
 	// In volumetric mode, distant glyphs are dimmer
 	if (volumetric && !showDebugView) {
 		brightness = brightness * min(1., vDepth);

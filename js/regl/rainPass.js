@@ -12,6 +12,21 @@ const cycleStyles = {
 	cycleRandomly: 1,
 };
 
+// These compute buffers are used to compute the properties of cells in the grid.
+// They take turns being the source and destination of a "compute" shader.
+// The half float data type is crucial! It lets us store almost any real number,
+// whereas the default type limits us to integers between 0 and 255.
+
+// These double buffers are smaller than the screen, because their pixels correspond
+// with cells in the grid, and the cells' glyphs are much larger than a pixel.
+const makeComputeDoubleBuffer = (regl, height, width) =>
+	makeDoubleBuffer(regl, {
+		width,
+		height,
+		wrapT: "clamp",
+		type: "half float",
+	});
+
 const numVerticesPerQuad = 2 * 3;
 const tlVert = [0, 0];
 const trVert = [0, 1];
@@ -46,36 +61,11 @@ export default ({ regl, config, lkg }) => {
 		showDebugView,
 	};
 
-	// These two framebuffers are used to compute the raining code.
-	// they take turns being the source and destination of the "compute" shader.
-	// The half float data type is crucial! It lets us store almost any real number,
-	// whereas the default type limits us to integers between 0 and 255.
-
-	// This double buffer is smaller than the screen, because its pixels correspond
-	// with glyphs in the final image, and the glyphs are much larger than a pixel.
-	const shineDoubleBuffer = makeDoubleBuffer(regl, {
-		width: numColumns,
-		height: numRows,
-		wrapT: "clamp",
-		type: "half float",
-	});
+	const shineDoubleBuffer = makeComputeDoubleBuffer(regl, numRows, numColumns);
 	const rainPassShine = loadText("shaders/glsl/rainPass.shine.frag.glsl");
 	const shineUniforms = {
 		...commonUniforms,
-		...extractEntries(config, [
-			"baseBrightness",
-			"baseContrast",
-			"brightnessDecay",
-			"fallSpeed",
-			"hasSun",
-			"hasThunder",
-			"raindropLength",
-			"rippleScale",
-			"rippleSpeed",
-			"rippleThickness",
-			"loops",
-		]),
-		rippleType,
+		...extractEntries(config, ["baseBrightness", "baseContrast", "brightnessDecay", "fallSpeed", "raindropLength", "loops"]),
 	};
 	const shine = regl({
 		frag: regl.prop("frag"),
@@ -87,12 +77,7 @@ export default ({ regl, config, lkg }) => {
 		framebuffer: shineDoubleBuffer.front,
 	});
 
-	const symbolDoubleBuffer = makeDoubleBuffer(regl, {
-		width: numColumns,
-		height: numRows,
-		wrapT: "clamp",
-		type: "half float",
-	});
+	const symbolDoubleBuffer = makeComputeDoubleBuffer(regl, numRows, numColumns);
 	const rainPassSymbol = loadText("shaders/glsl/rainPass.symbol.frag.glsl");
 	const symbolUniforms = {
 		...commonUniforms,
@@ -108,6 +93,24 @@ export default ({ regl, config, lkg }) => {
 		},
 
 		framebuffer: symbolDoubleBuffer.front,
+	});
+
+	const effectDoubleBuffer = makeComputeDoubleBuffer(regl, numRows, numColumns);
+	const rainPassEffect = loadText("shaders/glsl/rainPass.effect.frag.glsl");
+	const effectUniforms = {
+		...commonUniforms,
+		...extractEntries(config, ["hasThunder", "rippleScale", "rippleSpeed", "rippleThickness", "loops"]),
+		rippleType,
+	};
+	const effect = regl({
+		frag: regl.prop("frag"),
+		uniforms: {
+			...effectUniforms,
+			shineState: shineDoubleBuffer.front,
+			previousEffectState: effectDoubleBuffer.back,
+		},
+
+		framebuffer: effectDoubleBuffer.front,
 	});
 
 	const quadPositions = Array(numQuadRows)
@@ -160,6 +163,7 @@ export default ({ regl, config, lkg }) => {
 
 			shineState: shineDoubleBuffer.front,
 			symbolState: symbolDoubleBuffer.front,
+			effectState: effectDoubleBuffer.front,
 			glyphTex: msdf.texture,
 
 			camera: regl.prop("camera"),
@@ -254,6 +258,7 @@ export default ({ regl, config, lkg }) => {
 		() => {
 			shine({ frag: rainPassShine.text() });
 			symbol({ frag: rainPassSymbol.text() });
+			effect({ frag: rainPassEffect.text() });
 			regl.clear({
 				depth: 1,
 				color: [0, 0, 0, 1],

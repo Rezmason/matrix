@@ -1,15 +1,20 @@
 TODO:
 
+Test all the versions!
+
 Reformulate the basis
   https://buf.com/films/the-matrix-resurrections
   Rain pass frag's output should match its debug view output
+    Move brightness and contrast logic to the later passes
   The channels get individually blurred
   Then the other passes use the red, green and blue channels for separate things
+    red: cursor
+    green: long tail
+    blue: short tail
   Tune the colors
-  Maybe glow can be an SDF-derived effect instead, look into it
-
-  Migrate the rest of the project over
-  Migrate WebGPU
+  New config properties
+  Find a way to support the old stuff?
+  Migrate to WebGPU
 
 Audio system
   Toggle (or number representing frequency)

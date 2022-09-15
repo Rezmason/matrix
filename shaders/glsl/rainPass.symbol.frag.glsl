@@ -1,7 +1,7 @@
 precision highp float;
 
 // This shader governs the glyphs appearing in the rain.
-// It writes each glyph's state to four channels of a data texture:
+// It writes each glyph's state to the channels of a data texture:
 // 		R: symbol
 // 		G: age
 // 		B: unused

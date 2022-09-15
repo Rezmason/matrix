@@ -75,7 +75,6 @@ const defaults = {
 	glyphEdgeCrop: 0.0, // The border around a glyph in a font texture that should be cropped out
 	glyphHeightToWidth: 1, // The aspect ratio of glyphs
 	glyphVerticalSpacing: 1, // The ratio of the vertical distance between glyphs to their height
-	hasSun: false, // Makes the glyphs more radiant. Admittedly not very technical.
 	hasThunder: false, // An effect that adds dramatic lightning flashes
 	isPolar: false, // Whether the glyphs arc across the screen or sit in a standard grid
 	rippleTypeName: null, // The variety of the ripple effect
@@ -154,10 +153,10 @@ const versions = {
 		bloomStrength: 1,
 		highPassThreshold: 0,
 		cycleSpeed: 0.05,
-		baseBrightness: -0.1,
+		baseBrightness: -1.3,
+		baseContrast: 2,
 		brightnessDecay: 0.05,
 		fallSpeed: 0.04,
-		hasSun: true,
 		isPolar: true,
 		rippleTypeName: "circle",
 		rippleSpeed: 0.1,
@@ -211,7 +210,6 @@ const versions = {
 		fallSpeed: 0.1,
 		cycleStyleName: "cycleRandomly",
 		highPassThreshold: 0.0,
-		hasSun: true,
 		paletteEntries: [
 			{ hsl: [0.6, 1.0, 0.05], at: 0.0 },
 			{ hsl: [0.6, 0.8, 0.1], at: 0.1 },

@@ -34,7 +34,7 @@ const loadJS = (src) =>
 	});
 
 export default async (canvas, config) => {
-	await Promise.all([loadJS("lib/regl.min.js"), loadJS("lib/gl-matrix.js")]);
+	await Promise.all([loadJS("lib/regl.js"), loadJS("lib/gl-matrix.js")]);
 
 	const resize = () => {
 		canvas.width = Math.ceil(canvas.clientWidth * config.resolution);

@@ -1,11 +1,11 @@
 precision highp float;
 
 // This shader is the star of the show.
-// It writes falling rain to four channels of a data texture:
+// It writes falling rain to the channels of a data texture:
 // 		R: brightness
 // 		G: unused
 // 		B: whether the cell is a "cursor"
-// 		A: some other effect, such as a ripple
+// 		A: unused
 
 // Listen.
 // I understand if this shader looks confusing. Please don't be discouraged!
@@ -21,12 +21,10 @@ uniform float numColumns, numRows;
 uniform float time, tick;
 uniform float animationSpeed, fallSpeed;
 
-uniform bool hasSun, hasThunder, loops;
+uniform bool loops;
 uniform float brightnessDecay;
 uniform float baseContrast, baseBrightness;
 uniform float raindropLength, glyphHeightToWidth;
-uniform int rippleType;
-uniform float rippleScale, rippleSpeed, rippleThickness;
 
 // Helper functions for generating randomness, borrowed from elsewhere
 
@@ -66,80 +64,13 @@ float getBrightness(float rainTime) {
 	return (1. - fract(rainTime)) * baseContrast + baseBrightness;
 }
 
-// Additional effects
-
-float applySunShowerBrightness(float brightness, vec2 screenPos) {
-	if (brightness >= -4.) {
-		brightness = pow(fract(brightness * 0.5), 3.) * screenPos.y * 1.5;
-	}
-	return brightness;
-}
-
-float applyThunderBrightness(float brightness, float simTime, vec2 screenPos) {
-	simTime *= 0.5;
-	float thunder = 1. - fract(wobble(simTime));
-	if (loops) {
-		thunder = 1. - fract(simTime + 0.3);
-	}
-
-	thunder = log(thunder * 1.5) * 4.;
-	thunder = clamp(thunder, 0., 1.);
-	thunder = thunder * pow(screenPos.y, 2.) * 3.;
-	return brightness + thunder;
-}
-
-float applyRippleEffect(float effect, float simTime, vec2 screenPos) {
-	if (rippleType == -1) {
-		return effect;
-	}
-
-	float rippleTime = (simTime * 0.5 + sin(simTime) * 0.2) * rippleSpeed + 1.; // TODO: clarify
-	if (loops) {
-		rippleTime = (simTime * 0.5) * rippleSpeed + 1.;
-	}
-
-	vec2 offset = randomVec2(vec2(floor(rippleTime), 0.)) - 0.5;
-	if (loops) {
-		offset = vec2(0.);
-	}
-	vec2 ripplePos = screenPos * 2. - 1. + offset;
-	float rippleDistance;
-	if (rippleType == 0) {
-		vec2 boxDistance = abs(ripplePos) * vec2(1., glyphHeightToWidth);
-		rippleDistance = max(boxDistance.x, boxDistance.y);
-	} else if (rippleType == 1) {
-		rippleDistance = length(ripplePos);
-	}
-
-	float rippleValue = fract(rippleTime) * rippleScale - rippleDistance;
-
-	if (rippleValue > 0. && rippleValue < rippleThickness) {
-		effect += 0.75;
-	}
-
-	return effect;
-}
-
 // Main function
 
 vec4 computeResult(float simTime, bool isFirstFrame, vec2 glyphPos, vec2 screenPos, vec4 previous) {
-
-	// Determine the glyph's local time.
 	float rainTime = getRainTime(simTime, glyphPos);
 	float rainTimeBelow = getRainTime(simTime, glyphPos + vec2(0., -1.));
 	float cursor = fract(rainTime) < fract(rainTimeBelow) ? 1.0 : 0.0;
-
-	// Rain time is the backbone of this effect.
-
-	// Determine the glyph's brightness.
 	float brightness = getBrightness(rainTime);
-
-	if (hasSun) brightness = applySunShowerBrightness(brightness, screenPos);
-	if (hasThunder) brightness = applyThunderBrightness(brightness, simTime, screenPos);
-
-	// Determine the glyph's effect— the amount the glyph lights up for other reasons
-	float effect = 0.;
-	effect = applyRippleEffect(effect, simTime, screenPos); // Round or square ripples across the grid
 
 	// Blend the glyph's brightness with its previous brightness, so it winks on and off organically
 	if (!isFirstFrame) {
@@ -147,7 +78,7 @@ vec4 computeResult(float simTime, bool isFirstFrame, vec2 glyphPos, vec2 screenP
 		brightness = mix(previousBrightness, brightness, brightnessDecay);
 	}
 
-	vec4 result = vec4(brightness, fract(rainTime), cursor, effect);
+	vec4 result = vec4(brightness, fract(rainTime), cursor, 0.0);
 	return result;
 }
 
