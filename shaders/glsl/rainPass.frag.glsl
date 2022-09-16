@@ -9,13 +9,14 @@ uniform float numColumns, numRows;
 uniform sampler2D glyphTex;
 uniform float glyphHeightToWidth, glyphSequenceLength, glyphEdgeCrop;
 uniform float baseContrast, baseBrightness;
-uniform float brightnessOverride, brightnessThreshold, cursorBrightness;
+uniform float brightnessOverride, brightnessThreshold;
 uniform vec2 glyphTextureGridSize;
 uniform vec2 slantVec;
 uniform float slantScale;
 uniform bool isPolar;
 uniform bool showDebugView;
 uniform bool volumetric;
+uniform bool isolateCursor;
 
 varying vec2 vUV;
 varying vec4 vShine, vSymbol, vEffect;
@@ -57,24 +58,26 @@ vec2 getUV(vec2 uv) {
 	return uv;
 }
 
-float getBrightness(float brightness, float cursor, float multipliedEffects, float addedEffects) {
+vec2 getBrightness(float brightness, float cursor, float multipliedEffects, float addedEffects) {
+	if (!isolateCursor) {
+		cursor = 0.;
+	}
 	brightness = (1.0 - brightness) * baseContrast + baseBrightness;
 
 	// Modes that don't fade glyphs set their actual brightness here
-	if (brightnessOverride > 0. && brightness > brightnessThreshold) {
+	if (brightnessOverride > 0. && brightness > brightnessThreshold && cursor == 0.) {
 		brightness = brightnessOverride;
 	}
 
 	brightness *= multipliedEffects;
 	brightness += addedEffects;
-	brightness = max(cursor * cursorBrightness, brightness);
 
 	// In volumetric mode, distant glyphs are dimmer
 	if (volumetric && !showDebugView) {
 		brightness = brightness * min(1., vDepth);
 	}
 
-	return brightness;
+	return vec2(brightness * (1. - cursor), brightness * cursor);
 }
 
 vec2 getSymbolUV(float index) {
@@ -107,7 +110,7 @@ void main() {
 	vec4 symbolData = volumetric ? vSymbol : texture2D(symbolState, uv);
 	vec4 effectData = volumetric ? vEffect : texture2D(effectState, uv);
 
-	float brightness = getBrightness(shineData.r, shineData.g, effectData.r, effectData.g);
+	vec2 brightness = getBrightness(shineData.r, shineData.g, effectData.r, effectData.g);
 	float symbol = getSymbol(uv, symbolData.r);
 
 	if (showDebugView) {
@@ -122,6 +125,6 @@ void main() {
 			1.
 		);
 	} else {
-		gl_FragColor = vec4(brightness * symbol, 0., 0., 0.);
+		gl_FragColor = vec4(brightness * symbol, 0., 0.);
 	}
 }

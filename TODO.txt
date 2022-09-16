@@ -1,12 +1,6 @@
 TODO:
 
-Reformulate the basis
-  Separate cursor and non-cursor parts of the code into rain pass output channels
-    Downstream passes can add them or color them separately
-  Add cursorColor to config
-    Switch operator/resurrections/classic to this
-  Tune ALL the versions!
-  Migrate to WebGPU
+Migrate recoded changes to WebGPU
 
 Update the README
 

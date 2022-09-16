@@ -7,7 +7,7 @@ uniform sampler2D palette;
 uniform float bloomStrength;
 uniform float ditherMagnitude;
 uniform float time;
-uniform vec3 backgroundColor;
+uniform vec3 backgroundColor, cursorColor;
 varying vec2 vUV;
 
 highp float rand( const in vec2 uv, const in float t ) {
@@ -26,11 +26,16 @@ void main() {
 	vec4 brightnessRGB = getBrightness(vUV);
 
 	// Combine the texture and bloom
-	float brightness = brightnessRGB.r + brightnessRGB.g + brightnessRGB.b;
+	vec2 brightness = brightnessRGB.rg;
 
 	// Dither: subtract a random value from the brightness
 	brightness = brightness - rand( gl_FragCoord.xy, time ) * ditherMagnitude;
 
 	// Map the brightness to a position in the palette texture
-	gl_FragColor = texture2D( palette, vec2(brightness, 0.0)) + vec4(backgroundColor, 0.0);
+	gl_FragColor = vec4(
+		texture2D( palette, vec2(brightness.r, 0.0)).rgb
+			+ min(cursorColor * brightness.g, 1.0)
+			+ backgroundColor,
+		1.0
+	);
 }

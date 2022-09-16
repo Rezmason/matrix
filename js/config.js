@@ -55,7 +55,8 @@ const defaults = {
 	font: "matrixcode",
 	useCamera: false,
 	backgroundColor: [0, 0, 0], // The color "behind" the glyphs
-	cursorBrightness: 0, // The brightness of the "cursor" at the bottom of a raindrop
+	isolateCursor: true, // Whether the "cursor"— the brightest glyph at the bottom of a raindrop— has its own color
+	cursorColor: [1.5, 2, 0.9], // The color of the cursor
 	volumetric: false, // A mode where the raindrops appear in perspective
 	animationSpeed: 1, // The global rate that all animations progress
 	forwardSpeed: 0.25, // The speed volumetric rain approaches the eye
@@ -107,7 +108,7 @@ const versions = {
 		width: 40,
 	},
 	operator: {
-		cursorBrightness: 1,
+		cursorColor: [1.0, 3, 1.5],
 		bloomSize: 0.6,
 		bloomStrength: 0.75,
 		highPassThreshold: 0.0,
@@ -129,6 +130,7 @@ const versions = {
 	},
 	nightmare: {
 		font: "gothic",
+		isolateCursor: false,
 		highPassThreshold: 0.7,
 		baseBrightness: -0.8,
 		brightnessDecay: 0.75,
@@ -148,6 +150,7 @@ const versions = {
 	},
 	paradise: {
 		font: "coptic",
+		isolateCursor: false,
 		bloomStrength: 1,
 		highPassThreshold: 0,
 		cycleSpeed: 0.005,
@@ -171,7 +174,7 @@ const versions = {
 	resurrections: {
 		font: "resurrections",
 		glyphEdgeCrop: 0.1,
-		cursorBrightness: 1,
+		cursorColor: [1.4, 2, 1.2],
 		baseBrightness: -0.7,
 		baseContrast: 1.17,
 		highPassThreshold: 0,
@@ -180,13 +183,14 @@ const versions = {
 		bloomStrength: 0.7,
 		fallSpeed: 0.3,
 		paletteEntries: [
-			{ hsl: [0.38, 0.9, 0.0], at: 0.0 },
-			{ hsl: [0.38, 1.0, 0.6], at: 0.92 },
-			{ hsl: [0.38, 1.0, 1.0], at: 1.0 },
+			{ hsl: [0.375, 0.9, 0.0], at: 0.0 },
+			{ hsl: [0.375, 1.0, 0.6], at: 0.92 },
+			{ hsl: [0.375, 1.0, 1.0], at: 1.0 },
 		],
 	},
 	palimpsest: {
 		font: "huberfishA",
+		isolateCursor: false,
 		bloomStrength: 0.2,
 		numColumns: 40,
 		raindropLength: 1.2,
@@ -200,7 +204,8 @@ const versions = {
 	},
 	twilight: {
 		font: "huberfishD",
-		bloomStrength: 0.3,
+		cursorColor: [1.5, 1, 0.9],
+		bloomStrength: 0.1,
 		numColumns: 50,
 		raindropLength: 0.9,
 		fallSpeed: 0.1,
@@ -210,7 +215,7 @@ const versions = {
 			{ hsl: [0.6, 0.8, 0.1], at: 0.1 },
 			{ hsl: [0.88, 0.8, 0.5], at: 0.5 },
 			{ hsl: [0.15, 1.0, 0.6], at: 0.8 },
-			{ hsl: [0.1, 1.0, 0.9], at: 1.0 },
+			// { hsl: [0.1, 1.0, 0.9], at: 1.0 },
 		],
 	},
 
@@ -297,6 +302,7 @@ const paramMapping = {
 	url: { key: "bgURL", parser: (s) => s },
 	stripeColors: { key: "stripeColors", parser: (s) => s },
 	backgroundColor: { key: "backgroundColor", parser: (s) => s.split(",").map(parseFloat) },
+	cursorColor: { key: "cursorColor", parser: (s) => s.split(",").map(parseFloat) },
 	volumetric: { key: "volumetric", parser: (s) => s.toLowerCase().includes("true") },
 	loops: { key: "loops", parser: (s) => s.toLowerCase().includes("true") },
 	renderer: { key: "renderer", parser: (s) => s },

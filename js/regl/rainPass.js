@@ -130,7 +130,7 @@ export default ({ regl, config, lkg }) => {
 			"baseContrast",
 			"brightnessThreshold",
 			"brightnessOverride",
-			"cursorBrightness",
+			"isolateCursor",
 			"glyphEdgeCrop",
 			"isPolar",
 		]),
