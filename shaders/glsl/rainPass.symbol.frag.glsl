@@ -9,7 +9,7 @@ precision highp float;
 
 #define PI 3.14159265359
 
-uniform sampler2D previousSymbolState, shineState;
+uniform sampler2D previousSymbolState, raindropState;
 uniform float numColumns, numRows;
 uniform float time, tick, cycleFrameSkip;
 uniform float animationSpeed, cycleSpeed;
@@ -26,13 +26,13 @@ highp float randomFloat( const in vec2 uv ) {
 
 // Main function
 
-vec4 computeResult(float simTime, bool isFirstFrame, vec2 glyphPos, vec2 screenPos, vec4 previous, vec4 shine) {
+vec4 computeResult(float simTime, bool isFirstFrame, vec2 glyphPos, vec2 screenPos, vec4 previous, vec4 raindrop) {
 
 	float previousSymbol = previous.r;
 	float previousAge = previous.g;
 	bool resetGlyph = isFirstFrame;
 	if (loops) {
-		resetGlyph = resetGlyph || shine.r <= 0.;
+		resetGlyph = resetGlyph || raindrop.r <= 0.;
 	}
 	if (resetGlyph) {
 		previousAge = randomFloat(screenPos + 0.5);
@@ -60,6 +60,6 @@ void main()	{
 	vec2 glyphPos = gl_FragCoord.xy;
 	vec2 screenPos = glyphPos / vec2(numColumns, numRows);
 	vec4 previous = texture2D( previousSymbolState, screenPos );
-	vec4 shine = texture2D( shineState, screenPos );
-	gl_FragColor = computeResult(simTime, isFirstFrame, glyphPos, screenPos, previous, shine);
+	vec4 raindrop = texture2D( raindropState, screenPos );
+	gl_FragColor = computeResult(simTime, isFirstFrame, glyphPos, screenPos, previous, raindrop);
 }

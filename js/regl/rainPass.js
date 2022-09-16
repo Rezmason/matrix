@@ -55,20 +55,20 @@ export default ({ regl, config, lkg }) => {
 		showDebugView,
 	};
 
-	const shineDoubleBuffer = makeComputeDoubleBuffer(regl, numRows, numColumns);
-	const rainPassShine = loadText("shaders/glsl/rainPass.shine.frag.glsl");
-	const shineUniforms = {
+	const raindropDoubleBuffer = makeComputeDoubleBuffer(regl, numRows, numColumns);
+	const rainPassShine = loadText("shaders/glsl/rainPass.raindrop.frag.glsl");
+	const raindropUniforms = {
 		...commonUniforms,
 		...extractEntries(config, ["brightnessDecay", "fallSpeed", "raindropLength", "loops"]),
 	};
-	const shine = regl({
+	const raindrop = regl({
 		frag: regl.prop("frag"),
 		uniforms: {
-			...shineUniforms,
-			previousShineState: shineDoubleBuffer.back,
+			...raindropUniforms,
+			previousShineState: raindropDoubleBuffer.back,
 		},
 
-		framebuffer: shineDoubleBuffer.front,
+		framebuffer: raindropDoubleBuffer.front,
 	});
 
 	const symbolDoubleBuffer = makeComputeDoubleBuffer(regl, numRows, numColumns);
@@ -81,7 +81,7 @@ export default ({ regl, config, lkg }) => {
 		frag: regl.prop("frag"),
 		uniforms: {
 			...symbolUniforms,
-			shineState: shineDoubleBuffer.front,
+			raindropState: raindropDoubleBuffer.front,
 			previousSymbolState: symbolDoubleBuffer.back,
 		},
 
@@ -99,7 +99,7 @@ export default ({ regl, config, lkg }) => {
 		frag: regl.prop("frag"),
 		uniforms: {
 			...effectUniforms,
-			shineState: shineDoubleBuffer.front,
+			raindropState: raindropDoubleBuffer.front,
 			previousEffectState: effectDoubleBuffer.back,
 		},
 
@@ -156,7 +156,7 @@ export default ({ regl, config, lkg }) => {
 		uniforms: {
 			...renderUniforms,
 
-			shineState: shineDoubleBuffer.front,
+			raindropState: raindropDoubleBuffer.front,
 			symbolState: symbolDoubleBuffer.front,
 			effectState: effectDoubleBuffer.front,
 			glyphTex: msdf.texture,
@@ -251,7 +251,7 @@ export default ({ regl, config, lkg }) => {
 			[screenSize[0], screenSize[1]] = aspectRatio > 1 ? [1, aspectRatio] : [1 / aspectRatio, 1];
 		},
 		() => {
-			shine({ frag: rainPassShine.text() });
+			raindrop({ frag: rainPassShine.text() });
 			symbol({ frag: rainPassSymbol.text() });
 			effect({ frag: rainPassEffect.text() });
 			regl.clear({

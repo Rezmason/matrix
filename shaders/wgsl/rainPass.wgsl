@@ -56,7 +56,7 @@ struct Scene {
 };
 
 struct Cell {
-	shine : vec4<f32>,
+	raindrop : vec4<f32>,
 	symbol : vec4<f32>,
 };
 
@@ -246,9 +246,9 @@ fn computeShine (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, scree
 	return result;
 }
 
-fn computeSymbol (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, screenPos : vec2<f32>, previous : vec4<f32>, shine : vec4<f32>) -> vec4<f32> {
+fn computeSymbol (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, screenPos : vec2<f32>, previous : vec4<f32>, raindrop : vec4<f32>) -> vec4<f32> {
 
-	var brightness = shine.r;
+	var brightness = raindrop.r;
 
 	var previousSymbol = previous.r;
 	var previousAge = previous.g;
@@ -298,8 +298,8 @@ fn computeSymbol (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, scre
 	var screenPos = glyphPos / config.gridSize;
 
 	var cell = cells_RW.cells[i];
-	cell.shine = computeShine(simTime, isFirstFrame, glyphPos, screenPos, cell.shine);
-	cell.symbol = computeSymbol(simTime, isFirstFrame, glyphPos, screenPos, cell.symbol, cell.shine);
+	cell.raindrop = computeShine(simTime, isFirstFrame, glyphPos, screenPos, cell.raindrop);
+	cell.symbol = computeSymbol(simTime, isFirstFrame, glyphPos, screenPos, cell.symbol, cell.raindrop);
 	cells_RW.cells[i] = cell;
 }
 
@@ -407,15 +407,15 @@ fn getSymbolUV(symbol : i32) -> vec2<f32> {
 	var cell = cells_RO.cells[gridIndex];
 	var symbolUV = getSymbolUV(i32(cell.symbol.r));
 
-	var brightness = cell.shine.r;
+	var brightness = cell.raindrop.r;
 
 	// Modes that don't fade glyphs set their actual brightness here
 	if (config.brightnessOverride > 0.0 && brightness > config.brightnessThreshold) {
 		brightness = config.brightnessOverride;
 	}
 
-	brightness = max(cell.shine.b * config.cursorBrightness, brightness);
-	brightness = max(cell.shine.a, brightness);
+	brightness = max(cell.raindrop.b * config.cursorBrightness, brightness);
+	brightness = max(cell.raindrop.a, brightness);
 
 	// In volumetric mode, distant glyphs are dimmer
 	if (volumetric) {
@@ -440,11 +440,11 @@ fn getSymbolUV(symbol : i32) -> vec2<f32> {
 	if (bool(config.showDebugView)) {
 		output.color = vec4<f32>(
 			vec3<f32>(
-				cell.shine.b,
+				cell.raindrop.b,
 				vec2<f32>(
-					1.0 - (cell.shine.g * 3.0),
-					1.0 - (cell.shine.g * 10.0)
-				) * (1.0 - cell.shine.b)
+					1.0 - (cell.raindrop.g * 3.0),
+					1.0 - (cell.raindrop.g * 10.0)
+				) * (1.0 - cell.raindrop.b)
 			) * alpha,
 			1.
 		);

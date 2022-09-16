@@ -45,7 +45,7 @@ float wobble(float x) {
 // This is the code rain's key underlying concept.
 // It's why glyphs that share a column are lit simultaneously, and are brighter toward the bottom.
 // It's also why those bright areas are truncated into raindrops.
-float getBrightness(float simTime, vec2 glyphPos) {
+float getRainBrightness(float simTime, vec2 glyphPos) {
 	float columnTimeOffset = randomFloat(vec2(glyphPos.x, 0.)) * 1000.;
 	float columnSpeedOffset = randomFloat(vec2(glyphPos.x + 0.1, 0.)) * 0.5 + 0.5;
 	if (loops) {
@@ -62,8 +62,8 @@ float getBrightness(float simTime, vec2 glyphPos) {
 // Main function
 
 vec4 computeResult(float simTime, bool isFirstFrame, vec2 glyphPos, vec2 screenPos, vec4 previous) {
-	float brightness = getBrightness(simTime, glyphPos);
-	float brightnessBelow = getBrightness(simTime, glyphPos + vec2(0., -1.));
+	float brightness = getRainBrightness(simTime, glyphPos);
+	float brightnessBelow = getRainBrightness(simTime, glyphPos + vec2(0., -1.));
 	float cursor = brightness < brightnessBelow ? 1.0 : 0.0;
 
 	// Blend the glyph's brightness with its previous brightness, so it winks on and off organically

@@ -4,7 +4,7 @@
 #endif
 precision lowp float;
 
-uniform sampler2D shineState, symbolState, effectState;
+uniform sampler2D raindropState, symbolState, effectState;
 uniform float numColumns, numRows;
 uniform sampler2D glyphTex;
 uniform float glyphHeightToWidth, glyphSequenceLength, glyphEdgeCrop;
@@ -106,21 +106,21 @@ void main() {
 	vec2 uv = getUV(vUV);
 
 	// Unpack the values from the data textures
-	vec4  shineData = volumetric ?  vShine : texture2D( shineState, uv);
+	vec4  raindropData = volumetric ?  vShine : texture2D( raindropState, uv);
 	vec4 symbolData = volumetric ? vSymbol : texture2D(symbolState, uv);
 	vec4 effectData = volumetric ? vEffect : texture2D(effectState, uv);
 
-	vec2 brightness = getBrightness(shineData.r, shineData.g, effectData.r, effectData.g);
+	vec2 brightness = getBrightness(raindropData.r, raindropData.g, effectData.r, effectData.g);
 	float symbol = getSymbol(uv, symbolData.r);
 
 	if (showDebugView) {
 		gl_FragColor = vec4(
 			vec3(
-				shineData.g,
+				raindropData.g,
 				vec2(
-					1.0 - (shineData.r * 3.0),
-					1.0 - (shineData.r * 8.0)
-				) * (1.0 - shineData.g)
+					1.0 - (raindropData.r * 3.0),
+					1.0 - (raindropData.r * 8.0)
+				) * (1.0 - raindropData.g)
 			) * symbol,
 			1.
 		);
