@@ -122,7 +122,6 @@ void main() {
 			1.
 		);
 	} else {
-		gl_FragColor = vec4(brightness * symbol, 0., 0., 1.);
+		gl_FragColor = vec4(brightness * symbol, 0., 0., 0.);
 	}
-
 }

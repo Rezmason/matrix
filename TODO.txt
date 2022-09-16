@@ -1,16 +1,11 @@
 TODO:
 
 Reformulate the basis
-  https://buf.com/films/the-matrix-resurrections
-  Rain pass frag's output should match its debug view output
-  The post-bloom passes should apply brightness, contrast, and handle effects
-    r: cursor, g: long tail, b: short tail, a: maybe effects data goes here? we'll see
-    But, the texture format beyond the rain pass is 8-bit. Something to watch out for.
-  Create new, simpler default colorizer
-    Config properties: Cursor color, long tail color, short tail color
-  Figure out what to do with the thunder and ripple
+  Separate cursor and non-cursor parts of the code into rain pass output channels
+    Downstream passes can add them or color them separately
+  Add cursorColor to config
+    Switch operator/resurrections/classic to this
   Tune ALL the versions!
-  Find a way to support the old stuff?
   Migrate to WebGPU
 
 Update the README
@@ -31,21 +26,24 @@ Playdate version
     Docking sound
     Maybe crank sounds? Not sure yet
 
-Resurrections
-  Support anomaly streaks
-    MSDF
-      They should line up in Photoshop without too much trouble, actually
-    Texture
-      Maybe give normal Matrix code a pixel grill texture
-    Lighting
-      Different parts of a streak glow at different intensities, at different times
-      The streaks often dim slower, ie. are brighter, than the glyphs beneath them
-      Imagine they're metallic or something
-  Support SDF bevel and "lights"
-    https://shaderfun.com/2018/07/23/signed-distance-fields-part-8-gradients-bevels-and-noise/
-    Get the "normals" and color right
-      Note: even completely dark glyphs can have glint on their edges
-      "Golden hour"
+Support Resurrections anomaly streaks
+  Kind of like the cursor: new rain pass output channel, new config prop
+  MSDF
+    They should line up in Photoshop without too much trouble, actually
+  Texture
+    Maybe give normal Matrix code a pixel grill texture
+  Lighting
+    Different parts of a streak glow at different intensities, at different times
+    The streaks often dim slower, ie. are brighter, than the glyphs beneath them
+    Imagine they're metallic or something
+
+Support Resurrections SDF bevel and "lights"
+  https://shaderfun.com/2018/07/23/signed-distance-fields-part-8-gradients-bevels-and-noise/
+  Get the "normals" and color right
+    Note: even completely dark glyphs can have glint on their edges
+    "Golden hour"
+  Stuff MSDF-derived normal vectors from rain pass frag into two of its output channels
+  Anomaly mode toggles between this and anomaly streaks
 
 WebGPU
   Why is it brighter than the regl version?
