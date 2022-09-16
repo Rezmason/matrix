@@ -42,11 +42,10 @@ float wobble(float x) {
 	return x + 0.3 * sin(SQRT_2 * x) + 0.2 * sin(SQRT_5 * x);
 }
 
-// Core functions
-
-// Rain time is the shader's key underlying concept.
+// This is the code rain's key underlying concept.
 // It's why glyphs that share a column are lit simultaneously, and are brighter toward the bottom.
-float getRainTime(float simTime, vec2 glyphPos) {
+// It's also why those bright areas are truncated into raindrops.
+float getBrightness(float simTime, vec2 glyphPos) {
 	float columnTimeOffset = randomFloat(vec2(glyphPos.x, 0.)) * 1000.;
 	float columnSpeedOffset = randomFloat(vec2(glyphPos.x + 0.1, 0.)) * 0.5 + 0.5;
 	if (loops) {
@@ -57,20 +56,15 @@ float getRainTime(float simTime, vec2 glyphPos) {
 	if (!loops) {
 		rainTime = wobble(rainTime);
 	}
-	return rainTime;
-}
-
-float getBrightness(float rainTime) {
-	return (1. - fract(rainTime)) * baseContrast + baseBrightness;
+	return fract(rainTime);
 }
 
 // Main function
 
 vec4 computeResult(float simTime, bool isFirstFrame, vec2 glyphPos, vec2 screenPos, vec4 previous) {
-	float rainTime = getRainTime(simTime, glyphPos);
-	float rainTimeBelow = getRainTime(simTime, glyphPos + vec2(0., -1.));
-	float cursor = fract(rainTime) < fract(rainTimeBelow) ? 1.0 : 0.0;
-	float brightness = getBrightness(rainTime);
+	float brightness = getBrightness(simTime, glyphPos);
+	float brightnessBelow = getBrightness(simTime, glyphPos + vec2(0., -1.));
+	float cursor = brightness < brightnessBelow ? 1.0 : 0.0;
 
 	// Blend the glyph's brightness with its previous brightness, so it winks on and off organically
 	if (!isFirstFrame) {
@@ -78,7 +72,7 @@ vec4 computeResult(float simTime, bool isFirstFrame, vec2 glyphPos, vec2 screenP
 		brightness = mix(previousBrightness, brightness, brightnessDecay);
 	}
 
-	vec4 result = vec4(brightness, fract(rainTime), cursor, 0.0);
+	vec4 result = vec4(brightness, cursor, 0.0, 0.0);
 	return result;
 }
 

@@ -59,7 +59,7 @@ export default ({ regl, config, lkg }) => {
 	const rainPassShine = loadText("shaders/glsl/rainPass.shine.frag.glsl");
 	const shineUniforms = {
 		...commonUniforms,
-		...extractEntries(config, ["baseBrightness", "baseContrast", "brightnessDecay", "fallSpeed", "raindropLength", "loops"]),
+		...extractEntries(config, ["brightnessDecay", "fallSpeed", "raindropLength", "loops"]),
 	};
 	const shine = regl({
 		frag: regl.prop("frag"),
@@ -126,6 +126,8 @@ export default ({ regl, config, lkg }) => {
 			"forwardSpeed",
 			"glyphVerticalSpacing",
 			// fragment
+			"baseBrightness",
+			"baseContrast",
 			"brightnessThreshold",
 			"brightnessOverride",
 			"cursorBrightness",

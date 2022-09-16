@@ -1,18 +1,15 @@
 TODO:
 
-Test all the versions!
-
 Reformulate the basis
   https://buf.com/films/the-matrix-resurrections
   Rain pass frag's output should match its debug view output
-    Move brightness and contrast logic to the later passes
-  The channels get individually blurred
-  Then the other passes use the red, green and blue channels for separate things
-    red: cursor
-    green: long tail
-    blue: short tail
-  Tune the colors
-  New config properties
+  The post-bloom passes should apply brightness, contrast, and handle effects
+    r: cursor, g: long tail, b: short tail, a: maybe effects data goes here? we'll see
+    But, the texture format beyond the rain pass is 8-bit. Something to watch out for.
+  Create new, simpler default colorizer
+    Config properties: Cursor color, long tail color, short tail color
+  Figure out what to do with the thunder and ripple
+  Tune ALL the versions!
   Find a way to support the old stuff?
   Migrate to WebGPU
 
@@ -27,7 +24,6 @@ Audio system
     Randomize pitch a little?
 
 Playdate version
-  Separate glyph cycling from brightness
   Audio system
     Falling sound
     Launch sound
