@@ -78,6 +78,7 @@ export default ({ config, device, timeBuffer }) => {
 			bloomStrength: config.bloomStrength,
 			ditherMagnitude: config.ditherMagnitude,
 			backgroundColor: config.backgroundColor,
+			cursorColor: config.cursorColor,
 		});
 	})();
 

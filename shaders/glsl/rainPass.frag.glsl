@@ -19,7 +19,7 @@ uniform bool volumetric;
 uniform bool isolateCursor;
 
 varying vec2 vUV;
-varying vec4 vShine, vSymbol, vEffect;
+varying vec4 vRaindrop, vSymbol, vEffect;
 varying float vDepth;
 
 float median3(vec3 i) {
@@ -62,7 +62,7 @@ vec2 getBrightness(float brightness, float cursor, float multipliedEffects, floa
 	if (!isolateCursor) {
 		cursor = 0.;
 	}
-	brightness = (1.0 - brightness) * baseContrast + baseBrightness;
+	brightness = (1. - brightness) * baseContrast + baseBrightness;
 
 	// Modes that don't fade glyphs set their actual brightness here
 	if (brightnessOverride > 0. && brightness > brightnessThreshold && cursor == 0.) {
@@ -98,7 +98,7 @@ float getSymbol(vec2 uv, float index) {
 	// MSDF: calculate brightness of fragment based on distance to shape
 	vec3 dist = texture2D(glyphTex, uv).rgb;
 	float sigDist = median3(dist) - 0.5;
-	return clamp(sigDist/fwidth(sigDist) + 0.5, 0., 1.);
+	return clamp(sigDist / fwidth(sigDist) + 0.5, 0., 1.);
 }
 
 void main() {
@@ -106,9 +106,9 @@ void main() {
 	vec2 uv = getUV(vUV);
 
 	// Unpack the values from the data textures
-	vec4  raindropData = volumetric ?  vShine : texture2D( raindropState, uv);
-	vec4 symbolData = volumetric ? vSymbol : texture2D(symbolState, uv);
-	vec4 effectData = volumetric ? vEffect : texture2D(effectState, uv);
+	vec4 raindropData = volumetric ? vRaindrop : texture2D(raindropState, uv);
+	vec4   symbolData = volumetric ?   vSymbol : texture2D(  symbolState, uv);
+	vec4   effectData = volumetric ?   vEffect : texture2D(  effectState, uv);
 
 	vec2 brightness = getBrightness(raindropData.r, raindropData.g, effectData.r, effectData.g);
 	float symbol = getSymbol(uv, symbolData.r);
@@ -118,9 +118,9 @@ void main() {
 			vec3(
 				raindropData.g,
 				vec2(
-					1.0 - (raindropData.r * 3.0),
-					1.0 - (raindropData.r * 8.0)
-				) * (1.0 - raindropData.g)
+					1. - (raindropData.r * 3.),
+					1. - (raindropData.r * 8.)
+				) * (1. - raindropData.g)
 			) * symbol,
 			1.
 		);

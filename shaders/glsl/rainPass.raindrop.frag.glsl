@@ -2,9 +2,9 @@ precision highp float;
 
 // This shader is the star of the show.
 // It writes falling rain to the channels of a data texture:
-// 		R: brightness
-// 		G: unused
-// 		B: whether the cell is a "cursor"
+// 		R: raindrop brightness
+// 		G: whether the cell is a "cursor"
+// 		B: unused
 // 		A: unused
 
 // Listen.

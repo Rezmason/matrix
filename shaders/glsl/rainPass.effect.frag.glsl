@@ -35,10 +35,10 @@ float getThunder(float simTime, vec2 screenPos) {
 		return 0.;
 	}
 
-	simTime *= 0.5;
-	float thunder = 1. - fract(wobble(simTime));
+	float thunderTime = simTime * 0.5;
+	float thunder = 1. - fract(wobble(thunderTime));
 	if (loops) {
-		thunder = 1. - fract(simTime + 0.3);
+		thunder = 1. - fract(thunderTime + 0.3);
 	}
 
 	thunder = log(thunder * 1.5) * 4.;
@@ -82,7 +82,7 @@ float getRipple(float simTime, vec2 screenPos) {
 
 vec4 computeResult(float simTime, bool isFirstFrame, vec2 glyphPos, vec2 screenPos, vec4 previous) {
 
-	float multipliedEffects = 1.0 + getThunder(simTime, screenPos);
+	float multipliedEffects = 1. + getThunder(simTime, screenPos);
 	float addedEffects = getRipple(simTime, screenPos); // Round or square ripples across the grid
 
 	vec4 result = vec4(multipliedEffects, addedEffects, 0., 0.);

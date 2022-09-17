@@ -6,11 +6,6 @@ const rippleTypes = {
 	circle: 1,
 };
 
-const cycleStyles = {
-	cycleFasterWhenDimmed: 0,
-	cycleRandomly: 1,
-};
-
 const numVerticesPerQuad = 2 * 3;
 
 const makeConfigBuffer = (device, configUniforms, config, density, gridSize) => {
@@ -19,7 +14,6 @@ const makeConfigBuffer = (device, configUniforms, config, density, gridSize) => 
 		gridSize,
 		density,
 		showDebugView: config.effect === "none",
-		cycleStyle: config.cycleStyleName in cycleStyles ? cycleStyles[config.cycleStyleName] : 0,
 		rippleType: config.rippleTypeName in rippleTypes ? rippleTypes[config.rippleTypeName] : -1,
 		slantScale: 1 / (Math.abs(Math.sin(2 * config.slant)) * (Math.sqrt(2) - 1) + 1),
 		slantVec: [Math.cos(config.slant), Math.sin(config.slant)],

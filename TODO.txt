@@ -1,6 +1,6 @@
 TODO:
 
-Migrate recoded changes to WebGPU
+Isolate classic from defaults
 
 Update the README
 
@@ -67,17 +67,17 @@ Write an explanation of the rain pass (and include images)
   Fullscreen quad and spacial mapping
   MSDFs
 
+Idea: Build a UI
+  Replace versions with presets
+  Simple changes update the values
+  Complex changes replace the pipeline
+  Make it a form, so it's accessible
+  Then, make it look cool like the UI from the old site
+
+Maybe pay someone to make Mac/Windows screensavers
+
 Zion Control's matrix variant
   From Reloaded
-
-Idea: Build a UI
-  Changes some uniforms
-  Effect selection would swap out the desired effect pass, somehow
-  The color palette stuff would be hard
-
-Deja vu effect: flashing rows
-  Make them flash all the time
-  Then use a thunder-like pattern to show and hide the flash
 
 gpu-buffer, working title
   Support type aliasing (type Q = array<i32, 5>)

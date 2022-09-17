@@ -2,6 +2,7 @@ struct Config {
 	bloomStrength : f32,
 	ditherMagnitude : f32,
 	backgroundColor : vec3<f32>,
+	cursorColor : vec3<f32>
 };
 
 struct Time {
@@ -52,10 +53,15 @@ fn getBrightness(uv : vec2<f32>) -> vec4<f32> {
 
 	var color = textureSampleLevel( stripeTexture, linearSampler, uv, 0.0 ).rgb;
 
-	var brightness = getBrightness(uv).r;
+	var brightness = getBrightness(uv);
 
 	// Dither: subtract a random value from the brightness
 	brightness -= randomFloat( uv + vec2<f32>(time.seconds) ) * config.ditherMagnitude;
 
-	textureStore(outputTex, coord, vec4<f32>(color * brightness + config.backgroundColor, 1.0));
+	textureStore(outputTex, coord, vec4<f32>(
+		color * brightness.r
+			+ min(config.cursorColor * brightness.g, vec3<f32>(1.0))
+			+ config.backgroundColor,
+		1.0
+	));
 }

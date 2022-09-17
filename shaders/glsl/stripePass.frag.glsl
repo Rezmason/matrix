@@ -24,11 +24,11 @@ vec4 getBrightness(vec2 uv) {
 
 void main() {
 	vec3 color = texture2D(stripes, vUV).rgb;
-	// Combine the texture and bloom
+
 	vec4 brightness = getBrightness(vUV);
 
 	// Dither: subtract a random value from the brightness
-	brightness = brightness - rand( gl_FragCoord.xy, time ) * ditherMagnitude;
+	brightness -= rand( gl_FragCoord.xy, time ) * ditherMagnitude;
 	
 	gl_FragColor = vec4(
 		color * brightness.r
