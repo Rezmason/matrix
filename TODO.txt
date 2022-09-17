@@ -1,9 +1,5 @@
 TODO:
 
-Isolate classic from defaults
-
-Update the README
-
 Audio system
   Toggle (or number representing frequency)
   Load the sound effect
