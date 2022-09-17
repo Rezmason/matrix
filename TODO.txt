@@ -1,5 +1,11 @@
 TODO:
 
+Multiply glints and bases by texture
+  Base: grid
+  Trinity glint: worn metal
+  Morpheus glint: hex mesh
+  Bugs glint: horizontal grooves
+
 Audio system
   Toggle (or number representing frequency)
   Load the sound effect
@@ -15,14 +21,6 @@ Playdate version
     Undocking sound
     Docking sound
     Maybe crank sounds? Not sure yet
-
-Support Resurrections anomaly streaks
-  grit texture multiply
-  Lighting
-    Different parts of a streak glow at different intensities, at different times
-    The streaks often dim slower, ie. are brighter, than the glyphs beneath them
-      Different brightness/contrast?
-    Imagine they're metallic or something
 
 Support Resurrections SDF bevel and "lights"
   https://shaderfun.com/2018/07/23/signed-distance-fields-part-8-gradients-bevels-and-noise/

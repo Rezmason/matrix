@@ -56,7 +56,7 @@ float getRainBrightness(float simTime, vec2 glyphPos) {
 	if (!loops) {
 		rainTime = wobble(rainTime);
 	}
-	return fract(rainTime);
+	return 1.0 - fract(rainTime);
 }
 
 // Main function
@@ -64,7 +64,7 @@ float getRainBrightness(float simTime, vec2 glyphPos) {
 vec4 computeResult(float simTime, bool isFirstFrame, vec2 glyphPos, vec2 screenPos, vec4 previous) {
 	float brightness = getRainBrightness(simTime, glyphPos);
 	float brightnessBelow = getRainBrightness(simTime, glyphPos + vec2(0., -1.));
-	float cursor = brightness < brightnessBelow ? 1.0 : 0.0;
+	float cursor = brightness > brightnessBelow ? 1.0 : 0.0;
 
 	// Blend the glyph's brightness with its previous brightness, so it winks on and off organically
 	if (!isFirstFrame) {

@@ -8,7 +8,7 @@ uniform sampler2D raindropState, symbolState, effectState;
 uniform float numColumns, numRows;
 uniform sampler2D glyphTex, glintTex;
 uniform float glyphHeightToWidth, glyphSequenceLength, glyphEdgeCrop;
-uniform float baseContrast, baseBrightness;
+uniform float baseContrast, baseBrightness, glintContrast, glintBrightness;
 uniform float brightnessOverride, brightnessThreshold;
 uniform vec2 glyphTextureGridSize;
 uniform vec2 slantVec;
@@ -58,26 +58,35 @@ vec2 getUV(vec2 uv) {
 	return uv;
 }
 
-vec2 getBrightness(float brightness, float cursor, float multipliedEffects, float addedEffects) {
-	if (!isolateCursor) {
-		cursor = 0.;
-	}
-	brightness = (1. - brightness) * baseContrast + baseBrightness;
+vec3 getBrightness(vec4 raindrop, vec4 effect, float quadDepth) {
+
+	float base = raindrop.r;
+	bool isCursor = bool(raindrop.g) && isolateCursor;
+	float glint = base;
+	float multipliedEffects = effect.r;
+	float addedEffects = effect.g;
+
+	base = base * baseContrast + baseBrightness;
+	glint = glint * glintContrast + glintBrightness;
 
 	// Modes that don't fade glyphs set their actual brightness here
-	if (brightnessOverride > 0. && brightness > brightnessThreshold && cursor == 0.) {
-		brightness = brightnessOverride;
+	if (brightnessOverride > 0. && base > brightnessThreshold && !isCursor) {
+		base = brightnessOverride;
 	}
 
-	brightness *= multipliedEffects;
-	brightness += addedEffects;
+	base = base * multipliedEffects + addedEffects;
+	glint = glint * multipliedEffects + addedEffects;
 
 	// In volumetric mode, distant glyphs are dimmer
 	if (volumetric && !showDebugView) {
-		brightness = brightness * min(1., vDepth);
+		base = base * min(1.0, quadDepth);
+		glint = glint * min(1.0, quadDepth);
 	}
 
-	return vec2(brightness * (1. - cursor), brightness * cursor);
+	return vec3(
+		(isCursor ? vec2(0.0, 1.0) : vec2(1.0, 0.0)) * base,
+		glint
+	);
 }
 
 vec2 getSymbolUV(float index) {
@@ -121,7 +130,11 @@ void main() {
 	vec4   symbolData = volumetric ?   vSymbol : texture2D(  symbolState, uv);
 	vec4   effectData = volumetric ?   vEffect : texture2D(  effectState, uv);
 
-	vec2 brightness = getBrightness(raindropData.r, raindropData.g, effectData.r, effectData.g);
+	vec3 brightness = getBrightness(
+		raindropData,
+		effectData,
+		vDepth
+	);
 	vec2 symbol = getSymbol(uv, symbolData.r);
 
 	if (showDebugView) {
@@ -136,6 +149,6 @@ void main() {
 			1.
 		);
 	} else {
-		gl_FragColor = vec4(brightness * symbol.r, brightness.r * symbol.g, 0.);
+		gl_FragColor = vec4(brightness.rg * symbol.r, brightness.b * symbol.g, 0.);
 	}
 }

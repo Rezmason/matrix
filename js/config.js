@@ -70,6 +70,8 @@ const defaults = {
 	cycleFrameSkip: 1, // The global minimum number of frames between glyphs cycling
 	baseBrightness: -0.5, // The brightness of the glyphs, before any effects are applied
 	baseContrast: 1.1, // The contrast of the glyphs, before any effects are applied
+	glintBrightness: -2, // The brightness of the glints, before any effects are applied
+	glintContrast: 3, // The contrast of the glints, before any effects are applied
 	brightnessOverride: 0.0, // A global override to the brightness of displayed glyphs. Only used if it is > 0.
 	brightnessThreshold: 0, // The minimum brightness for a glyph to still be considered visible
 	brightnessDecay: 1.0, // The rate at which glyphs light up and dim
@@ -196,7 +198,7 @@ const versions = {
 		glyphEdgeCrop: 0.1,
 		cursorColor: [1.4, 2, 1.2],
 		isolateGlint: true,
-		glintColor: [2, 1.5, 0.5],
+		glintColor: [1.6, 1.5, 0.5],
 		baseBrightness: -0.9,
 		baseContrast: 1.5,
 		highPassThreshold: 0,

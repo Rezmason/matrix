@@ -129,6 +129,8 @@ export default ({ regl, config, lkg }) => {
 			// fragment
 			"baseBrightness",
 			"baseContrast",
+			"glintBrightness",
+			"glintContrast",
 			"brightnessThreshold",
 			"brightnessOverride",
 			"isolateCursor",

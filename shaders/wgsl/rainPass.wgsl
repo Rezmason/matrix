@@ -29,6 +29,8 @@ struct Config {
 	forwardSpeed : f32,
 	baseBrightness : f32,
 	baseContrast : f32,
+	glintBrightness : f32,
+	glintContrast : f32,
 	glyphVerticalSpacing : f32,
 	glyphEdgeCrop : f32,
 	isPolar : i32,
@@ -144,7 +146,7 @@ fn getRainBrightness(simTime : f32, glyphPos : vec2<f32>) -> f32 {
 	if (!bool(config.loops)) {
 		rainTime = wobble(rainTime);
 	}
-	return fract(rainTime);
+	return 1.0 - fract(rainTime);
 }
 
 // Compute shader additional effects
@@ -203,7 +205,7 @@ fn computeRaindrop (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, sc
 
 	var brightness = getRainBrightness(simTime, glyphPos);
 	var brightnessBelow = getRainBrightness(simTime, glyphPos + vec2(0., -1.));
-	var cursor = select(0.0, 1.0, brightness < brightnessBelow);
+	var cursor = select(0.0, 1.0, brightness > brightnessBelow);
 
 	// Blend the glyph's brightness with its previous brightness, so it winks on and off organically
 	if (!isFirstFrame) {
@@ -371,30 +373,35 @@ fn getUV(inputUV : vec2<f32>) -> vec2<f32> {
 	return uv;
 }
 
-fn getBrightness(inputBrightness : f32, cursor : f32, quadDepth : f32, multipliedEffects : f32, addedEffects : f32) -> vec2<f32> {
+fn getBrightness(raindrop : vec4<f32>, effect : vec4<f32>, quadDepth : f32) -> vec3<f32> {
 
-	var isCursor = bool(cursor);
+	var base = raindrop.r;
+	var isCursor = bool(raindrop.g) && bool(config.isolateCursor);
+	var glint = base;
+	var multipliedEffects = effect.r;
+	var addedEffects = effect.g;
 
-	if (!bool(config.isolateCursor)) {
-		isCursor = false;
-	}
-
-	var brightness = (1.0 - inputBrightness) * config.baseContrast + config.baseBrightness;
+	base = base * config.baseContrast + config.baseBrightness;
+	glint = glint * config.glintContrast + config.glintBrightness;
 
 	// Modes that don't fade glyphs set their actual brightness here
-	if (config.brightnessOverride > 0. && brightness > config.brightnessThreshold && !isCursor) {
-		brightness = config.brightnessOverride;
+	if (config.brightnessOverride > 0. && base > config.brightnessThreshold && !isCursor) {
+		base = config.brightnessOverride;
 	}
 
-	brightness *= multipliedEffects;
-	brightness += addedEffects;
+	base = base * multipliedEffects + addedEffects;
+	glint = glint * multipliedEffects + addedEffects;
 
 	// In volumetric mode, distant glyphs are dimmer
 	if (bool(config.volumetric) && !bool(config.showDebugView)) {
-		brightness = brightness * min(1.0, quadDepth);
+		base = base * min(1.0, quadDepth);
+		glint = glint * min(1.0, quadDepth);
 	}
 
-	return select(vec2<f32>(1.0, 0.0), vec2<f32>(0.0, 1.0), isCursor) * brightness;
+	return vec3<f32>(
+		select(vec2<f32>(1.0, 0.0), vec2<f32>(0.0, 1.0), isCursor) * base,
+		glint
+	);
 }
 
 fn getSymbolUV(symbol : i32) -> vec2<f32> {
@@ -442,11 +449,9 @@ fn getSymbol(cellUV : vec2<f32>, index : i32) -> vec2<f32> {
 	var cell = cells_RO.cells[gridIndex];
 
 	var brightness = getBrightness(
-		cell.raindrop.r,
-		cell.raindrop.g,
-		input.quadDepth,
-		cell.effect.r,
-		cell.effect.g
+		cell.raindrop,
+		cell.effect,
+		input.quadDepth
 	);
 	var symbol = getSymbol(uv, i32(cell.symbol.r));
 
@@ -464,7 +469,7 @@ fn getSymbol(cellUV : vec2<f32>, index : i32) -> vec2<f32> {
 			1.0
 		);
 	} else {
-		output.color = vec4(brightness * symbol.r, brightness.r * symbol.g, 0.0);
+		output.color = vec4(brightness.rg * symbol.r, brightness.b * symbol.g, 0.0);
 	}
 
 	var highPassColor = output.color;
