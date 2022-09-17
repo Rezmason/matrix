@@ -43,11 +43,10 @@ vec4 computeResult(float simTime, bool isFirstFrame, vec2 glyphPos, vec2 screenP
 	float symbol = previousSymbol;
 	if (mod(tick, cycleFrameSkip) == 0.) {
 		age += cycleSpeed * cycleFrameSkip;
-		float advance = floor(age);
-		if (advance > 0.) {
+		if (age >= 1.) {
 			symbol = floor(glyphSequenceLength * randomFloat(screenPos + simTime));
+			age = fract(age);
 		}
-		age = fract(age);
 	}
 
 	vec4 result = vec4(symbol, age, 0., 0.);
