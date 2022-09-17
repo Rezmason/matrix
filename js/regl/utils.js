@@ -1,11 +1,11 @@
-const makePassTexture = (regl, halfFloat) =>
+const makePassTexture = (regl, halfFloat, mipmap) =>
 	regl.texture({
 		width: 1,
 		height: 1,
 		type: halfFloat ? "half float" : "uint8",
 		wrap: "clamp",
-		min: "linear",
-		mag: "linear",
+		min: mipmap ? "mipmap" : "linear",
+		mag: mipmap ? "mipmap" : "linear",
 	});
 
 const makePassFBO = (regl, halfFloat) => regl.framebuffer({ color: makePassTexture(regl, halfFloat) });

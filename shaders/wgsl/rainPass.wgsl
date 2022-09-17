@@ -31,6 +31,8 @@ struct Config {
 	baseContrast : f32,
 	glintBrightness : f32,
 	glintContrast : f32,
+	hasBaseTexture: i32,
+	hasGlintTexture: i32,
 	glyphVerticalSpacing : f32,
 	glyphEdgeCrop : f32,
 	isPolar : i32,
@@ -80,7 +82,9 @@ struct CellData {
 @group(0) @binding(3) var linearSampler : sampler;
 @group(0) @binding(4) var msdfTexture : texture_2d<f32>;
 @group(0) @binding(5) var glintMSDFTexture : texture_2d<f32>;
-@group(0) @binding(6) var<storage, read> cells_RO : CellData;
+@group(0) @binding(6) var baseTexture : texture_2d<f32>;
+@group(0) @binding(7) var glintTexture : texture_2d<f32>;
+@group(0) @binding(8) var<storage, read> cells_RO : CellData;
 
 // Shader params
 
@@ -373,7 +377,7 @@ fn getUV(inputUV : vec2<f32>) -> vec2<f32> {
 	return uv;
 }
 
-fn getBrightness(raindrop : vec4<f32>, effect : vec4<f32>, quadDepth : f32) -> vec3<f32> {
+fn getBrightness(raindrop : vec4<f32>, effect : vec4<f32>, uv : vec2<f32>, quadDepth : f32) -> vec3<f32> {
 
 	var base = raindrop.r;
 	var isCursor = bool(raindrop.g) && bool(config.isolateCursor);
@@ -381,8 +385,15 @@ fn getBrightness(raindrop : vec4<f32>, effect : vec4<f32>, quadDepth : f32) -> v
 	var multipliedEffects = effect.r;
 	var addedEffects = effect.g;
 
+	var textureUV = fract(uv * config.gridSize);
 	base = base * config.baseContrast + config.baseBrightness;
+	if (bool(config.hasBaseTexture)) {
+		base *= textureSample(baseTexture, linearSampler, textureUV).r;
+	}
 	glint = glint * config.glintContrast + config.glintBrightness;
+	if (bool(config.hasGlintTexture)) {
+		glint *= textureSample(glintTexture, linearSampler, textureUV).r;
+	}
 
 	// Modes that don't fade glyphs set their actual brightness here
 	if (config.brightnessOverride > 0. && base > config.brightnessThreshold && !isCursor) {
@@ -451,6 +462,7 @@ fn getSymbol(cellUV : vec2<f32>, index : i32) -> vec2<f32> {
 	var brightness = getBrightness(
 		cell.raindrop,
 		cell.effect,
+		uv,
 		input.quadDepth
 	);
 	var symbol = getSymbol(uv, i32(cell.symbol.r));
@@ -462,8 +474,8 @@ fn getSymbol(cellUV : vec2<f32>, index : i32) -> vec2<f32> {
 			vec3<f32>(
 				cell.raindrop.g,
 				vec2<f32>(
-					1.0 - (cell.raindrop.r * 3.0),
-					1.0 - (cell.raindrop.r * 8.0)
+					1.0 - ((1.0 - cell.raindrop.r) * 3.0),
+					1.0 - ((1.0 - cell.raindrop.r) * 8.0)
 				) * (1.0 - cell.raindrop.g)
 			) * symbol.r,
 			1.0

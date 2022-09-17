@@ -34,7 +34,7 @@ export default ({ regl, config, lkg }) => {
 	// to reach the desired density, and then overlaps them
 	const volumetric = config.volumetric;
 	const density = volumetric && config.effect !== "none" ? config.density : 1;
-	const [numRows, numColumns] = [config.numColumns, config.numColumns * density];
+	const [numRows, numColumns] = [config.numColumns, Math.floor(config.numColumns * density)];
 
 	// The volumetric mode requires us to create a grid of quads,
 	// rather than a single quad for our geometry
@@ -115,8 +115,10 @@ export default ({ regl, config, lkg }) => {
 		);
 
 	// We render the code into an FBO using MSDFs: https://github.com/Chlumsky/msdfgen
-	const msdf = loadImage(regl, config.glyphTexURL);
-	const glintMSDF = loadImage(regl, config.glintTexURL);
+	const glyphMSDF = loadImage(regl, config.glyphMSDFURL);
+	const glintMSDF = loadImage(regl, config.glintMSDFURL);
+	const baseTexture = loadImage(regl, config.baseTextureURL);
+	const glintTexture = loadImage(regl, config.glintTextureURL);
 	const rainPassVert = loadText("shaders/glsl/rainPass.vert.glsl");
 	const rainPassFrag = loadText("shaders/glsl/rainPass.frag.glsl");
 	const output = makePassFBO(regl, config.useHalfFloat);
@@ -131,6 +133,8 @@ export default ({ regl, config, lkg }) => {
 			"baseContrast",
 			"glintBrightness",
 			"glintContrast",
+			"hasBaseTexture",
+			"hasGlintTexture",
 			"brightnessThreshold",
 			"brightnessOverride",
 			"isolateCursor",
@@ -163,8 +167,10 @@ export default ({ regl, config, lkg }) => {
 			raindropState: raindropDoubleBuffer.front,
 			symbolState: symbolDoubleBuffer.front,
 			effectState: effectDoubleBuffer.front,
-			glyphTex: msdf.texture,
-			glintTex: glintMSDF.texture,
+			glyphMSDF: glyphMSDF.texture,
+			glintMSDF: glintMSDF.texture,
+			baseTexture: baseTexture.texture,
+			glintTexture: glintTexture.texture,
 
 			camera: regl.prop("camera"),
 			transform: regl.prop("transform"),
@@ -206,7 +212,16 @@ export default ({ regl, config, lkg }) => {
 		{
 			primary: output,
 		},
-		Promise.all([msdf.loaded, glintMSDF.loaded, rainPassShine.loaded, rainPassSymbol.loaded, rainPassVert.loaded, rainPassFrag.loaded]),
+		Promise.all([
+			glyphMSDF.loaded,
+			glintMSDF.loaded,
+			baseTexture.loaded,
+			glintTexture.loaded,
+			rainPassShine.loaded,
+			rainPassSymbol.loaded,
+			rainPassVert.loaded,
+			rainPassFrag.loaded,
+		]),
 		(w, h) => {
 			output.resize(w, h);
 			const aspectRatio = w / h;

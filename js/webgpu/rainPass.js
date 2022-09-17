@@ -26,12 +26,18 @@ const makeConfigBuffer = (device, configUniforms, config, density, gridSize) => 
 export default ({ config, device, timeBuffer }) => {
 	const { mat4, vec3 } = glMatrix;
 
-	const assets = [loadTexture(device, config.glyphTexURL), loadTexture(device, config.glintTexURL), loadShader(device, "shaders/wgsl/rainPass.wgsl")];
+	const assets = [
+		loadTexture(device, config.glyphMSDFURL),
+		loadTexture(device, config.glintMSDFURL),
+		loadTexture(device, config.baseTextureURL, false, true),
+		loadTexture(device, config.glintTextureURL, false, true),
+		loadShader(device, "shaders/wgsl/rainPass.wgsl"),
+	];
 
 	// The volumetric mode multiplies the number of columns
 	// to reach the desired density, and then overlaps them
 	const density = config.volumetric && config.effect !== "none" ? config.density : 1;
-	const gridSize = [config.numColumns * density, config.numColumns];
+	const gridSize = [Math.floor(config.numColumns * density), config.numColumns];
 	const numCells = gridSize[0] * gridSize[1];
 
 	// The volumetric mode requires us to create a grid of quads,
@@ -85,7 +91,7 @@ export default ({ config, device, timeBuffer }) => {
 	let highPassOutput;
 
 	const loaded = (async () => {
-		const [msdfTexture, glintMSDFTexture, rainShader] = await Promise.all(assets);
+		const [msdfTexture, glintMSDFTexture, baseTexture, glintTexture, rainShader] = await Promise.all(assets);
 
 		const rainShaderUniforms = structs.from(rainShader.code);
 		configBuffer = makeConfigBuffer(device, rainShaderUniforms.Config, config, density, gridSize);
@@ -150,6 +156,8 @@ export default ({ config, device, timeBuffer }) => {
 			linearSampler,
 			msdfTexture.createView(),
 			glintMSDFTexture.createView(),
+			baseTexture.createView(),
+			glintTexture.createView(),
 			cellsBuffer,
 		]);
 	})();

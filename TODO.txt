@@ -1,11 +1,5 @@
 TODO:
 
-Multiply glints and bases by texture
-  Base: grid
-  Trinity glint: worn metal
-  Morpheus glint: hex mesh
-  Bugs glint: horizontal grooves
-
 Audio system
   Toggle (or number representing frequency)
   Load the sound effect

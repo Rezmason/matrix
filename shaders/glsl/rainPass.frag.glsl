@@ -6,7 +6,8 @@ precision lowp float;
 
 uniform sampler2D raindropState, symbolState, effectState;
 uniform float numColumns, numRows;
-uniform sampler2D glyphTex, glintTex;
+uniform sampler2D glyphMSDF, glintMSDF, baseTexture, glintTexture;
+uniform bool hasBaseTexture, hasGlintTexture;
 uniform float glyphHeightToWidth, glyphSequenceLength, glyphEdgeCrop;
 uniform float baseContrast, baseBrightness, glintContrast, glintBrightness;
 uniform float brightnessOverride, brightnessThreshold;
@@ -58,7 +59,7 @@ vec2 getUV(vec2 uv) {
 	return uv;
 }
 
-vec3 getBrightness(vec4 raindrop, vec4 effect, float quadDepth) {
+vec3 getBrightness(vec4 raindrop, vec4 effect, float quadDepth, vec2 uv) {
 
 	float base = raindrop.r;
 	bool isCursor = bool(raindrop.g) && isolateCursor;
@@ -66,8 +67,15 @@ vec3 getBrightness(vec4 raindrop, vec4 effect, float quadDepth) {
 	float multipliedEffects = effect.r;
 	float addedEffects = effect.g;
 
+	vec2 textureUV = fract(uv * vec2(numColumns, numRows));
 	base = base * baseContrast + baseBrightness;
+	if (hasBaseTexture) {
+		base *= texture2D(baseTexture, textureUV).r;
+	}
 	glint = glint * glintContrast + glintBrightness;
+	if (hasGlintTexture) {
+		glint *= texture2D(glintTexture, textureUV).r;
+	}
 
 	// Modes that don't fade glyphs set their actual brightness here
 	if (brightnessOverride > 0. && base > brightnessThreshold && !isCursor) {
@@ -107,13 +115,13 @@ vec2 getSymbol(vec2 uv, float index) {
 	// MSDF: calculate brightness of fragment based on distance to shape
 	vec2 symbol;
 	{
-		vec3 dist = texture2D(glyphTex, uv).rgb;
+		vec3 dist = texture2D(glyphMSDF, uv).rgb;
 		float sigDist = median3(dist) - 0.5;
 		symbol.r = clamp(sigDist / fwidth(sigDist) + 0.5, 0., 1.);
 	}
 
 	if (isolateGlint) {
-		vec3 dist = texture2D(glintTex, uv).rgb;
+		vec3 dist = texture2D(glintMSDF, uv).rgb;
 		float sigDist = median3(dist) - 0.5;
 		symbol.g = clamp(sigDist / fwidth(sigDist) + 0.5, 0., 1.);
 	}
@@ -133,7 +141,8 @@ void main() {
 	vec3 brightness = getBrightness(
 		raindropData,
 		effectData,
-		vDepth
+		vDepth,
+		uv
 	);
 	vec2 symbol = getSymbol(uv, symbolData.r);
 
@@ -142,8 +151,8 @@ void main() {
 			vec3(
 				raindropData.g,
 				vec2(
-					1. - (raindropData.r * 3.),
-					1. - (raindropData.r * 8.)
+					1. - ((1.0 - raindropData.r) * 3.),
+					1. - ((1.0 - raindropData.r) * 8.)
 				) * (1. - raindropData.g)
 			) * symbol.r,
 			1.

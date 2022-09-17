@@ -1,59 +1,68 @@
 const fonts = {
 	coptic: {
 		// The script the Gnostic codices were written in
-		glyphTexURL: "assets/coptic_msdf.png",
+		glyphMSDFURL: "assets/coptic_msdf.png",
 		glyphSequenceLength: 32,
 		glyphTextureGridSize: [8, 8],
 	},
 	gothic: {
 		// The script the Codex Argenteus was written in
-		glyphTexURL: "assets/gothic_msdf.png",
+		glyphMSDFURL: "assets/gothic_msdf.png",
 		glyphSequenceLength: 27,
 		glyphTextureGridSize: [8, 8],
 	},
 	matrixcode: {
 		// The glyphs seen in the film trilogy
-		glyphTexURL: "assets/matrixcode_msdf.png",
+		glyphMSDFURL: "assets/matrixcode_msdf.png",
 		glyphSequenceLength: 57,
 		glyphTextureGridSize: [8, 8],
 	},
 	megacity: {
 		// The glyphs seen in the film trilogy
-		glyphTexURL: "assets/megacity_msdf.png",
+		glyphMSDFURL: "assets/megacity_msdf.png",
 		glyphSequenceLength: 64,
 		glyphTextureGridSize: [8, 8],
 	},
 	resurrections: {
 		// The glyphs seen in the film trilogy
-		glyphTexURL: "assets/resurrections_msdf.png",
-		glintTexURL: "assets/resurrections_glint_msdf.png",
+		glyphMSDFURL: "assets/resurrections_msdf.png",
+		glintMSDFURL: "assets/resurrections_glint_msdf.png",
 		glyphSequenceLength: 135,
 		glyphTextureGridSize: [13, 12],
 	},
 	huberfishA: {
-		glyphTexURL: "assets/huberfish_a_msdf.png",
+		glyphMSDFURL: "assets/huberfish_a_msdf.png",
 		glyphSequenceLength: 34,
 		glyphTextureGridSize: [6, 6],
 	},
 	huberfishD: {
-		glyphTexURL: "assets/huberfish_d_msdf.png",
+		glyphMSDFURL: "assets/huberfish_d_msdf.png",
 		glyphSequenceLength: 34,
 		glyphTextureGridSize: [6, 6],
 	},
 	gtarg_tenretniolleh: {
-		glyphTexURL: "assets/gtarg_tenretniolleh_msdf.png",
+		glyphMSDFURL: "assets/gtarg_tenretniolleh_msdf.png",
 		glyphSequenceLength: 36,
 		glyphTextureGridSize: [6, 6],
 	},
 	gtarg_alientext: {
-		glyphTexURL: "assets/gtarg_alientext_msdf.png",
+		glyphMSDFURL: "assets/gtarg_alientext_msdf.png",
 		glyphSequenceLength: 38,
 		glyphTextureGridSize: [8, 5],
 	},
 };
 
+const textureURLs = {
+	sand: "assets/sand.png",
+	pixels: "assets/pixel_grid.png",
+	mesh: "assets/mesh.png",
+	metal: "assets/metal.png",
+};
+
 const defaults = {
 	font: "matrixcode",
+	baseTexture: null, // The name of the texture to apply to the base layer of the glyphs
+	glintTexture: null, // The name of the texture to apply to the glint layer of the glyphs
 	useCamera: false,
 	backgroundColor: [0, 0, 0], // The color "behind" the glyphs
 	isolateCursor: true, // Whether the "cursor"— the brightest glyph at the bottom of a raindrop— has its own color
@@ -70,8 +79,8 @@ const defaults = {
 	cycleFrameSkip: 1, // The global minimum number of frames between glyphs cycling
 	baseBrightness: -0.5, // The brightness of the glyphs, before any effects are applied
 	baseContrast: 1.1, // The contrast of the glyphs, before any effects are applied
-	glintBrightness: -2, // The brightness of the glints, before any effects are applied
-	glintContrast: 3, // The contrast of the glints, before any effects are applied
+	glintBrightness: -1.5, // The brightness of the glints, before any effects are applied
+	glintContrast: 2.5, // The contrast of the glints, before any effects are applied
 	brightnessOverride: 0.0, // A global override to the brightness of displayed glyphs. Only used if it is > 0.
 	brightnessThreshold: 0, // The minimum brightness for a glyph to still be considered visible
 	brightnessDecay: 1.0, // The rate at which glyphs light up and dim
@@ -195,25 +204,85 @@ const versions = {
 	},
 	trinity: {
 		font: "resurrections",
+		glintTexture: "metal",
+		baseTexture: "pixels",
 		glyphEdgeCrop: 0.1,
 		cursorColor: [1.4, 2, 1.2],
 		isolateGlint: true,
-		glintColor: [1.6, 1.5, 0.5],
-		baseBrightness: -0.9,
+		glintColor: [3, 2.5, 0.6],
+		glintBrightness: -2,
+		glintContrast: 3,
+		baseBrightness: -0.8,
 		baseContrast: 1.5,
 		highPassThreshold: 0,
-		numColumns: 50,
+		numColumns: 60,
 		cycleSpeed: 0.03,
 		bloomStrength: 0.7,
 		fallSpeed: 0.3,
 		paletteEntries: [
-			{ hsl: [0.4, 0.9, 0.0], at: 0.0 },
-			{ hsl: [0.4, 1.0, 0.5], at: 1.0 },
+			{ hsl: [0.37, 0.6, 0.0], at: 0.0 },
+			{ hsl: [0.37, 0.6, 0.5], at: 1.0 },
 		],
+		cycleSpeed: 0.01,
 		volumetric: true,
 		forwardSpeed: 0.2,
 		raindropLength: 0.3,
-		density: 0.5,
+		density: 0.75,
+	},
+	morpheus: {
+		font: "resurrections",
+		glintTexture: "mesh",
+		baseTexture: "metal",
+		glyphEdgeCrop: 0.1,
+		cursorColor: [1.4, 2, 1.4],
+		isolateGlint: true,
+		glintColor: [0, 2, 0.8],
+		glintBrightness: -1.5,
+		glintContrast: 3,
+		baseBrightness: -0.3,
+		baseContrast: 1.5,
+		highPassThreshold: 0,
+		numColumns: 60,
+		cycleSpeed: 0.03,
+		bloomStrength: 0.7,
+		fallSpeed: 0.3,
+		paletteEntries: [
+			{ hsl: [0.97, 0.6, 0.0], at: 0.0 },
+			{ hsl: [0.97, 0.6, 0.5], at: 1.0 },
+		],
+		cycleSpeed: 0.015,
+		volumetric: true,
+		forwardSpeed: 0.1,
+		raindropLength: 0.4,
+		density: 0.75,
+	},
+	bugs: {
+		font: "resurrections",
+		glintTexture: "sand",
+		baseTexture: "metal",
+		glyphEdgeCrop: 0.1,
+		cursorColor: [0.6, 1, 2],
+		isolateGlint: true,
+		glintColor: [0.6, 2, 3],
+		glintBrightness: -2,
+		glintContrast: 3,
+		baseBrightness: -0.3,
+		baseContrast: 1.5,
+		highPassThreshold: 0,
+		numColumns: 60,
+		cycleSpeed: 0.03,
+		bloomStrength: 0.7,
+		fallSpeed: 0.3,
+		paletteEntries: [
+			{ hsl: [0.1, 0.7, 0.0], at: 0.0 },
+			{ hsl: [0.1, 0.7, 0.1], at: 0.3 },
+			{ hsl: [0.12, 0.7, 0.5], at: 1.0 },
+		],
+		cycleSpeed: 0.01,
+		volumetric: true,
+		forwardSpeed: 0.4,
+		raindropLength: 0.3,
+		density: 0.75,
 	},
 	palimpsest: {
 		font: "huberfishA",
@@ -363,11 +432,20 @@ export default (urlParams) => {
 	const fontName = [validParams.font, version.font, defaults.font].find((name) => name in fonts);
 	const font = fonts[fontName];
 
+	const baseTextureURL = textureURLs[[version.baseTexture, defaults.baseTexture].find((name) => name in textureURLs)];
+	const hasBaseTexture = baseTextureURL != null;
+	const glintTextureURL = textureURLs[[version.glintTexture, defaults.glintTexture].find((name) => name in textureURLs)];
+	const hasGlintTexture = glintTextureURL != null;
+
 	const config = {
 		...defaults,
 		...version,
 		...font,
 		...validParams,
+		baseTextureURL,
+		glintTextureURL,
+		hasBaseTexture,
+		hasGlintTexture,
 	};
 
 	if (config.bloomSize <= 0) {
