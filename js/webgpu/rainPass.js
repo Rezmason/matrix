@@ -26,7 +26,7 @@ const makeConfigBuffer = (device, configUniforms, config, density, gridSize) => 
 export default ({ config, device, timeBuffer }) => {
 	const { mat4, vec3 } = glMatrix;
 
-	const assets = [loadTexture(device, config.glyphTexURL), loadShader(device, "shaders/wgsl/rainPass.wgsl")];
+	const assets = [loadTexture(device, config.glyphTexURL), loadTexture(device, config.glintTexURL), loadShader(device, "shaders/wgsl/rainPass.wgsl")];
 
 	// The volumetric mode multiplies the number of columns
 	// to reach the desired density, and then overlaps them
@@ -85,7 +85,7 @@ export default ({ config, device, timeBuffer }) => {
 	let highPassOutput;
 
 	const loaded = (async () => {
-		const [msdfTexture, rainShader] = await Promise.all(assets);
+		const [msdfTexture, glintMSDFTexture, rainShader] = await Promise.all(assets);
 
 		const rainShaderUniforms = structs.from(rainShader.code);
 		configBuffer = makeConfigBuffer(device, rainShaderUniforms.Config, config, density, gridSize);
@@ -143,7 +143,15 @@ export default ({ config, device, timeBuffer }) => {
 		]);
 
 		computeBindGroup = makeBindGroup(device, computePipeline, 0, [configBuffer, timeBuffer, cellsBuffer]);
-		renderBindGroup = makeBindGroup(device, renderPipeline, 0, [configBuffer, timeBuffer, sceneBuffer, linearSampler, msdfTexture.createView(), cellsBuffer]);
+		renderBindGroup = makeBindGroup(device, renderPipeline, 0, [
+			configBuffer,
+			timeBuffer,
+			sceneBuffer,
+			linearSampler,
+			msdfTexture.createView(),
+			glintMSDFTexture.createView(),
+			cellsBuffer,
+		]);
 	})();
 
 	const build = (size) => {

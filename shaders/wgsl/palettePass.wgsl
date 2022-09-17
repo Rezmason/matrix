@@ -2,7 +2,8 @@ struct Config {
 	bloomStrength : f32,
 	ditherMagnitude : f32,
 	backgroundColor : vec3<f32>,
-	cursorColor : vec3<f32>
+	cursorColor : vec3<f32>,
+	glintColor : vec3<f32>,
 };
 
 struct Palette {
@@ -58,7 +59,7 @@ fn getBrightness(uv : vec2<f32>) -> vec4<f32> {
 	var brightness = getBrightness(uv);
 
 	// Dither: subtract a random value from the brightness
-	brightness -= randomFloat( uv + vec2<f32>(time.seconds) ) * config.ditherMagnitude;
+	brightness -= randomFloat( uv + vec2<f32>(time.seconds) ) * config.ditherMagnitude / 3.0;
 
 	// Map the brightness to a position in the palette texture
 	var paletteIndex = clamp(i32(brightness.r * 512.0), 0, 511);
@@ -66,6 +67,7 @@ fn getBrightness(uv : vec2<f32>) -> vec4<f32> {
 	textureStore(outputTex, coord, vec4<f32>(
 		palette.colors[paletteIndex]
 			+ min(config.cursorColor * brightness.g, vec3<f32>(1.0))
+			+ min(config.glintColor * brightness.b, vec3<f32>(1.0))
 			+ config.backgroundColor,
 		1.0
 	));

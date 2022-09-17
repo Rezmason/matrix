@@ -30,7 +30,7 @@ const loadImage = (regl, url) => {
 	let loaded = false;
 	return {
 		texture: () => {
-			if (!loaded) {
+			if (!loaded && url != null) {
 				console.warn(`texture still loading: ${url}`);
 			}
 			return texture;

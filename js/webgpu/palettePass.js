@@ -108,6 +108,7 @@ export default ({ config, device, timeBuffer }) => {
 			ditherMagnitude: config.ditherMagnitude,
 			backgroundColor: config.backgroundColor,
 			cursorColor: config.cursorColor,
+			glintColor: config.glintColor,
 		});
 
 		const paletteUniforms = paletteShaderUniforms.Palette;

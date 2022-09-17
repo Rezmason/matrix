@@ -6,7 +6,7 @@ precision lowp float;
 
 uniform sampler2D raindropState, symbolState, effectState;
 uniform float numColumns, numRows;
-uniform sampler2D glyphTex;
+uniform sampler2D glyphTex, glintTex;
 uniform float glyphHeightToWidth, glyphSequenceLength, glyphEdgeCrop;
 uniform float baseContrast, baseBrightness;
 uniform float brightnessOverride, brightnessThreshold;
@@ -16,7 +16,7 @@ uniform float slantScale;
 uniform bool isPolar;
 uniform bool showDebugView;
 uniform bool volumetric;
-uniform bool isolateCursor;
+uniform bool isolateCursor, isolateGlint;
 
 varying vec2 vUV;
 varying vec4 vRaindrop, vSymbol, vEffect;
@@ -87,7 +87,7 @@ vec2 getSymbolUV(float index) {
 	return vec2(symbolX, symbolY);
 }
 
-float getSymbol(vec2 uv, float index) {
+vec2 getSymbol(vec2 uv, float index) {
 	// resolve UV to cropped position of glyph in MSDF texture
 	uv = fract(uv * vec2(numColumns, numRows));
 	uv -= 0.5;
@@ -96,9 +96,20 @@ float getSymbol(vec2 uv, float index) {
 	uv = (uv + getSymbolUV(index)) / glyphTextureGridSize;
 
 	// MSDF: calculate brightness of fragment based on distance to shape
-	vec3 dist = texture2D(glyphTex, uv).rgb;
-	float sigDist = median3(dist) - 0.5;
-	return clamp(sigDist / fwidth(sigDist) + 0.5, 0., 1.);
+	vec2 symbol;
+	{
+		vec3 dist = texture2D(glyphTex, uv).rgb;
+		float sigDist = median3(dist) - 0.5;
+		symbol.r = clamp(sigDist / fwidth(sigDist) + 0.5, 0., 1.);
+	}
+
+	if (isolateGlint) {
+		vec3 dist = texture2D(glintTex, uv).rgb;
+		float sigDist = median3(dist) - 0.5;
+		symbol.g = clamp(sigDist / fwidth(sigDist) + 0.5, 0., 1.);
+	}
+
+	return symbol;
 }
 
 void main() {
@@ -111,7 +122,7 @@ void main() {
 	vec4   effectData = volumetric ?   vEffect : texture2D(  effectState, uv);
 
 	vec2 brightness = getBrightness(raindropData.r, raindropData.g, effectData.r, effectData.g);
-	float symbol = getSymbol(uv, symbolData.r);
+	vec2 symbol = getSymbol(uv, symbolData.r);
 
 	if (showDebugView) {
 		gl_FragColor = vec4(
@@ -121,10 +132,10 @@ void main() {
 					1. - (raindropData.r * 3.),
 					1. - (raindropData.r * 8.)
 				) * (1. - raindropData.g)
-			) * symbol,
+			) * symbol.r,
 			1.
 		);
 	} else {
-		gl_FragColor = vec4(brightness * symbol, 0., 0.);
+		gl_FragColor = vec4(brightness * symbol.r, brightness.r * symbol.g, 0.);
 	}
 }

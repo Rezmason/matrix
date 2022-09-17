@@ -37,6 +37,7 @@ struct Config {
 	slantVec : vec2<f32>,
 	volumetric : i32,
 	isolateCursor : i32,
+	isolateGlint : i32,
 	loops : i32,
 	highPassThreshold : f32,
 };
@@ -76,7 +77,8 @@ struct CellData {
 @group(0) @binding(2) var<uniform> scene : Scene;
 @group(0) @binding(3) var linearSampler : sampler;
 @group(0) @binding(4) var msdfTexture : texture_2d<f32>;
-@group(0) @binding(5) var<storage, read> cells_RO : CellData;
+@group(0) @binding(5) var glintMSDFTexture : texture_2d<f32>;
+@group(0) @binding(6) var<storage, read> cells_RO : CellData;
 
 // Shader params
 
@@ -401,7 +403,7 @@ fn getSymbolUV(symbol : i32) -> vec2<f32> {
 	return vec2<f32>(f32(symbolX), f32(symbolY));
 }
 
-fn getSymbol(cellUV : vec2<f32>, index : i32) -> f32 {
+fn getSymbol(cellUV : vec2<f32>, index : i32) -> vec2<f32> {
 	// resolve UV to cropped position of glyph in MSDF texture
 	var uv = fract(cellUV * config.gridSize);
 	uv.y = 1.0 - uv.y; // WebGL -> WebGPU y-flip
@@ -410,10 +412,22 @@ fn getSymbol(cellUV : vec2<f32>, index : i32) -> f32 {
 	uv += 0.5;
 	uv = (uv + getSymbolUV(index)) / vec2<f32>(config.glyphTextureGridSize);
 
+	var symbol = vec2<f32>();
+
 	// MSDF: calculate brightness of fragment based on distance to shape
-	var dist = textureSample(msdfTexture, linearSampler, uv).rgb;
-	var sigDist = median3(dist) - 0.5;
-	return clamp(sigDist / fwidth(sigDist) + 0.5, 0.0, 1.0);
+	{
+		var dist = textureSample(msdfTexture, linearSampler, uv).rgb;
+		var sigDist = median3(dist) - 0.5;
+		symbol.r = clamp(sigDist / fwidth(sigDist) + 0.5, 0.0, 1.0);
+	}
+
+	if (bool(config.isolateGlint)) {
+		var dist = textureSample(glintMSDFTexture, linearSampler, uv).rgb;
+		var sigDist = median3(dist) - 0.5;
+		symbol.g =  clamp(sigDist / fwidth(sigDist) + 0.5, 0.0, 1.0);
+	}
+
+	return symbol;
 }
 
 // Fragment shader
@@ -446,11 +460,11 @@ fn getSymbol(cellUV : vec2<f32>, index : i32) -> f32 {
 					1.0 - (cell.raindrop.r * 3.0),
 					1.0 - (cell.raindrop.r * 8.0)
 				) * (1.0 - cell.raindrop.g)
-			) * symbol,
+			) * symbol.r,
 			1.0
 		);
 	} else {
-		output.color = vec4(brightness * symbol, 0.0, 0.0);
+		output.color = vec4(brightness * symbol.r, brightness.r * symbol.g, 0.0);
 	}
 
 	var highPassColor = output.color;

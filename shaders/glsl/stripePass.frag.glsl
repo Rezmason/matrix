@@ -7,7 +7,7 @@ uniform float bloomStrength;
 uniform sampler2D stripes;
 uniform float ditherMagnitude;
 uniform float time;
-uniform vec3 backgroundColor, cursorColor;
+uniform vec3 backgroundColor, cursorColor, glintColor;
 varying vec2 vUV;
 
 highp float rand( const in vec2 uv, const in float t ) {
@@ -28,11 +28,12 @@ void main() {
 	vec4 brightness = getBrightness(vUV);
 
 	// Dither: subtract a random value from the brightness
-	brightness -= rand( gl_FragCoord.xy, time ) * ditherMagnitude;
+	brightness -= rand( gl_FragCoord.xy, time ) * ditherMagnitude / 3.0;
 	
 	gl_FragColor = vec4(
 		color * brightness.r
-			+ min(cursorColor * brightness.g, 1.0)
+			+ min(cursorColor * brightness.g, vec3(1.0))
+			+ min(glintColor * brightness.b, vec3(1.0))
 			+ backgroundColor,
 		1.0
 	);

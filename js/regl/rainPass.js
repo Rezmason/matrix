@@ -116,6 +116,7 @@ export default ({ regl, config, lkg }) => {
 
 	// We render the code into an FBO using MSDFs: https://github.com/Chlumsky/msdfgen
 	const msdf = loadImage(regl, config.glyphTexURL);
+	const glintMSDF = loadImage(regl, config.glintTexURL);
 	const rainPassVert = loadText("shaders/glsl/rainPass.vert.glsl");
 	const rainPassFrag = loadText("shaders/glsl/rainPass.frag.glsl");
 	const output = makePassFBO(regl, config.useHalfFloat);
@@ -131,6 +132,7 @@ export default ({ regl, config, lkg }) => {
 			"brightnessThreshold",
 			"brightnessOverride",
 			"isolateCursor",
+			"isolateGlint",
 			"glyphEdgeCrop",
 			"isPolar",
 		]),
@@ -160,6 +162,7 @@ export default ({ regl, config, lkg }) => {
 			symbolState: symbolDoubleBuffer.front,
 			effectState: effectDoubleBuffer.front,
 			glyphTex: msdf.texture,
+			glintTex: glintMSDF.texture,
 
 			camera: regl.prop("camera"),
 			transform: regl.prop("transform"),
@@ -201,7 +204,7 @@ export default ({ regl, config, lkg }) => {
 		{
 			primary: output,
 		},
-		Promise.all([msdf.loaded, rainPassShine.loaded, rainPassSymbol.loaded, rainPassVert.loaded, rainPassFrag.loaded]),
+		Promise.all([msdf.loaded, glintMSDF.loaded, rainPassShine.loaded, rainPassSymbol.loaded, rainPassVert.loaded, rainPassFrag.loaded]),
 		(w, h) => {
 			output.resize(w, h);
 			const aspectRatio = w / h;

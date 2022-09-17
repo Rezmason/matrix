@@ -26,6 +26,7 @@ const fonts = {
 	resurrections: {
 		// The glyphs seen in the film trilogy
 		glyphTexURL: "assets/resurrections_msdf.png",
+		glintTexURL: "assets/resurrections_glint_msdf.png",
 		glyphSequenceLength: 135,
 		glyphTextureGridSize: [13, 12],
 	},
@@ -57,6 +58,8 @@ const defaults = {
 	backgroundColor: [0, 0, 0], // The color "behind" the glyphs
 	isolateCursor: true, // Whether the "cursor"— the brightest glyph at the bottom of a raindrop— has its own color
 	cursorColor: [1.5, 2, 0.9], // The color of the cursor
+	isolateGlint: false, // Whether the "glint"— highlights on certain symbols in the font— should appear
+	glintColor: [1, 1, 1], // The color of the glint
 	volumetric: false, // A mode where the raindrops appear in perspective
 	animationSpeed: 1, // The global rate that all animations progress
 	forwardSpeed: 0.25, // The speed volumetric rain approaches the eye
@@ -188,6 +191,28 @@ const versions = {
 			{ hsl: [0.375, 1.0, 1.0], at: 1.0 },
 		],
 	},
+	trinity: {
+		font: "resurrections",
+		glyphEdgeCrop: 0.1,
+		cursorColor: [1.4, 2, 1.2],
+		isolateGlint: true,
+		glintColor: [2, 1.5, 0.5],
+		baseBrightness: -0.9,
+		baseContrast: 1.5,
+		highPassThreshold: 0,
+		numColumns: 50,
+		cycleSpeed: 0.03,
+		bloomStrength: 0.7,
+		fallSpeed: 0.3,
+		paletteEntries: [
+			{ hsl: [0.4, 0.9, 0.0], at: 0.0 },
+			{ hsl: [0.4, 1.0, 0.5], at: 1.0 },
+		],
+		volumetric: true,
+		forwardSpeed: 0.2,
+		raindropLength: 0.3,
+		density: 0.5,
+	},
 	palimpsest: {
 		font: "huberfishA",
 		isolateCursor: false,
@@ -303,6 +328,7 @@ const paramMapping = {
 	stripeColors: { key: "stripeColors", parser: (s) => s },
 	backgroundColor: { key: "backgroundColor", parser: (s) => s.split(",").map(parseFloat) },
 	cursorColor: { key: "cursorColor", parser: (s) => s.split(",").map(parseFloat) },
+	glintColor: { key: "glintColor", parser: (s) => s.split(",").map(parseFloat) },
 	volumetric: { key: "volumetric", parser: (s) => s.toLowerCase().includes("true") },
 	loops: { key: "loops", parser: (s) => s.toLowerCase().includes("true") },
 	renderer: { key: "renderer", parser: (s) => s },
@@ -321,8 +347,14 @@ export default (urlParams) => {
 			.filter(([_, value]) => value != null)
 	);
 
-	if (validParams.effect != null && validParams.cursorColor == null) {
-		validParams.cursorColor = [2, 2, 2];
+	if (validParams.effect != null) {
+		if (validParams.cursorColor == null) {
+			validParams.cursorColor = [2, 2, 2];
+		}
+
+		if (validParams.glintColor == null) {
+			validParams.glintColor = [1, 1, 1];
+		}
 	}
 
 	const version = validParams.version in versions ? versions[validParams.version] : versions.classic;

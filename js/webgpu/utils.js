@@ -20,6 +20,14 @@ const loadTexture = async (device, url) => {
 */
 
 const loadTexture = async (device, url) => {
+	if (url == null) {
+		return device.createTexture({
+			size: [1, 1, 1],
+			format: "rgba8unorm",
+			usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+		});
+	}
+
 	const image = new Image();
 	image.crossOrigin = "Anonymous";
 	image.src = url;
