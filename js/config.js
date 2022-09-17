@@ -212,7 +212,7 @@ const versions = {
 		glintColor: [3, 2.5, 0.6],
 		glintBrightness: -2,
 		glintContrast: 3,
-		baseBrightness: -0.8,
+		baseBrightness: -0.4,
 		baseContrast: 1.5,
 		highPassThreshold: 0,
 		numColumns: 60,
