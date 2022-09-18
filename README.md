@@ -110,9 +110,11 @@ Now you know link fu. Here's a list of customization options:
 
 ---
 ### Future directions
-- TODO: discuss audio
-- TODO: discuss plans for a GUI
-- TODO: discuss the practical challenges of "putting text in there" when the glyphs are a limited set of SDFs
+
+This project is still in active development, but some upcoming features are worth mentioning.
+
+- **An audio element.** Things make sounds, don't they? Yes, they do, especially in movies. And while silence is precious, there are plans to provide a setting that introduces some kind of pleasant audio treatment to the effect.
+- **A user interface that isn't a URL.** This project supports a lot of configurable options under the hood, and it would be wise to add a fun looking UI that exposes them all to visitors in an intuitive way.
 
 ---
 ### Contributions
