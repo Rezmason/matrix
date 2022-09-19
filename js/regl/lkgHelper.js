@@ -1,5 +1,3 @@
-import * as HoloPlayCore from "../../lib/holoplaycore.module.js";
-
 const recordedDevice = {
 	buttons: [0, 0, 0, 0],
 	calibration: {
@@ -33,14 +31,6 @@ const recordedDevice = {
 	unityIndex: 1,
 	windowCoords: [1440, 900],
 };
-
-const getDetectedDevice = new Promise(
-	(resolve, reject) =>
-		new HoloPlayCore.Client(
-			(data) => resolve(data.devices?.[0]),
-			(error) => resolve(null)
-		)
-);
 
 const interpretDevice = (device) => {
 	if (device == null) {
@@ -84,9 +74,16 @@ export default async (useHoloplay = false, useRecordedDevice = false) => {
 	if (!useHoloplay) {
 		return interpretDevice(null);
 	}
-	const detectedDevice = await getDetectedDevice;
-	if (detectedDevice == null && useRecordedDevice) {
+	const HoloPlayCore = await import("../../lib/holoplaycore.module.js");
+	const device = await new Promise(
+		(resolve, reject) =>
+			new HoloPlayCore.Client(
+				(data) => resolve(data.devices?.[0]),
+				(error) => resolve(null)
+			)
+	);
+	if (device == null && useRecordedDevice) {
 		return interpretDevice(recordedDevice);
 	}
-	return interpretDevice(detectedDevice);
+	return interpretDevice(device);
 };
