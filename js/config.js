@@ -259,7 +259,7 @@ const versions = {
 	bugs: {
 		font: "resurrections",
 		glintTexture: "sand",
-		baseTexture: "sand",
+		baseTexture: "metal",
 		glyphEdgeCrop: 0.1,
 		cursorColor: [0.6, 1, 2],
 		isolateGlint: true,
@@ -274,9 +274,8 @@ const versions = {
 		bloomStrength: 0.7,
 		fallSpeed: 0.3,
 		paletteEntries: [
-			{ hsl: [0.12, 0.5, 0.0], at: 0.0 },
-			{ hsl: [0.12, 0.7, 0.1], at: 0.3 },
-			{ hsl: [0.13, 0.7, 0.5], at: 1.0 },
+			{ hsl: [0.12, 0.6, 0.0], at: 0.0 },
+			{ hsl: [0.14, 0.6, 0.5], at: 1.0 },
 		],
 		cycleSpeed: 0.01,
 		volumetric: true,
