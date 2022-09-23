@@ -17,11 +17,21 @@ const isRunningSwiftShader = () => {
 	return renderer.toLowerCase().includes("swiftshader");
 };
 
+
+const initRenderer = async (config) => {
+	const useWebGPU = (await supportsWebGPU()) && ["webgpu"].includes(config.renderer?.toLowerCase());
+	const solution = import(`./${useWebGPU ? "webgpu" : "regl"}/main.js`);
+	(await solution).default(canvas, config);
+};
+
+const initAudio = async (config) => {
+	if (!config.audio) return;
+	(await import("./audio.js")).default();
+};
+
 document.body.onload = async () => {
 	const urlParams = Object.fromEntries(new URLSearchParams(window.location.search).entries());
 	const config = makeConfig(urlParams);
-	const useWebGPU = (await supportsWebGPU()) && ["webgpu"].includes(config.renderer?.toLowerCase());
-	const solution = import(`./${useWebGPU ? "webgpu" : "regl"}/main.js`);
 
 	if (isRunningSwiftShader()) {
 		const notice = document.createElement("notice");
@@ -34,11 +44,13 @@ document.body.onload = async () => {
 		canvas.style.display = "none";
 		document.body.appendChild(notice);
 		document.querySelector(".blue.pill").addEventListener("click", async () => {
-			(await solution).default(canvas, config);
+			initRenderer(config);
+			initAudio(config);
 			canvas.style.display = "unset";
 			document.body.removeChild(notice);
 		});
 	} else {
-		(await solution).default(canvas, config);
+		initRenderer(config);
+		initAudio(config);
 	}
 };

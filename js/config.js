@@ -119,6 +119,7 @@ const defaults = {
 	loops: false,
 	skipIntro: true,
 	testFix: null,
+	audio: false,
 };
 
 const versions = {
@@ -461,6 +462,7 @@ const paramMapping = {
 	loops: { key: "loops", parser: (s) => s.toLowerCase().includes("true") },
 	fps: { key: "fps", parser: (s) => nullNaN(range(parseFloat(s), 0, 60)) },
 	skipIntro: { key: "skipIntro", parser: (s) => s.toLowerCase().includes("true") },
+	audio: { key: "audio", parser: (s) => s.toLowerCase().includes("true") },
 	renderer: { key: "renderer", parser: (s) => s },
 	once: { key: "once", parser: (s) => s.toLowerCase().includes("true") },
 	isometric: { key: "isometric", parser: (s) => s.toLowerCase().includes("true") },
