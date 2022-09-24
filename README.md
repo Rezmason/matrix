@@ -24,8 +24,8 @@
 - [Trans flag colors](https://rezmason.github.io/matrix/?effect=trans)
 - [Custom stripes (`colors=R,G,B,R,G,B,R,G,B, etc`)](https://rezmason.github.io/matrix/?effect=customStripes&colors=1,0,0,1,1,0,0,1,0)
 - [Custom image (`url=www.website.com/picture.jpg`)](https://rezmason.github.io/matrix/?effect=image&url=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg)
-- [Debug view (`effect=none`) (_epilepsy warning_: this once had lots of flickering)](https://rezmason.github.io/matrix/?effect=none)
-- [Starting from a blank screen](https://rezmason.github.io/matrix/?skipIntro=false) (which some people really like, but isn't the default mode)
+- [Debug view (`effect=none`)](https://rezmason.github.io/matrix/?effect=none) (*epilepsy warning*: this once had lots of flickering)
+- [Starting from a blank screen (`skipIntro=false`)](https://rezmason.github.io/matrix/?skipIntro=false) (which some people really like, but isn't the default mode)
 
 - [The free classic font (TrueType).](https://github.com/Rezmason/matrix/raw/master/assets/Matrix-Code.ttf)
 - [The free *Resurrections* font (TrueType).](https://github.com/Rezmason/matrix/raw/master/assets/Matrix-Resurrected.ttf)
@@ -33,7 +33,7 @@
 ---
 ### about
 
-This project is a web implementation of the raining green code seen in the _Matrix_ franchise. It's built right on top of the upcoming graphics API [WebGPU](https://github.com/gpuweb/gpuweb), but falls back to the functional WebGL wrapper, [REGL](https://regl.party); its previous Three.js version is maintained in a separate branch.
+This project is a web implementation of the raining green code seen in the *Matrix* franchise. It's built right on top of the upcoming graphics API [WebGPU](https://github.com/gpuweb/gpuweb), but falls back to the functional WebGL wrapper, [REGL](https://regl.party); its previous Three.js version is maintained in a separate branch.
 
 ---
 ### goals
@@ -42,13 +42,13 @@ The way I see it, there's four kinds of Matrix effects people call ["digital rai
 1. The green symbols that "rain down" operators' screens endlessly
 2. Scenes from within the simulation that depict green symbols streaking across everything
 3. The films' opening title graphics, which dazzle viewers and then draw them into the world of the franchise
-4. The "dialing" visualization at the opening of _The Matrix_ and _Resurrections_
+4. The "dialing" visualization at the opening of *The Matrix* and *Resurrections*
 
 A fan project can attempt to tackle any of these. However, this project focuses specifically on #1 and #3— an endless effect, visually stunning and mystifying, that feels right at home on any screen.
 
 The following criteria guided the development process:
 
-- **Get the right glyphs**. Like the actual ones. By now everyone's heard how the Matrix glyphs are some treatment of [Katakana](https://en.wikipedia.org/wiki/Katakana), but they also include a few characters from [Susan Kare's Chicago typeface](https://en.wikipedia.org/wiki/Chicago_(typeface)). The Matrix glyphs in *this* project come from the source: cleaned up vectors [from an old SWF](https://web.archive.org/web/20070914173039/http://www.atari.com:80/thematrixpathofneo/) for an official Matrix product, archived back in 2007. That's how deep this rabbit hole goes, friends.
+- **Get the right glyphs**. Like the actual ones. By now everyone's heard how the Matrix glyphs are some treatment of [katakana](https://en.wikipedia.org/wiki/Katakana), but they also include a few characters from [Susan Kare's Chicago typeface](https://en.wikipedia.org/wiki/Chicago_(typeface)). The Matrix glyphs in *this* project come from the source: cleaned up vectors [from an old SWF](https://web.archive.org/web/20070914173039/http://www.atari.com:80/thematrixpathofneo/) for an official Matrix product, archived back in 2007. That's how deep this rabbit hole goes, friends.
 (Please support the [Internet Archive!](https://archive.org/about/))
 - **Get the new glyphs**. When *Resurrections* hit theaters in December '21, it debuted an expanded glyph set with a daunting *135 symbols*. Virtually all of them were recovered from the movie trailers for this project and uploaded before the film's release! ...But they were of relatively poor quality. Fortunately, in this age of 720p reference material and tie-in marketing, a decent sized sample of new glyphs were eventually reverse-engineered from [a sparkly watch ad](https://www.hamiltonwatch.com/en-int/thematrixresurrections), and the rest were lovingly synthesized from frames of a [behind-the-scenes VFX video](https://buf.com/films/the-matrix-resurrections).
 - **Make it look sweet in 2D.** The most versatile, recognizable and mesmerizing manifestation of the code rain is when it seems to pour right down your screen like rain on a windowpane. While depth effects are cool, they can obscure the details that make the difference between a goodtrix and a *greatrix*.
@@ -66,7 +66,7 @@ The following criteria guided the development process:
 ---
 ### side note: other people's Matrix effects
 
-The number of implementations out there of this effect is a testament to the size of the film's impact on popular culture. For decades, I've enjoyed searching for and comparing them from time to time. That's probably how you arrived here— it's _fun_ to see what kinds of solutions different people come up with to a problem, when the process is purely recreational and its success is subjective. I myself tried and failed to make the effect many times over.
+The number of implementations out there of this effect is a testament to the size of the film's impact on popular culture. For decades, I've enjoyed searching for and comparing them from time to time. That's probably how you arrived here— it's *fun* to see what kinds of solutions different people come up with to a problem, when the process is purely recreational and its success is subjective. I myself tried and failed to make the effect many times over.
 
 Some of the [earliest](https://github.com/ppetr/xlockmore/blob/master/modes/matrix.c), [roughest](https://github.com/Zygo/xscreensaver/blob/d1f484cfa47f4a0862140421480bb536ad66ede9/hacks/xmatrix.c) versions were made after the film hit theaters in March, but before it was released on home media in October— people were recreating the effect purely from memory. Others probably used the official screensaver as a reference, which was made by the time-strappped developers of [the (excellent, defunct) official site](https://web.archive.org/web/*/http://whatisthematrix.com) from the images and multimedia tools they had available.
 
@@ -79,36 +79,36 @@ You can customize the digital rain quite a bit by stapling "URL variables" to it
 
 Now you know link fu. Here's a list of customization options:
 
-- **version** - the version of the Matrix to simulate. Default is "classic".
+- `version` - the version of the Matrix to simulate. Default is "classic".
   - "classic" is the Matrix code everyone knows and loves, mostly based on the sequels' opening title graphics.
   - "3d" is the classic code in 3D mode.
-  - "megacity" is a variation of the classic code that includes the Megacity as a glyph, as is seen in the opening titles of _Revolutions_.
+  - "megacity" is a variation of the classic code that includes the Megacity as a glyph, as is seen in the opening titles of *Revolutions*.
   - "operator" is more reminiscent of the matrix code as it appears in the first movie's opening titles, and on operators' screens: flatter, crowded, without a gradient, and with occasional effects (such as a square ripple).
   - "nightmare" is how the Matrix may have appeared in the Merovingian's heyday: flashy, foreboding, relentless.
   - "paradise" is how the Matrix's idyllic predecessor may have appeared: warm, simplistic, encompassing.
   - "resurrections" is the updated Matrix code
   - "palimpsest" is a custom version inspired by the art and sound of [Rob Dougan](https://en.wikipedia.org/wiki/Rob_Dougan)'s [Furious Angels](https://en.wikipedia.org/wiki/Furious_Angels).
-- **skipIntro** - whether or not to start from a blank screen. Can be "true" or "false", default is *true*.
-- **font** - the set of glyphs to draw. Current options are "matrixcode", "resurrections", "gothic", "coptic", "huberfishA", and "huberfishD".
-- **width** - the number of columns (and rows) to draw. Default is 80.
-- **volumetric** - when set to "true", this renders the glyphs with depth, slowly approaching the eye. Default is "false".
-- **density** - the number of 3D raindrops to draw, proportional to the default. Default is 1.0.
-- **forwardSpeed** - the rate that the 3D raindrops approach. Default is 1.0.
-- **slant** - the angle that the 2D raindrops fall, in degrees. Default is 0.
-- **bloomSize** - the glow quality, from 0 to 1. Default is 0.5. Lowering this value may help the digital rain run smoother on your device.
-- **bloomStrength** - the glow intensity, from 0 to 1. Default is 1.
-- **ditherMagnitude** - the amount to randomly darken pixels, to conceal [banding](https://en.wikipedia.org/wiki/Colour_banding). Default is 0.05.
-- **resolution** - the image size, relative to the window size. Default is 1. Lowering this value may improve your performance, especially on high pixel density displays.
-- **raindropLength** - the vertical scale of "raindrops" in the columns. Can be any number.
-- **animationSpeed** - the overall speed of the animation. Can be any number.
-- **fallSpeed** - the speed of the rain's descent. Can be any number.
-- **cycleSpeed** - the speed that the glyphs change their symbol. Can be any number.
-- **effect** - alternatives to the default post-processing effect. Can be "plain", "pride", "customStripes", "none", "image" or "mirror".
+- `skipIntro` - whether or not to start from a blank screen. Can be "true" or "false", default is *true*.
+- `font` - the set of glyphs to draw. Current options are "matrixcode", "resurrections", "gothic", "coptic", "huberfishA", and "huberfishD".
+- `width` - the number of columns (and rows) to draw. Default is 80.
+- `volumetric` - when set to "true", this renders the glyphs with depth, slowly approaching the eye. Default is "false".
+- `density` - the number of 3D raindrops to draw, proportional to the default. Default is 1.0.
+- `forwardSpeed` - the rate that the 3D raindrops approach. Default is 1.0.
+- `slant` - the angle that the 2D raindrops fall, in degrees. Default is 0.
+- `bloomSize` - the glow quality, from 0 to 1. Default is 0.5. Lowering this value may help the digital rain run smoother on your device.
+- `bloomStrength` - the glow intensity, from 0 to 1. Default is 1.
+- `ditherMagnitude` - the amount to randomly darken pixels, to conceal [banding](https://en.wikipedia.org/wiki/Colour_banding). Default is 0.05.
+- `resolution` - the image size, relative to the window size. Default is 1. Lowering this value may improve your performance, especially on high pixel density displays.
+- `raindropLength` - the vertical scale of "raindrops" in the columns. Can be any number.
+- `animationSpeed` - the overall speed of the animation. Can be any number.
+- `fallSpeed` - the speed of the rain's descent. Can be any number.
+- `cycleSpeed` - the speed that the glyphs change their symbol. Can be any number.
+- `effect` - alternatives to the default post-processing effect. Can be "plain", "pride", "customStripes", "none", "image" or "mirror".
   - ("none" displays the 'debug view', a behind-the-scenes look at the anatomy of the effect.)
-- **camera** - some effects, ie. the mirror effect, optionally support webcam input. Can be "true" or "false". Default is false.
-- **colors** - if you set the effect to "customStripes", you can specify the colors of vertical stripes as alternating *R,G,B* numeric values, like so: [https://rezmason.github.io/matrix/?effect=customStripes&colors=1,0,0,1,1,0,0,1,0](https://rezmason.github.io/matrix/?effect=customStripes&colors=1,0,0,1,1,0,0,1,0)
-- **url** - if you set the effect to "image", this is how you specify which image to load. It doesn't work with any URL; I suggest grabbing them from Wikipedia: [https://rezmason.github.io/matrix/?effect=image&url=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg](https://rezmason.github.io/matrix/?effect=image&url=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg)
-- **loops** - (WIP) if set to "true", this causes the effect to loop, so that it can be converted into a looping video.
+- `camera` - some effects, ie. the mirror effect, optionally support webcam input. Can be "true" or "false". Default is false.
+- `colors` - if you set the effect to "customStripes", you can specify the colors of vertical stripes as alternating *R,G,B* numeric values, like so: [https://rezmason.github.io/matrix/?effect=customStripes&colors=1,0,0,1,1,0,0,1,0](https://rezmason.github.io/matrix/?effect=customStripes&colors=1,0,0,1,1,0,0,1,0)
+- `url` - if you set the effect to "image", this is how you specify which image to load. It doesn't work with any URL; I suggest grabbing them from Wikipedia: [https://rezmason.github.io/matrix/?effect=image&url=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg](https://rezmason.github.io/matrix/?effect=image&url=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg)
+- `loops` - (WIP) if set to "true", this causes the effect to loop, so that it can be converted into a looping video.
 
 ---
 ### Future directions
