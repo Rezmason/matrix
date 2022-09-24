@@ -41,8 +41,16 @@ vec4 computeResult(float simTime, bool isFirstFrame, vec2 glyphPos, vec2 screenP
 		return vec4(1., 0., 0., 0.);
 	}
 
-	float columnTimeOffset = randomFloat(vec2(glyphPos.x, 0.)) * -10.;
-	columnTimeOffset += sin(glyphPos.x / numColumns * PI) - 1.;
+	float columnTimeOffset;
+	int column = int(glyphPos.x);
+	if (column == int(numColumns / 2.)) {
+		columnTimeOffset = -1.;
+	} else if (column == int(numColumns * 0.75)) {
+		columnTimeOffset = -2.;
+	} else {
+		columnTimeOffset = randomFloat(vec2(glyphPos.x, 0.)) * -4.;
+		columnTimeOffset += (sin(glyphPos.x / numColumns * PI) - 1.) * 2. - 2.5;
+	}
 	float introTime = (simTime + columnTimeOffset) * fallSpeed / numRows * 100.;
 
 	vec4 result = vec4(introTime, 0., 0., 0.);

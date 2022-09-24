@@ -221,8 +221,16 @@ fn computeIntro (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, scree
 		return vec4<f32>(1.0, 0.0, 0.0, 0.0);
 	}
 
-	var columnTimeOffset = randomFloat(glyphPos) * -10.0;
-	columnTimeOffset += sin(glyphPos.x / config.gridSize.x * PI) - 1.0;
+	var columnTimeOffset = 0.0;
+	var column = i32(glyphPos.x);
+	if (column == i32(config.gridSize.y / 2.0)) {
+		columnTimeOffset = -1.0;
+	} else if (column == i32(config.gridSize.y * 0.75)) {
+		columnTimeOffset = -2.0;
+	} else {
+		columnTimeOffset = randomFloat(vec2(glyphPos.x, 0.)) * -4.;
+		columnTimeOffset += (sin(glyphPos.x / config.gridSize.y * PI) - 1.) * 2. - 2.5;
+	}
 	var introTime = (simTime + columnTimeOffset) * config.fallSpeed / config.gridSize.y * 100.0;
 
 	var result = vec4<f32>(introTime, 0.0, 0.0, 0.0);
