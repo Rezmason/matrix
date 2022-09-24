@@ -24,7 +24,8 @@
 - [Trans flag colors](https://rezmason.github.io/matrix/?effect=trans)
 - [Custom stripes (`colors=R,G,B,R,G,B,R,G,B, etc`)](https://rezmason.github.io/matrix/?effect=customStripes&colors=1,0,0,1,1,0,0,1,0)
 - [Custom image (`url=www.website.com/picture.jpg`)](https://rezmason.github.io/matrix/?effect=image&url=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg)
-- [Raw compute texture (`effect=none`) (_epilepsy warning_: lots of flickering)](https://rezmason.github.io/matrix/?effect=none)
+- [Debug view (`effect=none`) (_epilepsy warning_: this once had lots of flickering)](https://rezmason.github.io/matrix/?effect=none)
+- [Starting from a blank screen](https://rezmason.github.io/matrix/?skipIntro=false) (which some people really like, but isn't the default mode)
 
 - [The free classic font (TrueType).](https://github.com/Rezmason/matrix/raw/master/assets/Matrix-Code.ttf)
 - [The free *Resurrections* font (TrueType).](https://github.com/Rezmason/matrix/raw/master/assets/Matrix-Resurrected.ttf)
@@ -87,6 +88,7 @@ Now you know link fu. Here's a list of customization options:
   - "paradise" is how the Matrix's idyllic predecessor may have appeared: warm, simplistic, encompassing.
   - "resurrections" is the updated Matrix code
   - "palimpsest" is a custom version inspired by the art and sound of [Rob Dougan](https://en.wikipedia.org/wiki/Rob_Dougan)'s [Furious Angels](https://en.wikipedia.org/wiki/Furious_Angels).
+- **skipIntro** - whether or not to start from a blank screen. Can be "true" or "false", default is *true*.
 - **font** - the set of glyphs to draw. Current options are "matrixcode", "resurrections", "gothic", "coptic", "huberfishA", and "huberfishD".
 - **width** - the number of columns (and rows) to draw. Default is 80.
 - **volumetric** - when set to "true", this renders the glyphs with depth, slowly approaching the eye. Default is "false".

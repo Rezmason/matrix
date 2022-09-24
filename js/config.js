@@ -112,6 +112,7 @@ const defaults = {
 	isometric: false,
 	useHoloplay: false,
 	loops: false,
+	skipIntro: true,
 };
 
 const versions = {
@@ -410,6 +411,7 @@ const paramMapping = {
 	glintColor: { key: "glintColor", parser: (s) => s.split(",").map(parseFloat) },
 	volumetric: { key: "volumetric", parser: (s) => s.toLowerCase().includes("true") },
 	loops: { key: "loops", parser: (s) => s.toLowerCase().includes("true") },
+	skipIntro: { key: "skipIntro", parser: (s) => s.toLowerCase().includes("true") },
 	renderer: { key: "renderer", parser: (s) => s },
 	once: { key: "once", parser: (s) => s.toLowerCase().includes("true") },
 	isometric: { key: "isometric", parser: (s) => s.toLowerCase().includes("true") },

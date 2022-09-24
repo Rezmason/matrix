@@ -43,6 +43,7 @@ struct Config {
 	isolateCursor : i32,
 	isolateGlint : i32,
 	loops : i32,
+	skipIntro : i32,
 	highPassThreshold : f32,
 };
 
@@ -70,12 +71,22 @@ struct CellData {
 	cells: array<Cell>,
 };
 
+struct IntroCell {
+	progress : vec4<f32>,
+};
+
+// The array of cells that the compute shader updates, and the fragment shader draws.
+struct IntroCellData {
+	cells: array<IntroCell>,
+};
+
 // Shared bindings
 @group(0) @binding(0) var<uniform> config : Config;
 @group(0) @binding(1) var<uniform> time : Time;
 
 // Compute-specific bindings
 @group(0) @binding(2) var<storage, read_write> cells_RW : CellData;
+@group(0) @binding(3) var<storage, read_write> introCells_RW : IntroCellData;
 
 // Render-specific bindings
 @group(0) @binding(2) var<uniform> scene : Scene;
@@ -205,11 +216,32 @@ fn getRipple(simTime : f32, screenPos : vec2<f32>) -> f32 {
 
 // Compute shader main functions
 
-fn computeRaindrop (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, screenPos : vec2<f32>, previous : vec4<f32>) -> vec4<f32> {
+fn computeIntro (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, screenPos : vec2<f32>, previous : vec4<f32>) -> vec4<f32> {
+	if (bool(config.skipIntro)) {
+		return vec4<f32>(1.0, 0.0, 0.0, 0.0);
+	}
+
+	var columnTimeOffset = randomFloat(glyphPos) * -10.0;
+	columnTimeOffset += sin(glyphPos.x / config.gridSize.x * PI) - 1.0;
+	var introTime = (simTime + columnTimeOffset) * config.fallSpeed / config.gridSize.y * 100.0;
+
+	var result = vec4<f32>(introTime, 0.0, 0.0, 0.0);
+	return result;
+}
+
+fn computeRaindrop (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, screenPos : vec2<f32>, previous : vec4<f32>, progress : vec4<f32>) -> vec4<f32> {
 
 	var brightness = getRainBrightness(simTime, glyphPos);
-	var brightnessBelow = getRainBrightness(simTime, glyphPos + vec2(0., -1.));
-	var cursor = select(0.0, 1.0, brightness > brightnessBelow);
+	var brightnessBelow = getRainBrightness(simTime, glyphPos + vec2(0.0, -1.0));
+
+	var introProgress = progress.r - (1.0 - glyphPos.y / config.gridSize.y);
+	var introProgressBelow = progress.r - (1.0 - (glyphPos.y - 1.0) / config.gridSize.y);
+
+	var skipIntro = bool(config.skipIntro);
+	var activated = bool(previous.b) || skipIntro || introProgress > 0.0;
+	var activatedBelow = skipIntro || introProgressBelow > 0.0;
+
+	var cursor = brightness > brightnessBelow || (activated && !activatedBelow);
 
 	// Blend the glyph's brightness with its previous brightness, so it winks on and off organically
 	if (!isFirstFrame) {
@@ -217,7 +249,7 @@ fn computeRaindrop (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, sc
 		brightness = mix(previousBrightness, brightness, config.brightnessDecay);
 	}
 
-	var result = vec4<f32>(brightness, cursor, 0.0, 0.0);
+	var result = vec4<f32>(brightness, f32(cursor), f32(activated), introProgress);
 	return result;
 }
 
@@ -277,8 +309,15 @@ fn computeEffect (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, scre
 	var glyphPos = vec2<f32>(f32(column), f32(row));
 	var screenPos = glyphPos / config.gridSize;
 
+	var introCell = introCells_RW.cells[column];
+
+	if (row == i32(config.gridSize.y - 1)) {
+		introCell.progress = computeIntro(simTime, isFirstFrame, glyphPos, screenPos, introCell.progress);
+		introCells_RW.cells[column] = introCell;
+	}
+
 	var cell = cells_RW.cells[i];
-	cell.raindrop = computeRaindrop(simTime, isFirstFrame, glyphPos, screenPos, cell.raindrop);
+	cell.raindrop = computeRaindrop(simTime, isFirstFrame, glyphPos, screenPos, cell.raindrop, introCell.progress);
 	cell.symbol = computeSymbol(simTime, isFirstFrame, glyphPos, screenPos, cell.symbol, cell.raindrop);
 	cell.effect = computeEffect(simTime, isFirstFrame, glyphPos, screenPos, cell.effect, cell.raindrop);
 	cells_RW.cells[i] = cell;
@@ -379,7 +418,7 @@ fn getUV(inputUV : vec2<f32>) -> vec2<f32> {
 
 fn getBrightness(raindrop : vec4<f32>, effect : vec4<f32>, uv : vec2<f32>, quadDepth : f32) -> vec3<f32> {
 
-	var base = raindrop.r;
+	var base = raindrop.r + max(0.0, 1.0 - raindrop.a * 5.0);
 	var isCursor = bool(raindrop.g) && bool(config.isolateCursor);
 	var glint = base;
 	var multipliedEffects = effect.r;
@@ -412,7 +451,7 @@ fn getBrightness(raindrop : vec4<f32>, effect : vec4<f32>, uv : vec2<f32>, quadD
 	return vec3<f32>(
 		select(vec2<f32>(1.0, 0.0), vec2<f32>(0.0, 1.0), isCursor) * base,
 		glint
-	);
+	) * raindrop.b;
 }
 
 fn getSymbolUV(symbol : i32) -> vec2<f32> {

@@ -96,6 +96,11 @@ export default ({ config, device, timeBuffer }) => {
 		const rainShaderUniforms = structs.from(rainShader.code);
 		configBuffer = makeConfigBuffer(device, rainShaderUniforms.Config, config, density, gridSize);
 
+		const introCellsBuffer = device.createBuffer({
+			size: gridSize[0] * rainShaderUniforms.IntroCell.minSize,
+			usage: GPUBufferUsage.STORAGE,
+		});
+
 		const cellsBuffer = device.createBuffer({
 			size: numCells * rainShaderUniforms.Cell.minSize,
 			usage: GPUBufferUsage.STORAGE,
@@ -148,7 +153,7 @@ export default ({ config, device, timeBuffer }) => {
 			}),
 		]);
 
-		computeBindGroup = makeBindGroup(device, computePipeline, 0, [configBuffer, timeBuffer, cellsBuffer]);
+		computeBindGroup = makeBindGroup(device, computePipeline, 0, [configBuffer, timeBuffer, cellsBuffer, introCellsBuffer]);
 		renderBindGroup = makeBindGroup(device, renderPipeline, 0, [
 			configBuffer,
 			timeBuffer,
