@@ -218,7 +218,7 @@ fn getRipple(simTime : f32, screenPos : vec2<f32>) -> f32 {
 
 fn computeIntro (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, screenPos : vec2<f32>, previous : vec4<f32>) -> vec4<f32> {
 	if (bool(config.skipIntro)) {
-		return vec4<f32>(1.0, 0.0, 0.0, 0.0);
+		return vec4<f32>(2.0, 0.0, 0.0, 0.0);
 	}
 
 	var columnTimeOffset = 0.0;

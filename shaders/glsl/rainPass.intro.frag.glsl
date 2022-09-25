@@ -38,7 +38,7 @@ float wobble(float x) {
 
 vec4 computeResult(float simTime, bool isFirstFrame, vec2 glyphPos, vec2 screenPos, vec4 previous) {
 	if (skipIntro) {
-		return vec4(1., 0., 0., 0.);
+		return vec4(2., 0., 0., 0.);
 	}
 
 	float columnTimeOffset;
