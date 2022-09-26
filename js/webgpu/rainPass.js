@@ -83,8 +83,10 @@ export default ({ config, device, timeBuffer }) => {
 	let configBuffer;
 	let sceneUniforms;
 	let sceneBuffer;
+	let introPipeline;
 	let computePipeline;
 	let renderPipeline;
+	let introBindGroup;
 	let computeBindGroup;
 	let renderBindGroup;
 	let output;
@@ -115,7 +117,15 @@ export default ({ config, device, timeBuffer }) => {
 			dstFactor: "one",
 		};
 
-		[computePipeline, renderPipeline] = await Promise.all([
+		[introPipeline, computePipeline, renderPipeline] = await Promise.all([
+			device.createComputePipelineAsync({
+				layout: "auto",
+				compute: {
+					module: rainShader.module,
+					entryPoint: "computeIntro",
+				},
+			}),
+
 			device.createComputePipelineAsync({
 				layout: "auto",
 				compute: {
@@ -153,6 +163,7 @@ export default ({ config, device, timeBuffer }) => {
 			}),
 		]);
 
+		introBindGroup = makeBindGroup(device, introPipeline, 0, [configBuffer, timeBuffer, introCellsBuffer]);
 		computeBindGroup = makeBindGroup(device, computePipeline, 0, [configBuffer, timeBuffer, cellsBuffer, introCellsBuffer]);
 		renderBindGroup = makeBindGroup(device, renderPipeline, 0, [
 			configBuffer,
@@ -197,6 +208,12 @@ export default ({ config, device, timeBuffer }) => {
 
 	const run = (encoder) => {
 		// We render the code into an Target using MSDFs: https://github.com/Chlumsky/msdfgen
+
+		const introPass = encoder.beginComputePass();
+		introPass.setPipeline(introPipeline);
+		introPass.setBindGroup(0, introBindGroup);
+		introPass.dispatchWorkgroups(Math.ceil(gridSize[0] / 32), 1, 1);
+		introPass.end();
 
 		const computePass = encoder.beginComputePass();
 		computePass.setPipeline(computePipeline);

@@ -84,9 +84,12 @@ struct IntroCellData {
 @group(0) @binding(0) var<uniform> config : Config;
 @group(0) @binding(1) var<uniform> time : Time;
 
+// Intro-specific bindings
+@group(0) @binding(2) var<storage, read_write> introCells_RW : IntroCellData;
+
 // Compute-specific bindings
 @group(0) @binding(2) var<storage, read_write> cells_RW : CellData;
-@group(0) @binding(3) var<storage, read_write> introCells_RW : IntroCellData;
+@group(0) @binding(3) var<storage, read_write> introCells_RO : IntroCellData;
 
 // Render-specific bindings
 @group(0) @binding(2) var<uniform> scene : Scene;
@@ -216,7 +219,7 @@ fn getRipple(simTime : f32, screenPos : vec2<f32>) -> f32 {
 
 // Compute shader main functions
 
-fn computeIntro (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, screenPos : vec2<f32>, previous : vec4<f32>) -> vec4<f32> {
+fn computeIntroProgress (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, screenPos : vec2<f32>, previous : vec4<f32>) -> vec4<f32> {
 	if (bool(config.skipIntro)) {
 		return vec4<f32>(2.0, 0.0, 0.0, 0.0);
 	}
@@ -298,6 +301,27 @@ fn computeEffect (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, scre
 	return result;
 }
 
+@compute @workgroup_size(32, 1, 1) fn computeIntro(input : ComputeInput) {
+
+	// Resolve the invocation ID to an intro cell coordinate
+	var column = i32(input.id.x);
+
+	if (column >= i32(config.gridSize.x)) {
+		return;
+	}
+
+	var simTime = time.seconds * config.animationSpeed;
+	var isFirstFrame = time.frames == 0;
+
+	// Update the cell
+	var glyphPos = vec2<f32>(f32(column), 0.0);
+	var screenPos = glyphPos / config.gridSize;
+
+	var introCell = introCells_RW.cells[column];
+	introCell.progress = computeIntroProgress(simTime, isFirstFrame, glyphPos, screenPos, introCell.progress);
+	introCells_RW.cells[column] = introCell;
+}
+
 @compute @workgroup_size(32, 1, 1) fn computeMain(input : ComputeInput) {
 
 	// Resolve the invocation ID to a cell coordinate
@@ -317,14 +341,8 @@ fn computeEffect (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, scre
 	var glyphPos = vec2<f32>(f32(column), f32(row));
 	var screenPos = glyphPos / config.gridSize;
 
-	var introCell = introCells_RW.cells[column];
-
-	if (row == i32(config.gridSize.y - 1)) {
-		introCell.progress = computeIntro(simTime, isFirstFrame, glyphPos, screenPos, introCell.progress);
-		introCells_RW.cells[column] = introCell;
-	}
-
 	var cell = cells_RW.cells[i];
+	var introCell = introCells_RO.cells[column];
 	cell.raindrop = computeRaindrop(simTime, isFirstFrame, glyphPos, screenPos, cell.raindrop, introCell.progress);
 	cell.symbol = computeSymbol(simTime, isFirstFrame, glyphPos, screenPos, cell.symbol, cell.raindrop);
 	cell.effect = computeEffect(simTime, isFirstFrame, glyphPos, screenPos, cell.effect, cell.raindrop);
