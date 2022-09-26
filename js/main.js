@@ -13,7 +13,7 @@ const supportsWebGPU = async () => {
 document.body.onload = async () => {
 	const urlParams = Object.fromEntries(new URLSearchParams(window.location.search).entries());
 	const config = makeConfig(urlParams);
-	const useREGL = !(await supportsWebGPU()) || ["webgl", "regl"].includes(config.renderer?.toLowerCase());
-	const solution = import(`./${useREGL ? "regl" : "webgpu"}/main.js`);
+	const useWebGPU = (await supportsWebGPU()) && ["webgpu"].includes(config.renderer?.toLowerCase());
+	const solution = import(`./${useWebGPU ? "webgpu" : "regl"}/main.js`);
 	(await solution).default(canvas, config);
 };
