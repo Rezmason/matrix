@@ -68,11 +68,11 @@ const defaults = {
 	baseTexture: null, // The name of the texture to apply to the base layer of the glyphs
 	glintTexture: null, // The name of the texture to apply to the glint layer of the glyphs
 	useCamera: false,
-	backgroundColor: [0, 0, 0], // The color "behind" the glyphs
+	backgroundColor: { space: "rgb", values: [0, 0, 0] }, // The color "behind" the glyphs
 	isolateCursor: true, // Whether the "cursor"— the brightest glyph at the bottom of a raindrop— has its own color
-	cursorColor: [1.5, 2, 0.9], // The color of the cursor
+	cursorColor: { space: "rgb", values: [1.5, 2, 0.9] }, // The color of the cursor
 	isolateGlint: false, // Whether the "glint"— highlights on certain symbols in the font— should appear
-	glintColor: [1, 1, 1], // The color of the glint
+	glintColor: { space: "rgb", values: [1, 1, 1] }, // The color of the glint
 	volumetric: false, // A mode where the raindrops appear in perspective
 	animationSpeed: 1, // The global rate that all animations progress
 	forwardSpeed: 0.25, // The speed volumetric rain approaches the eye
@@ -127,7 +127,7 @@ const versions = {
 		width: 40,
 	},
 	operator: {
-		cursorColor: [1.0, 3, 1.5],
+		cursorColor: { space: "rgb", values: [1.0, 3, 1.5] },
 		bloomSize: 0.6,
 		bloomStrength: 0.75,
 		highPassThreshold: 0.0,
@@ -193,7 +193,7 @@ const versions = {
 	resurrections: {
 		font: "resurrections",
 		glyphEdgeCrop: 0.1,
-		cursorColor: [1.4, 2, 1.2],
+		cursorColor: { space: "rgb", values: [1.4, 2, 1.2] },
 		baseBrightness: -0.7,
 		baseContrast: 1.17,
 		highPassThreshold: 0,
@@ -212,9 +212,9 @@ const versions = {
 		glintTexture: "metal",
 		baseTexture: "pixels",
 		glyphEdgeCrop: 0.1,
-		cursorColor: [1.4, 2, 1.2],
+		cursorColor: { space: "rgb", values: [1.4, 2, 1.2] },
 		isolateGlint: true,
-		glintColor: [3, 2.5, 0.6],
+		glintColor: { space: "rgb", values: [3, 2.5, 0.6] },
 		glintBrightness: -0.5,
 		glintContrast: 1.5,
 		baseBrightness: -0.4,
@@ -239,9 +239,9 @@ const versions = {
 		glintTexture: "mesh",
 		baseTexture: "metal",
 		glyphEdgeCrop: 0.1,
-		cursorColor: [1.4, 2, 1.4],
+		cursorColor: { space: "rgb", values: [1.4, 2, 1.4] },
 		isolateGlint: true,
-		glintColor: [0, 2, 0.8],
+		glintColor: { space: "rgb", values: [0, 2, 0.8] },
 		glintBrightness: -1.5,
 		glintContrast: 3,
 		baseBrightness: -0.3,
@@ -266,9 +266,9 @@ const versions = {
 		glintTexture: "sand",
 		baseTexture: "metal",
 		glyphEdgeCrop: 0.1,
-		cursorColor: [0.6, 1, 2],
+		cursorColor: { space: "rgb", values: [0.6, 1, 2] },
 		isolateGlint: true,
-		glintColor: [0.6, 1.2, 3],
+		glintColor: { space: "rgb", values: [0.6, 1.2, 3] },
 		glintBrightness: -1,
 		glintContrast: 3,
 		baseBrightness: -0.3,
@@ -304,7 +304,7 @@ const versions = {
 	},
 	twilight: {
 		font: "huberfishD",
-		cursorColor: [1.5, 1, 0.9],
+		cursorColor: { space: "rgb", values: [1.5, 1, 0.9] },
 		bloomStrength: 0.1,
 		numColumns: 50,
 		raindropLength: 0.9,
@@ -323,9 +323,9 @@ const versions = {
 		font: "resurrections",
 		glintTexture: "metal",
 		glyphEdgeCrop: 0.1,
-		cursorColor: [1.4, 2, 1.2],
+		cursorColor: { space: "rgb", values: [1.4, 2, 1.2] },
 		isolateGlint: true,
-		glintColor: [3, 2.5, 0.6],
+		glintColor: { space: "rgb", values: [3, 2.5, 0.6] },
 		glintBrightness: -0.5,
 		glintContrast: 1.5,
 		baseBrightness: -0.4,
@@ -371,10 +371,19 @@ const nullNaN = (f) => (isNaN(f) ? null : f);
 
 const parseColors = (isHSL) => (s) => {
 	const values = s.split(",").map(parseFloat);
+	const space = isHSL ? "hsl" : "rgb";
 	return Array(Math.floor(values.length / 3))
 		.fill()
-		.map((_, index) => values.slice(index * 3, (index + 1) * 3));
+		.map((_, index) => ({
+			space,
+			values: values.slice(index * 3, (index + 1) * 3),
+		}));
 };
+
+const parseColor = (isHSL) => (s) => ({
+	space: isHSL ? "hsl" : "rgb",
+	values: s.split(",").map(parseFloat),
+});
 
 const paramMapping = {
 	version: { key: "version", parser: (s) => s },
@@ -417,9 +426,9 @@ const paramMapping = {
 	},
 	url: { key: "bgURL", parser: (s) => s },
 	stripeColors: { key: "stripeColors", parser: parseColors(false) },
-	backgroundColor: { key: "backgroundColor", parser: parseColors(false) },
-	cursorColor: { key: "cursorColor", parser: parseColors(false) },
-	glintColor: { key: "glintColor", parser: parseColors(false) },
+	backgroundColor: { key: "backgroundColor", parser: parseColor(false) },
+	cursorColor: { key: "cursorColor", parser: parseColor(false) },
+	glintColor: { key: "glintColor", parser: parseColor(false) },
 	volumetric: { key: "volumetric", parser: (s) => s.toLowerCase().includes("true") },
 	loops: { key: "loops", parser: (s) => s.toLowerCase().includes("true") },
 	skipIntro: { key: "skipIntro", parser: (s) => s.toLowerCase().includes("true") },
@@ -441,11 +450,11 @@ export default (urlParams) => {
 
 	if (validParams.effect != null) {
 		if (validParams.cursorColor == null) {
-			validParams.cursorColor = [2, 2, 2];
+			validParams.cursorColor = { space: "rgb", values: [2, 2, 2] };
 		}
 
 		if (validParams.glintColor == null) {
-			validParams.glintColor = [1, 1, 1];
+			validParams.glintColor = { space: "rgb", values: [1, 1, 1] };
 		}
 	}
 

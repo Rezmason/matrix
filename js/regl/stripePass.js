@@ -1,3 +1,4 @@
+import colorToRGB from "../colorToRGB.js";
 import { loadText, make1DTexture, makePassFBO, makePass } from "./utils.js";
 
 // Multiplies the rendered rain and bloom by a 1D gradient texture
@@ -33,9 +34,10 @@ export default ({ regl, config }, inputs) => {
 
 	// Expand and convert stripe colors into 1D texture data
 	const stripeColors = "stripeColors" in config ? config.stripeColors : config.effect === "pride" ? prideStripeColors : transPrideStripeColors;
+	console.log(stripeColors);
 	const stripeTex = make1DTexture(
 		regl,
-		stripeColors.map((rgb) => [...rgb, 1])
+		stripeColors.map((color) => [...colorToRGB(color), 1])
 	);
 
 	const stripePassFrag = loadText("shaders/glsl/stripePass.frag.glsl");
@@ -44,9 +46,9 @@ export default ({ regl, config }, inputs) => {
 		frag: regl.prop("frag"),
 
 		uniforms: {
-			backgroundColor,
-			cursorColor,
-			glintColor,
+			backgroundColor: colorToRGB(backgroundColor),
+			cursorColor: colorToRGB(cursorColor),
+			glintColor: colorToRGB(glintColor),
 			ditherMagnitude,
 			bloomStrength,
 			tex: inputs.primary,

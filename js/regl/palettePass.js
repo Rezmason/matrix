@@ -44,7 +44,7 @@ const makePalette = (regl, entries) => {
 
 	return make1DTexture(
 		regl,
-		paletteColors.flat().map((i) => i * 0xff)
+		paletteColors.map((rgb) => [...rgb, 1])
 	);
 };
 
@@ -65,9 +65,9 @@ export default ({ regl, config }, inputs) => {
 		frag: regl.prop("frag"),
 
 		uniforms: {
-			backgroundColor,
-			cursorColor,
-			glintColor,
+			backgroundColor: colorToRGB(backgroundColor),
+			cursorColor: colorToRGB(cursorColor),
+			glintColor: colorToRGB(glintColor),
 			ditherMagnitude,
 			bloomStrength,
 			tex: inputs.primary,
