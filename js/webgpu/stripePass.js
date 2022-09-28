@@ -7,27 +7,25 @@ import { loadShader, make1DTexture, makeUniformBuffer, makeBindGroup, makeComput
 // This shader introduces noise into the renders, to avoid banding
 
 const transPrideStripeColors = [
-	[0.3, 1.0, 1.0],
-	[0.3, 1.0, 1.0],
-	[1.0, 0.5, 0.8],
-	[1.0, 0.5, 0.8],
+	[0.36, 0.81, 0.98],
+	[0.96, 0.66, 0.72],
 	[1.0, 1.0, 1.0],
-	[1.0, 1.0, 1.0],
-	[1.0, 1.0, 1.0],
-	[1.0, 0.5, 0.8],
-	[1.0, 0.5, 0.8],
-	[0.3, 1.0, 1.0],
-	[0.3, 1.0, 1.0],
-].flat();
+	[0.96, 0.66, 0.72],
+	[0.36, 0.81, 0.98],
+]
+	.map((color) => Array(3).fill(color))
+	.flat(1);
 
 const prideStripeColors = [
-	[1, 0, 0],
-	[1, 0.5, 0],
-	[1, 1, 0],
-	[0, 1, 0],
-	[0, 0, 1],
-	[0.8, 0, 1],
-].flat();
+	[0.89, 0.01, 0.01],
+	[1.0, 0.55, 0.0],
+	[1.0, 0.93, 0.0],
+	[0.0, 0.5, 0.15],
+	[0.0, 0.3, 1.0],
+	[0.46, 0.03, 0.53],
+]
+	.map((color) => Array(2).fill(color))
+	.flat(1);
 
 const numVerticesPerQuad = 2 * 3;
 
@@ -39,14 +37,11 @@ const numVerticesPerQuad = 2 * 3;
 
 export default ({ config, device, timeBuffer }) => {
 	// Expand and convert stripe colors into 1D texture data
-	const input =
-		"stripeColors" in config ? config.stripeColors.split(",").map(parseFloat) : config.effect === "pride" ? prideStripeColors : transPrideStripeColors;
-
-	const stripeColors = Array(Math.floor(input.length / 3))
-		.fill()
-		.map((_, index) => [...input.slice(index * 3, (index + 1) * 3), 1]);
-
-	const stripeTexture = make1DTexture(device, stripeColors);
+	const stripeColors = "stripeColors" in config ? config.stripeColors : config.effect === "pride" ? prideStripeColors : transPrideStripeColors;
+	const stripeTex = make1DTexture(
+		device,
+		stripeColors.map((rgb) => [...rgb, 1])
+	);
 
 	const linearSampler = device.createSampler({
 		magFilter: "linear",
@@ -105,7 +100,7 @@ export default ({ config, device, timeBuffer }) => {
 			linearSampler,
 			tex.createView(),
 			bloomTex.createView(),
-			stripeTexture.createView(),
+			stripeTex.createView(),
 			output.createView(),
 		]);
 		computePass.setBindGroup(0, computeBindGroup);

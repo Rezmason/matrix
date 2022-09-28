@@ -4,7 +4,7 @@ precision mediump float;
 uniform sampler2D tex;
 uniform sampler2D bloomTex;
 uniform float bloomStrength;
-uniform sampler2D stripes;
+uniform sampler2D stripeTex;
 uniform float ditherMagnitude;
 uniform float time;
 uniform vec3 backgroundColor, cursorColor, glintColor;
@@ -23,7 +23,7 @@ vec4 getBrightness(vec2 uv) {
 }
 
 void main() {
-	vec3 color = texture2D(stripes, vUV).rgb;
+	vec3 color = texture2D(stripeTex, vUV).rgb;
 
 	vec4 brightness = getBrightness(vUV);
 

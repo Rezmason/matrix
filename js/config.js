@@ -369,18 +369,12 @@ versions["2021"] = versions.resurrections;
 const range = (f, min = -Infinity, max = Infinity) => Math.max(min, Math.min(max, f));
 const nullNaN = (f) => (isNaN(f) ? null : f);
 
-const clumpArray = (array, clumpSize) =>
-	array.reduce((result, value) => {
-		if (result.length > 0) {
-			const last = result[result.length - 1];
-			if (last.length < clumpSize) {
-				last.push(value);
-				return result;
-			}
-		}
-		result.push([value]);
-		return result;
-	}, []);
+const parseColors = (isHSL) => (s) => {
+	const values = s.split(",").map(parseFloat);
+	return Array(Math.floor(values.length / 3))
+		.fill()
+		.map((_, index) => values.slice(index * 3, (index + 1) * 3));
+};
 
 const paramMapping = {
 	version: { key: "version", parser: (s) => s },
@@ -422,10 +416,10 @@ const paramMapping = {
 		parser: (s) => nullNaN(range(parseFloat(s), 0, 1)),
 	},
 	url: { key: "bgURL", parser: (s) => s },
-	stripeColors: { key: "stripeColors", parser: (s) => s },
-	backgroundColor: { key: "backgroundColor", parser: (s) => s.split(",").map(parseFloat) },
-	cursorColor: { key: "cursorColor", parser: (s) => s.split(",").map(parseFloat) },
-	glintColor: { key: "glintColor", parser: (s) => s.split(",").map(parseFloat) },
+	stripeColors: { key: "stripeColors", parser: parseColors(false) },
+	backgroundColor: { key: "backgroundColor", parser: parseColors(false) },
+	cursorColor: { key: "cursorColor", parser: parseColors(false) },
+	glintColor: { key: "glintColor", parser: parseColors(false) },
 	volumetric: { key: "volumetric", parser: (s) => s.toLowerCase().includes("true") },
 	loops: { key: "loops", parser: (s) => s.toLowerCase().includes("true") },
 	skipIntro: { key: "skipIntro", parser: (s) => s.toLowerCase().includes("true") },

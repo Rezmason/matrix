@@ -7,36 +7,24 @@ import { loadText, make1DTexture, makePassFBO, makePass } from "./utils.js";
 
 const transPrideStripeColors = [
 	[0.36, 0.81, 0.98],
-	[0.36, 0.81, 0.98],
-	[0.36, 0.81, 0.98],
-	[0.96, 0.66, 0.72],
-	[0.96, 0.66, 0.72],
 	[0.96, 0.66, 0.72],
 	[1.0, 1.0, 1.0],
-	[1.0, 1.0, 1.0],
-	[1.0, 1.0, 1.0],
-	[0.96, 0.66, 0.72],
-	[0.96, 0.66, 0.72],
 	[0.96, 0.66, 0.72],
 	[0.36, 0.81, 0.98],
-	[0.36, 0.81, 0.98],
-	[0.36, 0.81, 0.98],
-].flat();
+]
+	.map((color) => Array(3).fill(color))
+	.flat();
 
 const prideStripeColors = [
 	[0.89, 0.01, 0.01],
-	[0.89, 0.01, 0.01],
-	[1.0, 0.55, 0.0],
 	[1.0, 0.55, 0.0],
 	[1.0, 0.93, 0.0],
-	[1.0, 0.93, 0.0],
-	[0.0, 0.5, 0.15],
 	[0.0, 0.5, 0.15],
 	[0.0, 0.3, 1.0],
-	[0.0, 0.3, 1.0],
 	[0.46, 0.03, 0.53],
-	[0.46, 0.03, 0.53],
-].flat();
+]
+	.map((color) => Array(2).fill(color))
+	.flat();
 
 export default ({ regl, config }, inputs) => {
 	const output = makePassFBO(regl, config.useHalfFloat);
@@ -44,12 +32,10 @@ export default ({ regl, config }, inputs) => {
 	const { backgroundColor, cursorColor, glintColor, ditherMagnitude, bloomStrength } = config;
 
 	// Expand and convert stripe colors into 1D texture data
-	const stripeColors =
-		"stripeColors" in config ? config.stripeColors.split(",").map(parseFloat) : config.effect === "pride" ? prideStripeColors : transPrideStripeColors;
-	const numStripeColors = Math.floor(stripeColors.length / 3);
-	const stripes = make1DTexture(
+	const stripeColors = "stripeColors" in config ? config.stripeColors : config.effect === "pride" ? prideStripeColors : transPrideStripeColors;
+	const stripeTex = make1DTexture(
 		regl,
-		stripeColors.slice(0, numStripeColors * 3).map((f) => Math.floor(f * 0xff))
+		stripeColors.map((rgb) => [...rgb, 1])
 	);
 
 	const stripePassFrag = loadText("shaders/glsl/stripePass.frag.glsl");
@@ -65,7 +51,7 @@ export default ({ regl, config }, inputs) => {
 			bloomStrength,
 			tex: inputs.primary,
 			bloomTex: inputs.bloom,
-			stripes,
+			stripeTex,
 		},
 		framebuffer: output,
 	});

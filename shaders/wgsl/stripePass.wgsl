@@ -16,7 +16,7 @@ struct Time {
 @group(0) @binding(2) var linearSampler : sampler;
 @group(0) @binding(3) var tex : texture_2d<f32>;
 @group(0) @binding(4) var bloomTex : texture_2d<f32>;
-@group(0) @binding(5) var stripeTexture : texture_2d<f32>;
+@group(0) @binding(5) var stripeTex : texture_2d<f32>;
 @group(0) @binding(6) var outputTex : texture_storage_2d<rgba8unorm, write>;
 
 struct ComputeInput {
@@ -52,7 +52,7 @@ fn getBrightness(uv : vec2<f32>) -> vec4<f32> {
 
 	var uv = vec2<f32>(coord) / vec2<f32>(screenSize);
 
-	var color = textureSampleLevel( stripeTexture, linearSampler, uv, 0.0 ).rgb;
+	var color = textureSampleLevel( stripeTex, linearSampler, uv, 0.0 ).rgb;
 
 	var brightness = getBrightness(uv);
 
