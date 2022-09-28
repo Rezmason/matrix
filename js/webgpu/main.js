@@ -22,6 +22,7 @@ const loadJS = (src) =>
 const effects = {
 	none: null,
 	plain: makePalettePass,
+	palette: makePalettePass,
 	customStripes: makeStripePass,
 	stripes: makeStripePass,
 	pride: makeStripePass,
@@ -88,7 +89,7 @@ export default async (canvas, config) => {
 		cameraSize,
 	};
 
-	const effectName = config.effect in effects ? config.effect : "plain";
+	const effectName = config.effect in effects ? config.effect : "palette";
 	const pipeline = await makePipeline(context, [makeRain, makeBloomPass, effects[effectName], makeEndPass]);
 
 	let frames = 0;

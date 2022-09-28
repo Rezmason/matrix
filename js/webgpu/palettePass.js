@@ -112,7 +112,7 @@ export default ({ config, device, timeBuffer }) => {
 		});
 
 		const paletteUniforms = paletteShaderUniforms.Palette;
-		paletteBuffer = makePalette(device, paletteUniforms, config.paletteEntries);
+		paletteBuffer = makePalette(device, paletteUniforms, config.palette);
 	})();
 
 	const build = (size, inputs) => {

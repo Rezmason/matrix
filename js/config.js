@@ -61,6 +61,7 @@ const textureURLs = {
 
 const defaults = {
 	font: "matrixcode",
+	effect: "palette", // The name of the effect to apply at the end of the process— mainly handles coloration
 	baseTexture: null, // The name of the texture to apply to the base layer of the glyphs
 	glintTexture: null, // The name of the texture to apply to the glint layer of the glyphs
 	useCamera: false,
@@ -97,7 +98,7 @@ const defaults = {
 	rippleSpeed: 0.2, // The rate at which the ripple effect progresses
 	numColumns: 80, // The maximum dimension of the glyph grid
 	density: 1, // In volumetric mode, the number of actual columns compared to the grid
-	paletteEntries: [
+	palette: [
 		// The color palette that glyph brightness is color mapped to
 		{ hsl: [0.3, 0.9, 0.0], at: 0.0 },
 		{ hsl: [0.3, 0.9, 0.2], at: 0.2 },
@@ -136,7 +137,7 @@ const versions = {
 		glyphHeightToWidth: 1.35,
 		rippleTypeName: "box",
 		numColumns: 108,
-		paletteEntries: [
+		palette: [
 			{ hsl: [0.4, 0.8, 0.0], at: 0.0 },
 			{ hsl: [0.4, 0.8, 0.5], at: 0.5 },
 			{ hsl: [0.4, 0.8, 1.0], at: 1.0 },
@@ -153,7 +154,7 @@ const versions = {
 		hasThunder: true,
 		numColumns: 60,
 		cycleSpeed: 0.35,
-		paletteEntries: [
+		palette: [
 			{ hsl: [0.0, 1.0, 0.0], at: 0.0 },
 			{ hsl: [0.0, 1.0, 0.2], at: 0.2 },
 			{ hsl: [0.0, 1.0, 0.4], at: 0.4 },
@@ -177,7 +178,7 @@ const versions = {
 		rippleTypeName: "circle",
 		rippleSpeed: 0.1,
 		numColumns: 40,
-		paletteEntries: [
+		palette: [
 			{ hsl: [0.0, 0.0, 0.0], at: 0.0 },
 			{ hsl: [0.0, 0.8, 0.3], at: 0.3 },
 			{ hsl: [0.1, 0.8, 0.5], at: 0.5 },
@@ -197,7 +198,7 @@ const versions = {
 		cycleSpeed: 0.03,
 		bloomStrength: 0.7,
 		fallSpeed: 0.3,
-		paletteEntries: [
+		palette: [
 			{ hsl: [0.375, 0.9, 0.0], at: 0.0 },
 			{ hsl: [0.375, 1.0, 0.6], at: 0.92 },
 			{ hsl: [0.375, 1.0, 1.0], at: 1.0 },
@@ -220,7 +221,7 @@ const versions = {
 		cycleSpeed: 0.03,
 		bloomStrength: 0.7,
 		fallSpeed: 0.3,
-		paletteEntries: [
+		palette: [
 			{ hsl: [0.37, 0.6, 0.0], at: 0.0 },
 			{ hsl: [0.37, 0.6, 0.5], at: 1.0 },
 		],
@@ -247,7 +248,7 @@ const versions = {
 		cycleSpeed: 0.03,
 		bloomStrength: 0.7,
 		fallSpeed: 0.3,
-		paletteEntries: [
+		palette: [
 			{ hsl: [0.97, 0.6, 0.0], at: 0.0 },
 			{ hsl: [0.97, 0.6, 0.5], at: 1.0 },
 		],
@@ -274,7 +275,7 @@ const versions = {
 		cycleSpeed: 0.03,
 		bloomStrength: 0.7,
 		fallSpeed: 0.3,
-		paletteEntries: [
+		palette: [
 			{ hsl: [0.12, 0.6, 0.0], at: 0.0 },
 			{ hsl: [0.14, 0.6, 0.5], at: 1.0 },
 		],
@@ -293,7 +294,7 @@ const versions = {
 		cycleFrameSkip: 3,
 		fallSpeed: 0.5,
 		slant: Math.PI * -0.0625,
-		paletteEntries: [
+		palette: [
 			{ hsl: [0.15, 0.25, 0.9], at: 0.0 },
 			{ hsl: [0.6, 0.8, 0.1], at: 0.4 },
 		],
@@ -306,7 +307,7 @@ const versions = {
 		raindropLength: 0.9,
 		fallSpeed: 0.1,
 		highPassThreshold: 0.0,
-		paletteEntries: [
+		palette: [
 			{ hsl: [0.6, 1.0, 0.05], at: 0.0 },
 			{ hsl: [0.6, 0.8, 0.1], at: 0.1 },
 			{ hsl: [0.88, 0.8, 0.5], at: 0.5 },
@@ -330,7 +331,7 @@ const versions = {
 		cycleSpeed: 0.03,
 		bloomStrength: 0.7,
 		fallSpeed: 0.3,
-		paletteEntries: [
+		palette: [
 			{ hsl: [0.37, 0.6, 0.0], at: 0.0 },
 			{ hsl: [0.37, 0.6, 0.5], at: 1.0 },
 		],
