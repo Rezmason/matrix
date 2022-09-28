@@ -1,3 +1,4 @@
+import colorToRGB from "../colorToRGB.js";
 import { structs } from "../../lib/gpu-buffer.js";
 import { loadShader, makeUniformBuffer, makeBindGroup, makeComputeTarget, makePass } from "./utils.js";
 
@@ -5,15 +6,6 @@ import { loadShader, makeUniformBuffer, makeBindGroup, makeComputeTarget, makePa
 // in a linear gradient buffer generated from the passed-in color sequence
 
 // This shader introduces noise into the renders, to avoid banding
-
-const colorToRGB = ([hue, saturation, lightness]) => {
-	const a = saturation * Math.min(lightness, 1 - lightness);
-	const f = (n) => {
-		const k = (n + hue * 12) % 12;
-		return lightness - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
-	};
-	return [f(0), f(8), f(4)];
-};
 
 const makePalette = (device, paletteUniforms, entries) => {
 	const PALETTE_SIZE = 512;
@@ -24,7 +16,7 @@ const makePalette = (device, paletteUniforms, entries) => {
 		.slice()
 		.sort((e1, e2) => e1.at - e2.at)
 		.map((entry) => ({
-			rgb: colorToRGB(entry.hsl),
+			rgb: colorToRGB(entry.color),
 			arrayIndex: Math.floor(Math.max(Math.min(1, entry.at), 0) * (PALETTE_SIZE - 1)),
 		}));
 	sortedEntries.unshift({ rgb: sortedEntries[0].rgb, arrayIndex: 0 });

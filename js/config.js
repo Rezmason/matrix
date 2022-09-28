@@ -59,6 +59,9 @@ const textureURLs = {
 	metal: "assets/metal.png",
 };
 
+const hsl = (...values) => ({ space: "hsl", values });
+const rgb = (...values) => ({ space: "rgb", values });
+
 const defaults = {
 	font: "matrixcode",
 	effect: "palette", // The name of the effect to apply at the end of the process— mainly handles coloration
@@ -100,10 +103,10 @@ const defaults = {
 	density: 1, // In volumetric mode, the number of actual columns compared to the grid
 	palette: [
 		// The color palette that glyph brightness is color mapped to
-		{ hsl: [0.3, 0.9, 0.0], at: 0.0 },
-		{ hsl: [0.3, 0.9, 0.2], at: 0.2 },
-		{ hsl: [0.3, 0.9, 0.7], at: 0.7 },
-		{ hsl: [0.3, 0.9, 0.8], at: 0.8 },
+		{ color: hsl(0.3, 0.9, 0.0), at: 0.0 },
+		{ color: hsl(0.3, 0.9, 0.2), at: 0.2 },
+		{ color: hsl(0.3, 0.9, 0.7), at: 0.7 },
+		{ color: hsl(0.3, 0.9, 0.8), at: 0.8 },
 	],
 	raindropLength: 0.75, // Adjusts the frequency of raindrops (and their length) in a column
 	slant: 0, // The angle at which rain falls; the orientation of the glyph grid
@@ -138,9 +141,9 @@ const versions = {
 		rippleTypeName: "box",
 		numColumns: 108,
 		palette: [
-			{ hsl: [0.4, 0.8, 0.0], at: 0.0 },
-			{ hsl: [0.4, 0.8, 0.5], at: 0.5 },
-			{ hsl: [0.4, 0.8, 1.0], at: 1.0 },
+			{ color: hsl(0.4, 0.8, 0.0), at: 0.0 },
+			{ color: hsl(0.4, 0.8, 0.5), at: 0.5 },
+			{ color: hsl(0.4, 0.8, 1.0), at: 1.0 },
 		],
 		raindropLength: 1.5,
 	},
@@ -155,11 +158,11 @@ const versions = {
 		numColumns: 60,
 		cycleSpeed: 0.35,
 		palette: [
-			{ hsl: [0.0, 1.0, 0.0], at: 0.0 },
-			{ hsl: [0.0, 1.0, 0.2], at: 0.2 },
-			{ hsl: [0.0, 1.0, 0.4], at: 0.4 },
-			{ hsl: [0.1, 1.0, 0.7], at: 0.7 },
-			{ hsl: [0.2, 1.0, 1.0], at: 1.0 },
+			{ color: hsl(0.0, 1.0, 0.0), at: 0.0 },
+			{ color: hsl(0.0, 1.0, 0.2), at: 0.2 },
+			{ color: hsl(0.0, 1.0, 0.4), at: 0.4 },
+			{ color: hsl(0.1, 1.0, 0.7), at: 0.7 },
+			{ color: hsl(0.2, 1.0, 1.0), at: 1.0 },
 		],
 		raindropLength: 0.5,
 		slant: (22.5 * Math.PI) / 180,
@@ -179,11 +182,11 @@ const versions = {
 		rippleSpeed: 0.1,
 		numColumns: 40,
 		palette: [
-			{ hsl: [0.0, 0.0, 0.0], at: 0.0 },
-			{ hsl: [0.0, 0.8, 0.3], at: 0.3 },
-			{ hsl: [0.1, 0.8, 0.5], at: 0.5 },
-			{ hsl: [0.1, 1.0, 0.6], at: 0.6 },
-			{ hsl: [0.1, 1.0, 0.9], at: 0.9 },
+			{ color: hsl(0.0, 0.0, 0.0), at: 0.0 },
+			{ color: hsl(0.0, 0.8, 0.3), at: 0.3 },
+			{ color: hsl(0.1, 0.8, 0.5), at: 0.5 },
+			{ color: hsl(0.1, 1.0, 0.6), at: 0.6 },
+			{ color: hsl(0.1, 1.0, 0.9), at: 0.9 },
 		],
 		raindropLength: 0.4,
 	},
@@ -199,9 +202,9 @@ const versions = {
 		bloomStrength: 0.7,
 		fallSpeed: 0.3,
 		palette: [
-			{ hsl: [0.375, 0.9, 0.0], at: 0.0 },
-			{ hsl: [0.375, 1.0, 0.6], at: 0.92 },
-			{ hsl: [0.375, 1.0, 1.0], at: 1.0 },
+			{ color: hsl(0.375, 0.9, 0.0), at: 0.0 },
+			{ color: hsl(0.375, 1.0, 0.6), at: 0.92 },
+			{ color: hsl(0.375, 1.0, 1.0), at: 1.0 },
 		],
 	},
 	trinity: {
@@ -222,8 +225,8 @@ const versions = {
 		bloomStrength: 0.7,
 		fallSpeed: 0.3,
 		palette: [
-			{ hsl: [0.37, 0.6, 0.0], at: 0.0 },
-			{ hsl: [0.37, 0.6, 0.5], at: 1.0 },
+			{ color: hsl(0.37, 0.6, 0.0), at: 0.0 },
+			{ color: hsl(0.37, 0.6, 0.5), at: 1.0 },
 		],
 		cycleSpeed: 0.01,
 		volumetric: true,
@@ -249,8 +252,8 @@ const versions = {
 		bloomStrength: 0.7,
 		fallSpeed: 0.3,
 		palette: [
-			{ hsl: [0.97, 0.6, 0.0], at: 0.0 },
-			{ hsl: [0.97, 0.6, 0.5], at: 1.0 },
+			{ color: hsl(0.97, 0.6, 0.0), at: 0.0 },
+			{ color: hsl(0.97, 0.6, 0.5), at: 1.0 },
 		],
 		cycleSpeed: 0.015,
 		volumetric: true,
@@ -276,8 +279,8 @@ const versions = {
 		bloomStrength: 0.7,
 		fallSpeed: 0.3,
 		palette: [
-			{ hsl: [0.12, 0.6, 0.0], at: 0.0 },
-			{ hsl: [0.14, 0.6, 0.5], at: 1.0 },
+			{ color: hsl(0.12, 0.6, 0.0), at: 0.0 },
+			{ color: hsl(0.14, 0.6, 0.5), at: 1.0 },
 		],
 		cycleSpeed: 0.01,
 		volumetric: true,
@@ -295,8 +298,8 @@ const versions = {
 		fallSpeed: 0.5,
 		slant: Math.PI * -0.0625,
 		palette: [
-			{ hsl: [0.15, 0.25, 0.9], at: 0.0 },
-			{ hsl: [0.6, 0.8, 0.1], at: 0.4 },
+			{ color: hsl(0.15, 0.25, 0.9), at: 0.0 },
+			{ color: hsl(0.6, 0.8, 0.1), at: 0.4 },
 		],
 	},
 	twilight: {
@@ -308,11 +311,11 @@ const versions = {
 		fallSpeed: 0.1,
 		highPassThreshold: 0.0,
 		palette: [
-			{ hsl: [0.6, 1.0, 0.05], at: 0.0 },
-			{ hsl: [0.6, 0.8, 0.1], at: 0.1 },
-			{ hsl: [0.88, 0.8, 0.5], at: 0.5 },
-			{ hsl: [0.15, 1.0, 0.6], at: 0.8 },
-			// { hsl: [0.1, 1.0, 0.9], at: 1.0 },
+			{ color: hsl(0.6, 1.0, 0.05), at: 0.0 },
+			{ color: hsl(0.6, 0.8, 0.1), at: 0.1 },
+			{ color: hsl(0.88, 0.8, 0.5), at: 0.5 },
+			{ color: hsl(0.15, 1.0, 0.6), at: 0.8 },
+			// { color: hsl(0.1, 1.0, 0.9), at: 1.0 },
 		],
 	},
 
@@ -332,8 +335,8 @@ const versions = {
 		bloomStrength: 0.7,
 		fallSpeed: 0.3,
 		palette: [
-			{ hsl: [0.37, 0.6, 0.0], at: 0.0 },
-			{ hsl: [0.37, 0.6, 0.5], at: 1.0 },
+			{ color: hsl(0.37, 0.6, 0.0), at: 0.0 },
+			{ color: hsl(0.37, 0.6, 0.5), at: 1.0 },
 		],
 		cycleSpeed: 0.01,
 		raindropLength: 0.3,
@@ -365,6 +368,19 @@ versions["2021"] = versions.resurrections;
 
 const range = (f, min = -Infinity, max = Infinity) => Math.max(min, Math.min(max, f));
 const nullNaN = (f) => (isNaN(f) ? null : f);
+
+const clumpArray = (array, clumpSize) =>
+	array.reduce((result, value) => {
+		if (result.length > 0) {
+			const last = result[result.length - 1];
+			if (last.length < clumpSize) {
+				last.push(value);
+				return result;
+			}
+		}
+		result.push([value]);
+		return result;
+	}, []);
 
 const paramMapping = {
 	version: { key: "version", parser: (s) => s },
