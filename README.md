@@ -95,8 +95,8 @@ Now you know link fu. Here's a list of customization options:
 - `density` - the number of 3D raindrops to draw, proportional to the default. Default is 1.0.
 - `forwardSpeed` - the rate that the 3D raindrops approach. Default is 1.0.
 - `slant` - the angle that the 2D raindrops fall, in degrees. Default is 0.
-- `bloomSize` - the glow quality, from 0 to 1. Default is 0.5. Lowering this value may help the digital rain run smoother on your device.
-- `bloomStrength` - the glow intensity, from 0 to 1. Default is 1.
+- `bloomSize` - the glow quality, from 0 to 1. Default is 0.4. Lowering this value may help the digital rain run smoother on your device.
+- `bloomStrength` - the glow intensity, from 0 to 1. Default is 0.7.
 - `ditherMagnitude` - the amount to randomly darken pixels, to conceal [banding](https://en.wikipedia.org/wiki/Colour_banding). Default is 0.05.
 - `resolution` - the image size, relative to the window size. Default is 1. Lowering this value may improve your performance, especially on high pixel density displays.
 - `raindropLength` - the vertical scale of "raindrops" in the columns. Can be any number.
