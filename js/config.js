@@ -369,6 +369,11 @@ versions["2021"] = versions.resurrections;
 const range = (f, min = -Infinity, max = Infinity) => Math.max(min, Math.min(max, f));
 const nullNaN = (f) => (isNaN(f) ? null : f);
 
+const parseColor = (isHSL) => (s) => ({
+	space: isHSL ? "hsl" : "rgb",
+	values: s.split(",").map(parseFloat),
+});
+
 const parseColors = (isHSL) => (s) => {
 	const values = s.split(",").map(parseFloat);
 	const space = isHSL ? "hsl" : "rgb";
@@ -380,10 +385,22 @@ const parseColors = (isHSL) => (s) => {
 		}));
 };
 
-const parseColor = (isHSL) => (s) => ({
-	space: isHSL ? "hsl" : "rgb",
-	values: s.split(",").map(parseFloat),
-});
+const parsePalette = (isHSL) => (s) => {
+	const values = s.split(",").map(parseFloat);
+	const space = isHSL ? "hsl" : "rgb";
+	return Array(Math.floor(values.length / 4))
+		.fill()
+		.map((_, index) => {
+			const colorValues = values.slice(index * 4, (index + 1) * 4);
+			return {
+				color: {
+					space,
+					values: colorValues.slice(0, 3),
+				},
+				at: colorValues[3],
+			};
+		});
+};
 
 const paramMapping = {
 	version: { key: "version", parser: (s) => s },
@@ -425,10 +442,18 @@ const paramMapping = {
 		parser: (s) => nullNaN(range(parseFloat(s), 0, 1)),
 	},
 	url: { key: "bgURL", parser: (s) => s },
+	palette: { key: "palette", parser: parsePalette(false) },
 	stripeColors: { key: "stripeColors", parser: parseColors(false) },
 	backgroundColor: { key: "backgroundColor", parser: parseColor(false) },
 	cursorColor: { key: "cursorColor", parser: parseColor(false) },
 	glintColor: { key: "glintColor", parser: parseColor(false) },
+
+	paletteHSL: { key: "palette", parser: parsePalette(true) },
+	stripeHSL: { key: "stripeColors", parser: parseColors(true) },
+	backgroundHSL: { key: "backgroundColor", parser: parseColor(true) },
+	cursorHSL: { key: "cursorColor", parser: parseColor(true) },
+	glintHSL: { key: "glintColor", parser: parseColor(true) },
+
 	volumetric: { key: "volumetric", parser: (s) => s.toLowerCase().includes("true") },
 	loops: { key: "loops", parser: (s) => s.toLowerCase().includes("true") },
 	skipIntro: { key: "skipIntro", parser: (s) => s.toLowerCase().includes("true") },
@@ -436,6 +461,13 @@ const paramMapping = {
 	once: { key: "once", parser: (s) => s.toLowerCase().includes("true") },
 	isometric: { key: "isometric", parser: (s) => s.toLowerCase().includes("true") },
 };
+
+paramMapping.paletteRGB = paramMapping.palette;
+paramMapping.stripeRGB = paramMapping.stripeColors;
+paramMapping.backgroundRGB = paramMapping.backgroundColor;
+paramMapping.cursorRGB = paramMapping.cursorColor;
+paramMapping.glintRGB = paramMapping.glintColor;
+
 paramMapping.dropLength = paramMapping.raindropLength;
 paramMapping.angle = paramMapping.slant;
 paramMapping.colors = paramMapping.stripeColors;

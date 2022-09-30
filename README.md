@@ -22,7 +22,8 @@
 - [Megacity Mode, as seen in Revolutions](https://rezmason.github.io/matrix?version=megacity)
 - [Pride flag colors](https://rezmason.github.io/matrix/?effect=pride)
 - [Trans flag colors](https://rezmason.github.io/matrix/?effect=trans)
-- [Custom stripes (`colors=R,G,B,R,G,B,R,G,B, etc`)](https://rezmason.github.io/matrix/?effect=customStripes&colors=1,0,0,1,1,0,0,1,0)
+- [Custom stripes (`effect=stripes&stripeColors=R,G,B,R,G,B,R,G,B, etc`)](https://rezmason.github.io/matrix/?effect=stripes&stripeColors=1,0,0,1,1,0,0,1,0)
+- [Custom palette (`palette=R,G,B,%,R,G,B,%,R,G,B,%, etc`)](https://rezmason.github.io/matrix/?palette=0.1,0,0.2,0,0.2,0.5,0,0.5,1,0.7,0,1)
 - [Custom image (`url=www.website.com/picture.jpg`)](https://rezmason.github.io/matrix/?effect=image&url=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg)
 - [Debug view (`effect=none`)](https://rezmason.github.io/matrix/?effect=none) (*epilepsy warning*: this once had lots of flickering)
 - [Starting from a blank screen (`skipIntro=false`)](https://rezmason.github.io/matrix/?skipIntro=false) (which some people really like, but isn't the default mode)
@@ -103,10 +104,13 @@ Now you know link fu. Here's a list of customization options:
 - `animationSpeed` - the overall speed of the animation. Can be any number.
 - `fallSpeed` - the speed of the rain's descent. Can be any number.
 - `cycleSpeed` - the speed that the glyphs change their symbol. Can be any number.
-- `effect` - alternatives to the default post-processing effect. Can be "plain", "pride", "customStripes", "none", "image" or "mirror".
+- `effect` - alternatives to the default post-processing effect. Can be "plain", "pride", "stripes", "none", "image" or "mirror".
   - ("none" displays the 'debug view', a behind-the-scenes look at the anatomy of the effect.)
 - `camera` - some effects, ie. the mirror effect, optionally support webcam input. Can be "true" or "false". Default is false.
-- `colors` - if you set the effect to "customStripes", you can specify the colors of vertical stripes as alternating *R,G,B* numeric values, like so: [https://rezmason.github.io/matrix/?effect=customStripes&colors=1,0,0,1,1,0,0,1,0](https://rezmason.github.io/matrix/?effect=customStripes&colors=1,0,0,1,1,0,0,1,0)
+- `stripeColors` - if you set the effect to "stripes", you can specify the colors of vertical stripes as alternating *R,G,B* numeric values, like so: [https://rezmason.github.io/matrix/?effect=stripes&stripeColors=1,0,0,1,1,0,0,1,0](https://rezmason.github.io/matrix/?effect=stripes&stripeColors=1,0,0,1,1,0,0,1,0)
+- `palette` — with the normal "palette" effect, you can specify the colors and placement of the colors along the color grade as alternating *R,G,B,%* numeric values, like so: [https://rezmason.github.io/matrix/?palette=0.1,0,0.2,0,0.2,0.5,0,0.5,1,0.7,0,1](https://rezmason.github.io/matrix/?palette=0.1,0,0.2,0,0.2,0.5,0,0.5,1,0.7,0,1)
+- `backgroundColor`, `cursorColor`, `glintColor` — other *R,G,B* values that apply to the corresponding parts of the effect.
+- `paletteHSL`, `stripeHSL`, `backgroundHSL`, `cursorHSL`, and `glintHSL` — the same as the above, except they use *H,S,L* (hue, saturation, lightness) instead of *R,G,B*.
 - `url` - if you set the effect to "image", this is how you specify which image to load. It doesn't work with any URL; I suggest grabbing them from Wikipedia: [https://rezmason.github.io/matrix/?effect=image&url=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg](https://rezmason.github.io/matrix/?effect=image&url=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg)
 - `loops` - (WIP) if set to "true", this causes the effect to loop, so that it can be converted into a looping video.
 
