@@ -7,22 +7,22 @@ import { loadText, make1DTexture, makePassFBO, makePass } from "./utils.js";
 // This shader introduces noise into the renders, to avoid banding
 
 const transPrideStripeColors = [
-	[0.36, 0.81, 0.98],
-	[0.96, 0.66, 0.72],
-	[1.0, 1.0, 1.0],
-	[0.96, 0.66, 0.72],
-	[0.36, 0.81, 0.98],
+	{ space: "rgb", values: [0.36, 0.81, 0.98] },
+	{ space: "rgb", values: [0.96, 0.66, 0.72] },
+	{ space: "rgb", values: [1.0, 1.0, 1.0] },
+	{ space: "rgb", values: [0.96, 0.66, 0.72] },
+	{ space: "rgb", values: [0.36, 0.81, 0.98] },
 ]
 	.map((color) => Array(3).fill(color))
 	.flat();
 
 const prideStripeColors = [
-	[0.89, 0.01, 0.01],
-	[1.0, 0.55, 0.0],
-	[1.0, 0.93, 0.0],
-	[0.0, 0.5, 0.15],
-	[0.0, 0.3, 1.0],
-	[0.46, 0.03, 0.53],
+	{ space: "rgb", values: [0.89, 0.01, 0.01] },
+	{ space: "rgb", values: [1.0, 0.55, 0.0] },
+	{ space: "rgb", values: [1.0, 0.93, 0.0] },
+	{ space: "rgb", values: [0.0, 0.5, 0.15] },
+	{ space: "rgb", values: [0.0, 0.3, 1.0] },
+	{ space: "rgb", values: [0.46, 0.03, 0.53] },
 ]
 	.map((color) => Array(2).fill(color))
 	.flat();
