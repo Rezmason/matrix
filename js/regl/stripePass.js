@@ -34,7 +34,6 @@ export default ({ regl, config }, inputs) => {
 
 	// Expand and convert stripe colors into 1D texture data
 	const stripeColors = "stripeColors" in config ? config.stripeColors : config.effect === "pride" ? prideStripeColors : transPrideStripeColors;
-	console.log(stripeColors);
 	const stripeTex = make1DTexture(
 		regl,
 		stripeColors.map((color) => [...colorToRGB(color), 1])
