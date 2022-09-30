@@ -1,7 +1,5 @@
 TODO:
 
-All colors in config should be able to be RGB or HSL
-
 Bloom comparison: WebGPU vs REGL
   Why are they different?
   Create a project that tests them side-by-side

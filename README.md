@@ -2,6 +2,9 @@
 
 # matrix (web-based green code rain, made with love)
 
+**_News Update September 2022:_** this project was [featured in Vice Motherboard](https://www.vice.com/en/article/88qvn3/coder-makes-matrix-green-rain-simulator-that-lilly-wachowski-says-is-better-than-the-original), along with insight into the effect from Lilly Wachowski.
+
+<a name="quicklinks"/>
 ### TL;DR
 
 - [Classic Matrix code](https://rezmason.github.io/matrix)
@@ -31,13 +34,28 @@
 - [The free classic font (TrueType).](https://github.com/Rezmason/matrix/raw/master/assets/Matrix-Code.ttf)
 - [The free *Resurrections* font (TrueType).](https://github.com/Rezmason/matrix/raw/master/assets/Matrix-Resurrected.ttf)
 - [The unofficial glyph database.](https://docs.google.com/spreadsheets/d/1NRJP88EzQlj_ghBbtjkGi-NbluZzlWpAqVIAq1MDGJc)
+
 ---
-### about
+<a name="contents"/>
+### Contents
+[About](#about)
+[Goals](#goals)
+[Sidenote: other people's Matrix effects](#others)
+[Customization](#customization)
+[Future directions](#future)
+[Friends of the project](#friends)
+[Colophon](#colophon)
+[Other details](#details)
+
+---
+<a name="about"/>
+### About
 
 This project is a web implementation of the raining green code seen in the *Matrix* franchise. It's built right on top of the functional WebGL wrapper, [REGL](https://regl.party), with beta support for the upcoming graphics API [WebGPU](https://github.com/gpuweb/gpuweb); its previous Three.js version is maintained in a separate branch.
 
 ---
-### goals
+<a name="goals"/>
+### Goals
 
 The way I see it, there's four kinds of Matrix effects people call ["digital rain"](http://matrix.wikia.com/wiki/Matrix_code):
 1. The green symbols that "rain down" operators' screens endlessly
@@ -65,14 +83,16 @@ The following criteria guided the development process:
 - **Promote a progressive interpretation of the film franchise.** *The Matrix* is an action film you can enjoy without critical analysis, but if you do read into it, you'll be rewarded. And let's be clear: **The Matrix is a story about transitioning, directed by two siblings who transitioned**. This is undeniable. Its franchise has plenty more themes, and plenty of room for interpretation, but the communities of misogynists and bigots who claim this imagery for their movements cannot be tolerated in any form. This is a chance to open minds, not shut them.
 
 ---
-### side note: other people's Matrix effects
+<a name="others"/>
+### Sidenote: other people's Matrix effects
 
 The number of implementations out there of this effect is a testament to the size of the film's impact on popular culture. For decades, I've enjoyed searching for and comparing them from time to time. That's probably how you arrived here— it's *fun* to see what kinds of solutions different people come up with to a problem, when the process is purely recreational and its success is subjective. I myself tried and failed to make the effect many times over.
 
 Some of the [earliest](https://github.com/ppetr/xlockmore/blob/master/modes/matrix.c), [roughest](https://github.com/Zygo/xscreensaver/blob/d1f484cfa47f4a0862140421480bb536ad66ede9/hacks/xmatrix.c) versions were made after the film hit theaters in March, but before it was released on home media in October— people were recreating the effect purely from memory. Others probably used the official screensaver as a reference, which was made by the time-strappped developers of [the (excellent, defunct) official site](https://web.archive.org/web/*/http://whatisthematrix.com) from the images and multimedia tools they had available.
 
 ---
-### customization
+<a name="customization"/>
+### Customization
 
 You can customize the digital rain quite a bit by stapling "URL variables" to its URL— by putting a '?' at the end of the link above, and then chaining together words, like this:
 
@@ -115,6 +135,7 @@ Now you know link fu. Here's a list of customization options:
 - `loops` - (WIP) if set to "true", this causes the effect to loop, so that it can be converted into a looping video.
 
 ---
+<a name="future"/>
 ### Future directions
 
 This project is still in active development, but some upcoming features are worth mentioning.
@@ -123,7 +144,16 @@ This project is still in active development, but some upcoming features are wort
 - **A user interface that isn't a URL.** This project supports a lot of configurable options under the hood, and it would be wise to add a fun looking UI that exposes them all to visitors in an intuitive way.
 
 ---
-### Contributions
+<a name="friends"/>
+### Friends of the project
+
+- Vesuveus was gracious to [spend time discussing this project](https://anchor.fm/vesuveusmxo/episodes/Podcast-Episode-5---Rezmason--Matrix-Code-e1i3iia) and the effect that inspires it on his long-running podcast, [The Matrix Online Revisited with Vesuveus](https://anchor.fm/vesuveusmxo). Fandom is the interwoven story of people interacting with a piece of media, and Vesuveus keeps ours alive and gives them perspective.
+- Alexi García's [stunning in-depth comparison](https://bit.ly/MatrixVersions) of the many home video releases of *The Matrix* is a must-see for any fan of the franchise, and those curious about how a movie can subtly change over time. Alexi's diligence and familiarity with the material are to thank for the high-fidelity references and high-fidelity feedback that have helped shape this project. Visit [his main site](https://alxcia.wordpress.com/) for more information.
+- GitHub user 57r31 produced a proof of concept that led to the [interactive mirror effect](https://rezmason.github.io/matrix/?version=updated&effect=mirror).
+
+---
+<a name="colophon"/>
+### Colophon
 
 The Coptic glyphs in the "Paradise Matrix" version are derived from [George Douros's font "Symbola"](http://users.teilar.gr/~g1951d), due to their similarity to the script in [CG II of Nag Hammadi](https://en.wikipedia.org/wiki/Nag_Hammadi_Codex_II). If a 4th century Gnostic scribe trolled Athanasius over IRC, it might look like this.
 
@@ -131,9 +161,9 @@ The Gothic glyphs in the "Nightmare Matrix" version are derived from [Dr. jur. R
 
 The glyphs used in the "Palimpsest" and "Twilight" versions are derived from [Teague Chrystie's font "Huberfish"](http://robotsoup.com/huberfish.html), a fictitious alphabet that comes in several styles. If a spacedock technician bought a soda from a vending machine in an cool utopian future that will never happen, it might look like this.
 
-GitHub user 57r31 produced a proof of concept that led to the [interactive mirror effect](https://rezmason.github.io/matrix/?version=updated&effect=mirror).
 
 ---
+<a name="details"/>
 ### Other details
 
 The glyphs are formatted as a multi-channel distance field (or MSDF) via Victor Chlumsky's [msdfgen](https://github.com/Chlumsky/msdfgen). This format preserves the crisp edges and corners of vector graphics when rendered as textures. Chlumsky's thesis paper, which is in English and is also easy to read, is [available to download here](https://dspace.cvut.cz/handle/10467/62770).
