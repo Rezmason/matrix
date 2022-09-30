@@ -388,6 +388,9 @@ fn computeEffect (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, scre
 	// Calculate the vertex's world space position
 	var worldPosition = quadPosition * vec2<f32>(1.0, config.glyphVerticalSpacing);
 	worldPosition += quadCorner * vec2<f32>(config.density, 1.0);
+	if (volumetric) {
+		worldPosition.y += randomFloat(vec2(quadPosition.x, 1.0));
+	}
 	worldPosition /= quadGridSize;
 	worldPosition = (worldPosition - 0.5) * 2.0;
 
