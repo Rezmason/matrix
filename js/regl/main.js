@@ -61,12 +61,21 @@ export default async (canvas, config) => {
 		await setupCamera();
 	}
 
-	const regl = createREGL({
-		canvas,
-		extensions: ["OES_texture_half_float", "OES_texture_half_float_linear"],
-		// These extensions are also needed, but Safari misreports that they are missing
-		optionalExtensions: ["EXT_color_buffer_half_float", "WEBGL_color_buffer_float", "OES_standard_derivatives"],
-	});
+	const extensions = ["OES_texture_half_float", "OES_texture_half_float_linear"];
+	// These extensions are also needed, but Safari misreports that they are missing
+	const optionalExtensions = ["EXT_color_buffer_half_float", "WEBGL_color_buffer_float", "OES_standard_derivatives"];
+
+	switch (config.testFix) {
+		case "fwidth_10_1_2022_A":
+			extensions.push("OES_standard_derivatives");
+			break;
+		case "fwidth_10_1_2022_B":
+			optionalExtensions.forEach(ext => extensions.push(ext));
+			extensions.length = 0;
+			break;
+	}
+
+	const regl = createREGL({ canvas, extensions, optionalExtensions, });
 
 	const cameraTex = regl.texture(cameraCanvas);
 	const lkg = await getLKG(config.useHoloplay, true);

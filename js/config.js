@@ -403,6 +403,7 @@ const parsePalette = (isHSL) => (s) => {
 };
 
 const paramMapping = {
+	testFix: { key: "testFix", parser: (s) => s },
 	version: { key: "version", parser: (s) => s },
 	font: { key: "font", parser: (s) => s },
 	effect: { key: "effect", parser: (s) => s },
