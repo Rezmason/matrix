@@ -55,7 +55,7 @@
 
 This project is a web implementation of the raining green code seen in the *Matrix* franchise. It's built right on top of the functional WebGL wrapper, [REGL](https://regl.party), with beta support for the upcoming graphics API [WebGPU](https://github.com/gpuweb/gpuweb); its previous Three.js version is maintained in a separate branch.
 
-This project runs right in the web browser; you can serve it from any HTTP/HTTPS server with no additional setup.
+This project runs right in the web browser; you can serve it with any HTTP/HTTPS server, with no additional setup. For example, on a Mac you can point a Terminal shell at a local copy of the project and run a simple HTTP server with Python: `cd /path/to/the/project ; python3 -m http.server`
 
 
 ## Goals
