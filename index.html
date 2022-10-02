@@ -3,25 +3,89 @@
 	<head>
 		<title>Matrix digital rain</title>
 		<meta charset="utf-8" />
-		<meta name="apple-mobile-web-app-capable" content="yes"></meta>
-      		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"></meta>
+		<meta name="apple-mobile-web-app-capable" content="yes" /></meta>
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" /></meta>
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
 		<style>
 			@supports (padding-top: env(safe-area-inset-top)) {
 				body {
 					padding: 0;
-				   	height: calc(100% + env(safe-area-inset-top));
-			  	}
-		  	}
+					height: calc(100% + env(safe-area-inset-top));
+				}
+			}
 			body {
 				background: black;
 				overflow: hidden;
 				margin: 0;
+
+				font-family: monospace;
+				font-size: 2em;
+				text-align: center;
 			}
 
 			canvas {
 				width: 100vw;
 				height: 100vh;
+			}
+
+			p {
+				color: hsl(108, 90%, 70%);
+				text-shadow: hsl(108, 90%, 40%) 1px 0 10px;
+			}
+
+			.notice {
+				margin-top: 10em;
+				animation: fadeInAnimation ease 3s;
+				animation-iteration-count: 1;
+				animation-fill-mode: forwards;
+			}
+
+			@keyframes fadeInAnimation {
+				0% {
+					opacity: 0;
+				}
+				100% {
+					opacity: 1;
+				}
+			}
+
+			.pill {
+				display: inline-block;
+				background: gray;
+				border: 0.3em solid lightgray;
+				font-size: 1rem;
+				font-family: monospace;
+				color: white;
+				padding: 0.5em 1em;
+				border-radius: 2em;
+				min-width: 6rem;
+				margin: 3em;
+				text-decoration: none;
+				cursor: pointer;
+				text-transform: uppercase;
+				font-weight: bold;
+			}
+
+			.blue {
+				background: linear-gradient(skyblue, blue, black, black, darkblue);
+				border-color: darkblue;
+				color: lightblue;
+			}
+
+			.blue:hover {
+				border-color: blue;
+				color: white;
+			}
+
+			.red {
+				background: linear-gradient(lightpink, crimson, black, black, darkred);
+				border-color: darkred;
+				color: lightpink;
+			}
+
+			.red:hover {
+				border-color: crimson;
+				color: white;
 			}
 		</style>
 	</head>

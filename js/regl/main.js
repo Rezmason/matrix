@@ -70,12 +70,12 @@ export default async (canvas, config) => {
 			extensions.push("OES_standard_derivatives");
 			break;
 		case "fwidth_10_1_2022_B":
-			optionalExtensions.forEach(ext => extensions.push(ext));
+			optionalExtensions.forEach((ext) => extensions.push(ext));
 			extensions.length = 0;
 			break;
 	}
 
-	const regl = createREGL({ canvas, extensions, optionalExtensions, });
+	const regl = createREGL({ canvas, extensions, optionalExtensions });
 
 	const cameraTex = regl.texture(cameraCanvas);
 	const lkg = await getLKG(config.useHoloplay, true);

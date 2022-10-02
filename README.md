@@ -45,6 +45,7 @@
 - [Goals](#goals)
 - [Sidenote: other people's Matrix effects](#sidenote-other-peoples-matrix-effects)
 - [Customization](#customization)
+- [Troubleshooting](#troubleshooting)
 - [Future directions](#future-directions)
 - [Friends of the project](#friends-of-the-project)
 - [Colophon](#colophon)
@@ -135,6 +136,12 @@ Now you know link fu. Here's a list of customization options:
 - `url` - if you set the effect to "image", this is how you specify which image to load. It doesn't work with any URL; I suggest grabbing them from Wikipedia: [https://rezmason.github.io/matrix/?effect=image&url=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg](https://rezmason.github.io/matrix/?effect=image&url=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg)
 - `loops` - (WIP) if set to "true", this causes the effect to loop, so that it can be converted into a looping video.
 
+
+## Troubleshooting
+
+There haven't been many reported issues yet that weren't quick fixes, but one has stood out: many visitors have previously *disabled hardware acceleration* in their Chrome browsers, at the advice of well-meaning Internet websites.
+
+What this does is cause Chrome to fall back to **SwiftShader**, a software renderer that runs projects like this one at a much slower rate. Because of this, if you are seeing serious performance issues on Chrome, it's recommended that you ensure hardware acceleration is enabled in your browser settings.
 
 ## Future directions
 
