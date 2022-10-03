@@ -117,7 +117,7 @@ vec2 getSymbol(vec2 uv, float index) {
 	// MSDF: calculate brightness of fragment based on distance to shape
 	vec2 symbol;
 	{
-		vec2 unitRange = vec2(msdfPxRange) / glyphMSDFSize;
+		vec2 unitRange = vec2(msdfPxRange) / (glyphMSDFSize * 1000.); // Not sure why this x1000 softening is necessary
 		vec2 screenTexSize = vec2(1.0) / fwidth(uv);
 		float screenPxRange = max(0.5 * dot(unitRange, screenTexSize), 1.0);
 
@@ -127,7 +127,7 @@ vec2 getSymbol(vec2 uv, float index) {
 	}
 
 	if (isolateGlint) {
-		vec2 unitRange = vec2(msdfPxRange) / glintMSDFSize;
+		vec2 unitRange = vec2(msdfPxRange) / (glintMSDFSize * 1000.); // Not sure why this x1000 softening is necessary
 		vec2 screenTexSize = vec2(1.0) / fwidth(uv);
 		float screenPxRange = max(0.5 * dot(unitRange, screenTexSize), 1.0);
 
@@ -167,24 +167,6 @@ void main() {
 			) * symbol.r,
 			1.
 		);
-
-		uv = fract(uv * vec2(numColumns, numRows));
-		uv -= 0.5;
-		uv *= clamp(1. - glyphEdgeCrop, 0., 1.);
-		if (length(uv) > 0.25) {
-			discard;
-		}
-		uv += 0.5;
-
-		float goal = fwidth(uv - 0.5).x;
-		float computed = 1.0;
-		float magnifier = 50.0;
-
-		if (uv.x <= 0.5) {
-			gl_FragColor = vec4(vec3(goal * magnifier), 1.0);
-		} else {
-			gl_FragColor = vec4(vec3(computed * magnifier), 1.0);
-		}
 	} else {
 		gl_FragColor = vec4(brightness.rg * symbol.r, brightness.b * symbol.g, 0.);
 	}
