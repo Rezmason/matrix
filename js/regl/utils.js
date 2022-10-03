@@ -36,6 +36,8 @@ const loadImage = (regl, url) => {
 			}
 			return texture;
 		},
+		width: () => (loaded ? texture.width : 1),
+		height: () => (loaded ? texture.height : 1),
 		loaded: (async () => {
 			if (url != null) {
 				const data = new Image();

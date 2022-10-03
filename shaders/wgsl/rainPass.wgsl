@@ -26,6 +26,7 @@ struct Config {
 	rippleType : i32,
 
 	// render-specific properties
+	msdfPxRange : f32,
 	forwardSpeed : f32,
 	baseBrightness : f32,
 	baseContrast : f32,
@@ -94,7 +95,7 @@ struct IntroCellData {
 // Render-specific bindings
 @group(0) @binding(2) var<uniform> scene : Scene;
 @group(0) @binding(3) var linearSampler : sampler;
-@group(0) @binding(4) var msdfTexture : texture_2d<f32>;
+@group(0) @binding(4) var glyphMSDFTexture : texture_2d<f32>;
 @group(0) @binding(5) var glintMSDFTexture : texture_2d<f32>;
 @group(0) @binding(6) var baseTexture : texture_2d<f32>;
 @group(0) @binding(7) var glintTexture : texture_2d<f32>;
@@ -502,15 +503,31 @@ fn getSymbol(cellUV : vec2<f32>, index : i32) -> vec2<f32> {
 
 	// MSDF: calculate brightness of fragment based on distance to shape
 	{
-		var dist = textureSample(msdfTexture, linearSampler, uv).rgb;
-		var sigDist = median3(dist) - 0.5;
-		symbol.r = clamp(sigDist / fwidth(sigDist) + 0.5, 0.0, 1.0);
+		// var dist = textureSample(glyphMSDFTexture, linearSampler, uv).rgb;
+		// var sigDist = median3(dist) - 0.5;
+		// symbol.r = clamp(sigDist / fwidth(sigDist) + 0.5, 0.0, 1.0);
+
+		var unitRange = vec2<f32>(config.msdfPxRange) / vec2<f32>(textureDimensions(glyphMSDFTexture));
+		var screenTexSize = vec2<f32>(1.0) / fwidth(uv);
+		var screenPxRange = max(0.5 * dot(unitRange, screenTexSize), 1.0);
+
+		var signedDistance = median3(textureSample(glyphMSDFTexture, linearSampler, uv).rgb);
+		var screenPxDistance = screenPxRange * (signedDistance - 0.5);
+		symbol.r = clamp(screenPxDistance + 0.5, 0.0, 1.0);
 	}
 
 	if (bool(config.isolateGlint)) {
-		var dist = textureSample(glintMSDFTexture, linearSampler, uv).rgb;
-		var sigDist = median3(dist) - 0.5;
-		symbol.g =  clamp(sigDist / fwidth(sigDist) + 0.5, 0.0, 1.0);
+		// var dist = textureSample(glintMSDFTexture, linearSampler, uv).rgb;
+		// var sigDist = median3(dist) - 0.5;
+		// symbol.g =  clamp(sigDist / fwidth(sigDist) + 0.5, 0.0, 1.0);
+
+		var unitRange = vec2<f32>(config.msdfPxRange) / vec2<f32>(textureDimensions(glintMSDFTexture));
+		var screenTexSize = vec2<f32>(1.0) / fwidth(uv);
+		var screenPxRange = max(0.5 * dot(unitRange, screenTexSize), 1.0);
+
+		var signedDistance = median3(textureSample(glintMSDFTexture, linearSampler, uv).rgb);
+		var screenPxDistance = screenPxRange * (signedDistance - 0.5);
+		symbol.g = clamp(screenPxDistance + 0.5, 0.0, 1.0);
 	}
 
 	return symbol;

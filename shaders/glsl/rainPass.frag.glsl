@@ -7,6 +7,8 @@ precision lowp float;
 uniform sampler2D raindropState, symbolState, effectState;
 uniform float numColumns, numRows;
 uniform sampler2D glyphMSDF, glintMSDF, baseTexture, glintTexture;
+uniform float msdfPxRange;
+uniform vec2 glyphMSDFSize, glintMSDFSize;
 uniform bool hasBaseTexture, hasGlintTexture;
 uniform float glyphHeightToWidth, glyphSequenceLength, glyphEdgeCrop;
 uniform float baseContrast, baseBrightness, glintContrast, glintBrightness;
@@ -115,15 +117,23 @@ vec2 getSymbol(vec2 uv, float index) {
 	// MSDF: calculate brightness of fragment based on distance to shape
 	vec2 symbol;
 	{
-		vec3 dist = texture2D(glyphMSDF, uv).rgb;
-		float sigDist = median3(dist) - 0.5;
-		symbol.r = clamp(sigDist / fwidth(sigDist) + 0.5, 0., 1.);
+		vec2 unitRange = vec2(msdfPxRange) / glyphMSDFSize;
+		vec2 screenTexSize = vec2(1.0) / fwidth(uv);
+		float screenPxRange = max(0.5 * dot(unitRange, screenTexSize), 1.0);
+
+		float signedDistance = median3(texture2D(glyphMSDF, uv).rgb);
+		float screenPxDistance = screenPxRange * (signedDistance - 0.5);
+		symbol.r = clamp(screenPxDistance + 0.5, 0.0, 1.0);
 	}
 
 	if (isolateGlint) {
-		vec3 dist = texture2D(glintMSDF, uv).rgb;
-		float sigDist = median3(dist) - 0.5;
-		symbol.g = clamp(sigDist / fwidth(sigDist) + 0.5, 0., 1.);
+		vec2 unitRange = vec2(msdfPxRange) / glintMSDFSize;
+		vec2 screenTexSize = vec2(1.0) / fwidth(uv);
+		float screenPxRange = max(0.5 * dot(unitRange, screenTexSize), 1.0);
+
+		float signedDistance = median3(texture2D(glintMSDF, uv).rgb);
+		float screenPxDistance = screenPxRange * (signedDistance - 0.5);
+		symbol.g = clamp(screenPxDistance + 0.5, 0.0, 1.0);
 	}
 
 	return symbol;
@@ -157,6 +167,24 @@ void main() {
 			) * symbol.r,
 			1.
 		);
+
+		uv = fract(uv * vec2(numColumns, numRows));
+		uv -= 0.5;
+		uv *= clamp(1. - glyphEdgeCrop, 0., 1.);
+		if (length(uv) > 0.25) {
+			discard;
+		}
+		uv += 0.5;
+
+		float goal = fwidth(uv - 0.5).x;
+		float computed = 1.0;
+		float magnifier = 50.0;
+
+		if (uv.x <= 0.5) {
+			gl_FragColor = vec4(vec3(goal * magnifier), 1.0);
+		} else {
+			gl_FragColor = vec4(vec3(computed * magnifier), 1.0);
+		}
 	} else {
 		gl_FragColor = vec4(brightness.rg * symbol.r, brightness.b * symbol.g, 0.);
 	}

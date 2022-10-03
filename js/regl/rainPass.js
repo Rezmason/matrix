@@ -189,6 +189,10 @@ export default ({ regl, config, lkg }) => {
 			baseTexture: baseTexture.texture,
 			glintTexture: glintTexture.texture,
 
+			msdfPxRange: 4.0,
+			glyphMSDFSize: [glyphMSDF.width(), glyphMSDF.height()],
+			glintMSDFSize: [glintMSDF.width(), glintMSDF.height()],
+
 			camera: regl.prop("camera"),
 			transform: regl.prop("transform"),
 			screenSize: regl.prop("screenSize"),

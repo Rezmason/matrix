@@ -17,6 +17,7 @@ const makeConfigBuffer = (device, configUniforms, config, density, gridSize) => 
 		rippleType: config.rippleTypeName in rippleTypes ? rippleTypes[config.rippleTypeName] : -1,
 		slantScale: 1 / (Math.abs(Math.sin(2 * config.slant)) * (Math.sqrt(2) - 1) + 1),
 		slantVec: [Math.cos(config.slant), Math.sin(config.slant)],
+		msdfPxRange: 4,
 	};
 	// console.table(configData);
 
@@ -93,7 +94,7 @@ export default ({ config, device, timeBuffer }) => {
 	let highPassOutput;
 
 	const loaded = (async () => {
-		const [msdfTexture, glintMSDFTexture, baseTexture, glintTexture, rainShader] = await Promise.all(assets);
+		const [glyphMSDFTexture, glintMSDFTexture, baseTexture, glintTexture, rainShader] = await Promise.all(assets);
 
 		const rainShaderUniforms = structs.from(rainShader.code);
 		configBuffer = makeConfigBuffer(device, rainShaderUniforms.Config, config, density, gridSize);
@@ -170,7 +171,7 @@ export default ({ config, device, timeBuffer }) => {
 			timeBuffer,
 			sceneBuffer,
 			linearSampler,
-			msdfTexture.createView(),
+			glyphMSDFTexture.createView(),
 			glintMSDFTexture.createView(),
 			baseTexture.createView(),
 			glintTexture.createView(),
