@@ -49,7 +49,11 @@ export default ({ device, canvasFormat, canvasContext }) => {
 		return null;
 	};
 
-	const run = (encoder) => {
+	const run = (encoder, shouldRender) => {
+		if (!shouldRender) {
+			return;
+		}
+
 		renderPassConfig.colorAttachments[0].view = canvasContext.getCurrentTexture().createView();
 		const renderPass = encoder.beginRenderPass(renderPassConfig);
 		renderPass.setPipeline(renderPipeline);

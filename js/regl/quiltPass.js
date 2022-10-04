@@ -25,6 +25,10 @@ export default ({ regl, config, lkg }, inputs) => {
 		},
 		Promise.all([quiltPassFrag.loaded]),
 		(w, h) => output.resize(w, h),
-		() => render({ frag: quiltPassFrag.text() })
+		(shouldRender) => {
+			if (shouldRender) {
+				render({ frag: quiltPassFrag.text() });
+			}
+		}
 	);
 };

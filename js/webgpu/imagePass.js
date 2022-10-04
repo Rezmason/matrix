@@ -53,7 +53,11 @@ export default ({ config, device }) => {
 		return { primary: output };
 	};
 
-	const run = (encoder) => {
+	const run = (encoder, shouldRender) => {
+		if (!shouldRender) {
+			return;
+		}
+
 		const computePass = encoder.beginComputePass();
 		computePass.setPipeline(computePipeline);
 		computePass.setBindGroup(0, computeBindGroup);

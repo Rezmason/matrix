@@ -135,7 +135,11 @@ export default ({ config, device }) => {
 		};
 	};
 
-	const run = (encoder) => {
+	const run = (encoder, shouldRender) => {
+		if (!shouldRender) {
+			return;
+		}
+
 		const computePass = encoder.beginComputePass();
 
 		computePass.setPipeline(blurPipeline);

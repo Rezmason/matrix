@@ -75,6 +75,7 @@ const defaults = {
 	glintColor: { space: "rgb", values: [1, 1, 1] }, // The color of the glint
 	volumetric: false, // A mode where the raindrops appear in perspective
 	animationSpeed: 1, // The global rate that all animations progress
+	fps: 60, // The target frame rate (frames per second) of the effect
 	forwardSpeed: 0.25, // The speed volumetric rain approaches the eye
 	bloomStrength: 0.7, // The intensity of the bloom
 	bloomSize: 0.4, // The amount the bloom calculation is scaled
@@ -117,6 +118,7 @@ const defaults = {
 	useHoloplay: false,
 	loops: false,
 	skipIntro: true,
+	testFix: null,
 };
 
 const versions = {
@@ -457,6 +459,7 @@ const paramMapping = {
 
 	volumetric: { key: "volumetric", parser: (s) => s.toLowerCase().includes("true") },
 	loops: { key: "loops", parser: (s) => s.toLowerCase().includes("true") },
+	fps: { key: "fps", parser: (s) => nullNaN(range(parseFloat(s), 0, 60)) },
 	skipIntro: { key: "skipIntro", parser: (s) => s.toLowerCase().includes("true") },
 	renderer: { key: "renderer", parser: (s) => s },
 	once: { key: "once", parser: (s) => s.toLowerCase().includes("true") },

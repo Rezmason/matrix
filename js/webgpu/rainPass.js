@@ -207,7 +207,7 @@ export default ({ config, device, timeBuffer }) => {
 		};
 	};
 
-	const run = (encoder) => {
+	const run = (encoder, shouldRender) => {
 		// We render the code into an Target using MSDFs: https://github.com/Chlumsky/msdfgen
 
 		const introPass = encoder.beginComputePass();
@@ -222,13 +222,15 @@ export default ({ config, device, timeBuffer }) => {
 		computePass.dispatchWorkgroups(Math.ceil(gridSize[0] / 32), gridSize[1], 1);
 		computePass.end();
 
-		renderPassConfig.colorAttachments[0].view = output.createView();
-		renderPassConfig.colorAttachments[1].view = highPassOutput.createView();
-		const renderPass = encoder.beginRenderPass(renderPassConfig);
-		renderPass.setPipeline(renderPipeline);
-		renderPass.setBindGroup(0, renderBindGroup);
-		renderPass.draw(numVerticesPerQuad * numQuads, 1, 0, 0);
-		renderPass.end();
+		if (shouldRender) {
+			renderPassConfig.colorAttachments[0].view = output.createView();
+			renderPassConfig.colorAttachments[1].view = highPassOutput.createView();
+			const renderPass = encoder.beginRenderPass(renderPassConfig);
+			renderPass.setPipeline(renderPipeline);
+			renderPass.setBindGroup(0, renderBindGroup);
+			renderPass.draw(numVerticesPerQuad * numQuads, 1, 0, 0);
+			renderPass.end();
+		}
 	};
 
 	return makePass("Rain", loaded, build, run);

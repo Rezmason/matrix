@@ -292,19 +292,22 @@ export default ({ regl, config, lkg }) => {
 			}
 			[screenSize[0], screenSize[1]] = aspectRatio > 1 ? [1, aspectRatio] : [1 / aspectRatio, 1];
 		},
-		() => {
+		(shouldRender) => {
 			intro({ frag: rainPassIntro.text() });
 			raindrop({ frag: rainPassRaindrop.text() });
 			symbol({ frag: rainPassSymbol.text() });
 			effect({ frag: rainPassEffect.text() });
-			regl.clear({
-				depth: 1,
-				color: [0, 0, 0, 1],
-				framebuffer: output,
-			});
 
-			for (const vantagePoint of vantagePoints) {
-				render({ ...vantagePoint, transform, screenSize, vert: rainPassVert.text(), frag: rainPassFrag.text() });
+			if (shouldRender) {
+				regl.clear({
+					depth: 1,
+					color: [0, 0, 0, 1],
+					framebuffer: output,
+				});
+
+				for (const vantagePoint of vantagePoints) {
+					render({ ...vantagePoint, transform, screenSize, vert: rainPassVert.text(), frag: rainPassFrag.text() });
+				}
 			}
 		}
 	);

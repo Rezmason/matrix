@@ -135,7 +135,7 @@ Now you know link fu. Here's a list of customization options:
 - `paletteHSL`, `stripeHSL`, `backgroundHSL`, `cursorHSL`, and `glintHSL` — the same as the above, except they use *H,S,L* (hue, saturation, lightness) instead of *R,G,B*.
 - `url` - if you set the effect to "image", this is how you specify which image to load. It doesn't work with any URL; I suggest grabbing them from Wikipedia: [https://rezmason.github.io/matrix/?effect=image&url=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg](https://rezmason.github.io/matrix/?effect=image&url=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg)
 - `loops` - (WIP) if set to "true", this causes the effect to loop, so that it can be converted into a looping video.
-
+- `fps` — the framerate of the effect. Can be any number between 0 and 60. Default is 60.
 
 ## Troubleshooting
 

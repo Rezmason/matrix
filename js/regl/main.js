@@ -88,10 +88,29 @@ export default async (canvas, config) => {
 	const screenUniforms = { tex: pipeline[pipeline.length - 1].outputs.primary };
 	const drawToScreen = regl({ uniforms: screenUniforms });
 	await Promise.all(pipeline.map((step) => step.ready));
+
+	const targetFrameTimeMilliseconds = 1000 / config.fps;
+	let last = NaN;
+
 	const tick = regl.frame(({ viewportWidth, viewportHeight }) => {
 		if (config.once) {
 			tick.cancel();
 		}
+
+		const now = regl.now() * 1000;
+
+		if (isNaN(last)) {
+			last = now;
+		}
+
+		const shouldRender = config.fps >= 60 || now - last >= targetFrameTimeMilliseconds || config.once == true;
+
+		if (shouldRender) {
+			while (now - targetFrameTimeMilliseconds > last) {
+				last += targetFrameTimeMilliseconds;
+			}
+		}
+
 		if (config.useCamera) {
 			cameraTex(cameraCanvas);
 		}
@@ -104,7 +123,7 @@ export default async (canvas, config) => {
 		}
 		fullScreenQuad(() => {
 			for (const step of pipeline) {
-				step.execute();
+				step.execute(shouldRender);
 			}
 			drawToScreen();
 		});

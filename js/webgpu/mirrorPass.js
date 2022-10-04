@@ -82,7 +82,11 @@ export default ({ config, device, cameraTex, cameraAspectRatio, timeBuffer }) =>
 		return { primary: output };
 	};
 
-	const run = (encoder) => {
+	const run = (encoder, shouldRender) => {
+		if (!shouldRender) {
+			return;
+		}
+
 		if (touchesChanged) {
 			touchesChanged = false;
 			device.queue.writeBuffer(touchBuffer, 0, touchUniforms.toBuffer({ touches }));

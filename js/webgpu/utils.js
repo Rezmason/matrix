@@ -118,9 +118,9 @@ const makeBindGroup = (device, pipeline, index, entries) =>
 const makePass = (name, loaded, build, run) => ({
 	loaded: loaded ?? Promise.resolve(),
 	build: build ?? ((size, inputs) => inputs),
-	run: (encoder) => {
+	run: (encoder, shouldRender) => {
 		encoder.pushDebugGroup(`Pass "${name}"`);
-		run?.(encoder);
+		run?.(encoder, shouldRender);
 		encoder.popDebugGroup();
 	},
 });
@@ -131,7 +131,7 @@ const makePipeline = async (context, steps) => {
 	return {
 		steps,
 		build: (canvasSize) => steps.reduce((outputs, step) => step.build(canvasSize, outputs), null),
-		run: (encoder) => steps.forEach((step) => step.run(encoder)),
+		run: (encoder, shouldRender) => steps.forEach((step) => step.run(encoder, shouldRender)),
 	};
 };
 

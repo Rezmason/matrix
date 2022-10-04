@@ -83,6 +83,10 @@ export default ({ regl, config }, inputs) => {
 		},
 		palettePassFrag.loaded,
 		(w, h) => output.resize(w, h),
-		() => render({ frag: palettePassFrag.text() })
+		(shouldRender) => {
+			if (shouldRender) {
+				render({ frag: palettePassFrag.text() });
+			}
+		}
 	);
 };

@@ -26,6 +26,10 @@ export default ({ regl, config }, inputs) => {
 		},
 		Promise.all([background.loaded, imagePassFrag.loaded]),
 		(w, h) => output.resize(w, h),
-		() => render({ frag: imagePassFrag.text() })
+		(shouldRender) => {
+			if (shouldRender) {
+				render({ frag: imagePassFrag.text() });
+			}
+		}
 	);
 };

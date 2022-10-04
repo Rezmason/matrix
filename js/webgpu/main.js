@@ -92,13 +92,26 @@ export default async (canvas, config) => {
 	const effectName = config.effect in effects ? config.effect : "palette";
 	const pipeline = await makePipeline(context, [makeRain, makeBloomPass, effects[effectName], makeEndPass]);
 
+	const targetFrameTimeMilliseconds = 1000 / config.fps;
 	let frames = 0;
 	let start = NaN;
+	let last = NaN;
 	let outputs;
 
 	const renderLoop = (now) => {
 		if (isNaN(start)) {
 			start = now;
+		}
+
+		if (isNaN(last)) {
+			last = start;
+		}
+
+		const shouldRender = config.fps >= 60 || now - last >= targetFrameTimeMilliseconds || config.once;
+		if (shouldRender) {
+			while (now - targetFrameTimeMilliseconds > last) {
+				last += targetFrameTimeMilliseconds;
+			}
 		}
 
 		const devicePixelRatio = window.devicePixelRatio ?? 1;
@@ -119,10 +132,11 @@ export default async (canvas, config) => {
 		frames++;
 
 		const encoder = device.createCommandEncoder();
-		pipeline.run(encoder);
+		pipeline.run(encoder, shouldRender);
 		// Eventually, when WebGPU allows it, we'll remove the endPass and just copy from our pipeline's output to the canvas texture.
 		// encoder.copyTextureToTexture({ texture: outputs?.primary }, { texture: canvasContext.getCurrentTexture() }, canvasSize);
 		device.queue.submit([encoder.finish()]);
+
 		if (!config.once) {
 			requestAnimationFrame(renderLoop);
 		}

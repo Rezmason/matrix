@@ -63,6 +63,10 @@ export default ({ regl, config }, inputs) => {
 		},
 		stripePassFrag.loaded,
 		(w, h) => output.resize(w, h),
-		() => render({ frag: stripePassFrag.text() })
+		(shouldRender) => {
+			if (shouldRender) {
+				render({ frag: stripePassFrag.text() });
+			}
+		}
 	);
 };

@@ -98,7 +98,11 @@ export default ({ regl, config }, inputs) => {
 			resizePyramid(vBlurPyramid, w, h, bloomSize);
 			output.resize(w, h);
 		},
-		() => {
+		(shouldRender) => {
+			if (!shouldRender) {
+				return;
+			}
+
 			for (let i = 0; i < pyramidHeight; i++) {
 				const highPassFBO = highPassPyramid[i];
 				const hBlurFBO = hBlurPyramid[i];
