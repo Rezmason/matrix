@@ -38,8 +38,9 @@ export default async (canvas, config) => {
 	await Promise.all([loadJS("lib/regl.min.js"), loadJS("lib/gl-matrix.js")]);
 
 	const resize = () => {
-		canvas.width = Math.ceil(canvas.clientWidth * config.resolution);
-		canvas.height = Math.ceil(canvas.clientHeight * config.resolution);
+		const devicePixelRatio = window.devicePixelRatio ?? 1;
+		canvas.width = Math.ceil(canvas.clientWidth * devicePixelRatio * config.resolution);
+		canvas.height = Math.ceil(canvas.clientHeight * devicePixelRatio * config.resolution);
 	};
 	window.onresize = resize;
 	if (document.fullscreenEnabled || document.webkitFullscreenEnabled) {
@@ -75,7 +76,7 @@ export default async (canvas, config) => {
 			break;
 	}
 
-	const regl = createREGL({ canvas, extensions, optionalExtensions });
+	const regl = createREGL({ canvas, pixelRatio: 1, extensions, optionalExtensions });
 
 	const cameraTex = regl.texture(cameraCanvas);
 	const lkg = await getLKG(config.useHoloplay, true);

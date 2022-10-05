@@ -115,8 +115,8 @@ export default async (canvas, config) => {
 		}
 
 		const devicePixelRatio = window.devicePixelRatio ?? 1;
-		const canvasWidth = canvas.clientWidth * devicePixelRatio;
-		const canvasHeight = canvas.clientHeight * devicePixelRatio;
+		const canvasWidth = Math.ceil(canvas.clientWidth * devicePixelRatio * config.resolution);
+		const canvasHeight = Math.ceil(canvas.clientHeight * devicePixelRatio * config.resolution);
 		const canvasSize = [canvasWidth, canvasHeight];
 		if (canvas.width !== canvasWidth || canvas.height !== canvasHeight) {
 			canvas.width = canvasWidth;
