@@ -499,15 +499,14 @@ fn getSymbol(cellUV : vec2<f32>, index : i32) -> vec2<f32> {
 	uv += 0.5;
 	uv = (uv + getSymbolUV(index)) / vec2<f32>(config.glyphTextureGridSize);
 
-	var symbol = vec2<f32>();
-
 	// MSDF: calculate brightness of fragment based on distance to shape
+	var symbol = vec2<f32>();
 	{
 		// var dist = textureSample(glyphMSDFTexture, linearSampler, uv).rgb;
 		// var sigDist = median3(dist) - 0.5;
 		// symbol.r = clamp(sigDist / fwidth(sigDist) + 0.5, 0.0, 1.0);
 
-		var unitRange = vec2<f32>(config.msdfPxRange) / (vec2<f32>(textureDimensions(glyphMSDFTexture)) * 1000.0); // Not sure why this x1000 softening is necessary
+		var unitRange = vec2<f32>(config.msdfPxRange) / vec2<f32>(textureDimensions(glyphMSDFTexture));
 		var screenTexSize = vec2<f32>(1.0) / fwidth(uv);
 		var screenPxRange = max(0.5 * dot(unitRange, screenTexSize), 1.0);
 
@@ -521,7 +520,7 @@ fn getSymbol(cellUV : vec2<f32>, index : i32) -> vec2<f32> {
 		// var sigDist = median3(dist) - 0.5;
 		// symbol.g =  clamp(sigDist / fwidth(sigDist) + 0.5, 0.0, 1.0);
 
-		var unitRange = vec2<f32>(config.msdfPxRange) / (vec2<f32>(textureDimensions(glintMSDFTexture)) * 1000.0); // Not sure why this x1000 softening is necessary
+		var unitRange = vec2<f32>(config.msdfPxRange) / vec2<f32>(textureDimensions(glintMSDFTexture));
 		var screenTexSize = vec2<f32>(1.0) / fwidth(uv);
 		var screenPxRange = max(0.5 * dot(unitRange, screenTexSize), 1.0);
 

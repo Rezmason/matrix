@@ -36,8 +36,18 @@ const loadImage = (regl, url) => {
 			}
 			return texture;
 		},
-		width: () => (loaded ? texture.width : 1),
-		height: () => (loaded ? texture.height : 1),
+		width: () => {
+			if (!loaded && url != null) {
+				console.warn(`texture still loading: ${url}`);
+			}
+			return loaded ? texture.width : 1;
+		},
+		height: () => {
+			if (!loaded && url != null) {
+				console.warn(`texture still loading: ${url}`);
+			}
+			return loaded ? texture.height : 1;
+		},
 		loaded: (async () => {
 			if (url != null) {
 				const data = new Image();

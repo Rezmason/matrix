@@ -117,7 +117,7 @@ vec2 getSymbol(vec2 uv, float index) {
 	// MSDF: calculate brightness of fragment based on distance to shape
 	vec2 symbol;
 	{
-		vec2 unitRange = vec2(msdfPxRange) / (glyphMSDFSize * 1000.); // Not sure why this x1000 softening is necessary
+		vec2 unitRange = vec2(msdfPxRange) / glyphMSDFSize;
 		vec2 screenTexSize = vec2(1.0) / fwidth(uv);
 		float screenPxRange = max(0.5 * dot(unitRange, screenTexSize), 1.0);
 
@@ -127,7 +127,7 @@ vec2 getSymbol(vec2 uv, float index) {
 	}
 
 	if (isolateGlint) {
-		vec2 unitRange = vec2(msdfPxRange) / (glintMSDFSize * 1000.); // Not sure why this x1000 softening is necessary
+		vec2 unitRange = vec2(msdfPxRange) / glintMSDFSize;
 		vec2 screenTexSize = vec2(1.0) / fwidth(uv);
 		float screenPxRange = max(0.5 * dot(unitRange, screenTexSize), 1.0);
 

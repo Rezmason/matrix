@@ -190,8 +190,8 @@ export default ({ regl, config, lkg }) => {
 			glintTexture: glintTexture.texture,
 
 			msdfPxRange: 4.0,
-			glyphMSDFSize: [glyphMSDF.width(), glyphMSDF.height()],
-			glintMSDFSize: [glintMSDF.width(), glintMSDF.height()],
+			glyphMSDFSize: () => [glyphMSDF.width(), glyphMSDF.height()],
+			glintMSDFSize: () => [glintMSDF.width(), glintMSDF.height()],
 
 			camera: regl.prop("camera"),
 			transform: regl.prop("transform"),
