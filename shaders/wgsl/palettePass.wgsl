@@ -1,5 +1,4 @@
 struct Config {
-	bloomStrength : f32,
 	ditherMagnitude : f32,
 	backgroundColor : vec3<f32>,
 	cursorColor : vec3<f32>,
@@ -40,8 +39,8 @@ fn randomFloat( uv : vec2<f32> ) -> f32 {
 
 fn getBrightness(uv : vec2<f32>) -> vec4<f32> {
 	var primary = textureSampleLevel(tex, linearSampler, uv, 0.0);
-	var bloom = textureSampleLevel(bloomTex, linearSampler, uv, 0.0) * config.bloomStrength;
-	return min((primary + bloom) * (2.0 - config.bloomStrength), vec4<f32>(1.0));
+	var bloom = textureSampleLevel(bloomTex, linearSampler, uv, 0.0);
+	return primary + bloom;
 }
 
 @compute @workgroup_size(32, 1, 1) fn computeMain(input : ComputeInput) {

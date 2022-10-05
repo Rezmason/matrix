@@ -2,13 +2,12 @@ precision mediump float;
 uniform sampler2D tex;
 uniform sampler2D bloomTex;
 uniform sampler2D backgroundTex;
-uniform float bloomStrength;
 varying vec2 vUV;
 
 vec4 getBrightness(vec2 uv) {
 	vec4 primary = texture2D(tex, uv);
-	vec4 bloom = texture2D(bloomTex, uv) * bloomStrength;
-	return min((primary + bloom) * (2.0 - bloomStrength), 1.0);
+	vec4 bloom = texture2D(bloomTex, uv);
+	return primary + bloom;
 }
 
 void main() {

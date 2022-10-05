@@ -50,7 +50,7 @@ export default ({ config, device, cameraTex, cameraAspectRatio, timeBuffer }) =>
 		const mirrorShaderUniforms = structs.from(mirrorShader.code);
 
 		const configUniforms = mirrorShaderUniforms.Config;
-		configBuffer = makeUniformBuffer(device, configUniforms, { bloomStrength: config.bloomStrength });
+		configBuffer = makeUniformBuffer(device, configUniforms, { unused: 0 });
 
 		sceneUniforms = mirrorShaderUniforms.Scene;
 		sceneBuffer = makeUniformBuffer(device, sceneUniforms);

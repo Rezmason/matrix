@@ -96,7 +96,6 @@ export default ({ config, device, timeBuffer }) => {
 		const paletteShaderUniforms = structs.from(paletteShader.code);
 		const configUniforms = paletteShaderUniforms.Config;
 		configBuffer = makeUniformBuffer(device, configUniforms, {
-			bloomStrength: config.bloomStrength,
 			ditherMagnitude: config.ditherMagnitude,
 			backgroundColor: colorToRGB(config.backgroundColor),
 			cursorColor: colorToRGB(config.cursorColor),

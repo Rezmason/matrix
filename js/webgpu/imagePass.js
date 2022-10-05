@@ -35,7 +35,7 @@ export default ({ config, device }) => {
 		});
 
 		const configUniforms = structs.from(imageShader.code).Config;
-		configBuffer = makeUniformBuffer(device, configUniforms, { bloomStrength: config.bloomStrength });
+		configBuffer = makeUniformBuffer(device, configUniforms, { unused: 0 });
 	})();
 
 	const build = (size, inputs) => {

@@ -1,18 +1,6 @@
 TODO:
 
-Bloom comparison: WebGPU vs REGL
-  Why are they different?
-  Create a project that tests them side-by-side
-    That's right, two canvases, one regl and one webgpu
-    program them both to do the same basic ops in a floating point texture
-    display that texture
-    Retrieve the texture from the GPU and spit it out
-  Possible causes of difference
-    Color space
-    Intermediate texture formats around high pass filter
-    Floating point math
-    Texture interpolation
-    Blur implementation
+Seems like bloom size and resolution impact the REGL and WebGPU bloom implementations differently
 
 Audio system
   Toggle (or number representing frequency)

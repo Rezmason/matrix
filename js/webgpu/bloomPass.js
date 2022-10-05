@@ -20,7 +20,7 @@ const makePyramid = (device, size, pyramidHeight) =>
 		.map((_, index) =>
 			makeComputeTarget(
 				device,
-				size.map((x) => Math.floor(x * 2 ** -(index + 1)))
+				size.map((x) => Math.floor(x * 2 ** -index))
 			)
 		);
 
@@ -97,7 +97,7 @@ export default ({ config, device }) => {
 		vBlurBuffer = makeUniformBuffer(device, blurUniforms, { bloomRadius, direction: [0, 1] });
 
 		const combineUniforms = structs.from(combineShader.code).Config;
-		combineBuffer = makeUniformBuffer(device, combineUniforms, { pyramidHeight });
+		combineBuffer = makeUniformBuffer(device, combineUniforms, { pyramidHeight, bloomStrength });
 	})();
 
 	const build = (screenSize, inputs) => {

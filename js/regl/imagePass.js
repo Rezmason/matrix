@@ -7,13 +7,11 @@ const defaultBGURL = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/
 export default ({ regl, config }, inputs) => {
 	const output = makePassFBO(regl, config.useHalfFloat);
 	const bgURL = "bgURL" in config ? config.bgURL : defaultBGURL;
-	const bloomStrength = config.bloomStrength;
 	const background = loadImage(regl, bgURL);
 	const imagePassFrag = loadText("shaders/glsl/imagePass.frag.glsl");
 	const render = regl({
 		frag: regl.prop("frag"),
 		uniforms: {
-			bloomStrength,
 			backgroundTex: background.texture,
 			tex: inputs.primary,
 			bloomTex: inputs.bloom,

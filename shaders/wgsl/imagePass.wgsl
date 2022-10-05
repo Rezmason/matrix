@@ -1,5 +1,5 @@
 struct Config {
-	bloomStrength : f32,
+	unused : f32,
 };
 
 @group(0) @binding(0) var<uniform> config : Config;
@@ -15,11 +15,13 @@ struct ComputeInput {
 
 fn getBrightness(uv : vec2<f32>) -> vec4<f32> {
 	var primary = textureSampleLevel(tex, linearSampler, uv, 0.0);
-	var bloom = textureSampleLevel(bloomTex, linearSampler, uv, 0.0) * config.bloomStrength;
-	return min((primary + bloom) * (2.0 - config.bloomStrength), vec4<f32>(1.0));
+	var bloom = textureSampleLevel(bloomTex, linearSampler, uv, 0.0);
+	return primary + bloom;
 }
 
 @compute @workgroup_size(32, 1, 1) fn computeMain(input : ComputeInput) {
+
+	var unused = config.unused;
 
 	// Resolve the invocation ID to a texel coordinate
 	var coord = vec2<i32>(input.id.xy);
