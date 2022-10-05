@@ -493,7 +493,7 @@ fn getSymbolUV(symbol : i32) -> vec2<f32> {
 fn getSymbol(cellUV : vec2<f32>, index : i32) -> vec2<f32> {
 	// resolve UV to cropped position of glyph in MSDF texture
 	var uv = fract(cellUV * config.gridSize);
-	uv.y = 1.0 - uv.y; // WebGL -> WebGPU y-flip
+	uv.y = 1.0 - uv.y; // y-flip
 	uv -= 0.5;
 	uv *= clamp(1.0 - config.glyphEdgeCrop, 0.0, 1.0);
 	uv += 0.5;

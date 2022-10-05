@@ -59,7 +59,6 @@ const loadImage = (regl, url) => {
 					data,
 					mag: "linear",
 					min: "linear",
-					flipY: true,
 				});
 			}
 		})(),

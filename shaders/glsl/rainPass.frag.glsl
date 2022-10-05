@@ -102,13 +102,13 @@ vec3 getBrightness(vec4 raindrop, vec4 effect, float quadDepth, vec2 uv) {
 vec2 getSymbolUV(float index) {
 	float symbolX = modI(index, glyphTextureGridSize.x);
 	float symbolY = (index - symbolX) / glyphTextureGridSize.x;
-	symbolY = glyphTextureGridSize.y - symbolY - 1.;
 	return vec2(symbolX, symbolY);
 }
 
 vec2 getSymbol(vec2 uv, float index) {
 	// resolve UV to cropped position of glyph in MSDF texture
 	uv = fract(uv * vec2(numColumns, numRows));
+	uv.y = 1.0 - uv.y; // y-flip
 	uv -= 0.5;
 	uv *= clamp(1. - glyphEdgeCrop, 0., 1.);
 	uv += 0.5;
