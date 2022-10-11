@@ -1,7 +1,12 @@
-/*
-// TODO: switch back to this impl once it doesn't break on FF Nightly
-
 const loadTexture = async (device, url) => {
+	if (url == null) {
+		return device.createTexture({
+			size: [1, 1, 1],
+			format: "rgba8unorm",
+			usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+		});
+	}
+
 	const response = await fetch(url);
 	const data = await response.blob();
 	const source = await createImageBitmap(data);
@@ -13,42 +18,7 @@ const loadTexture = async (device, url) => {
 		usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
 	});
 
-	device.queue.copyExternalImageToTexture({ source }, { texture }, size);
-
-	return texture;
-};
-*/
-
-const loadTexture = async (device, url) => {
-	if (url == null) {
-		return device.createTexture({
-			size: [1, 1, 1],
-			format: "rgba8unorm",
-			usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
-		});
-	}
-
-	const image = new Image();
-	image.crossOrigin = "Anonymous";
-	image.src = url;
-	await image.decode();
-	const { width, height } = image;
-	const size = [width, height, 1];
-
-	const canvas = document.createElement("canvas");
-	canvas.width = width;
-	canvas.height = height;
-	const ctx = canvas.getContext("2d");
-	ctx.drawImage(image, 0, 0);
-	const source = ctx.getImageData(0, 0, width, height).data;
-
-	const texture = device.createTexture({
-		size,
-		format: "rgba8unorm",
-		usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
-	});
-
-	device.queue.writeTexture({ texture }, source, { bytesPerRow: 4 * width }, size);
+	device.queue.copyExternalImageToTexture({ source, flipY: true }, { texture }, size);
 
 	return texture;
 };

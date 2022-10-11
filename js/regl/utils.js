@@ -1,11 +1,10 @@
-const makePassTexture = (regl, halfFloat, mipmap) =>
+const makePassTexture = (regl, halfFloat) =>
 	regl.texture({
 		width: 1,
 		height: 1,
 		type: halfFloat ? "half float" : "uint8",
 		wrap: "clamp",
-		minFilter: "mipmap",
-		min: mipmap ? "mipmap" : "linear",
+		min: "linear",
 		mag: "linear",
 	});
 
@@ -26,7 +25,9 @@ const makeDoubleBuffer = (regl, props) => {
 	};
 };
 
-const loadImage = (regl, url) => {
+const isPowerOfTwo = (x) => Math.log2(x) % 1 == 0;
+
+const loadImage = (regl, url, mipmap) => {
 	let texture = regl.texture([[0]]);
 	let loaded = false;
 	return {
@@ -55,10 +56,17 @@ const loadImage = (regl, url) => {
 				data.src = url;
 				await data.decode();
 				loaded = true;
+				if (mipmap) {
+					if (!isPowerOfTwo(data.width) || !isPowerOfTwo(data.height)) {
+						console.warn(`Can't mipmap a non-power-of-two image: ${url}`);
+					}
+					mipmap = false;
+				}
 				texture = regl.texture({
 					data,
 					mag: "linear",
-					min: "linear",
+					min: mipmap ? "mipmap" : "linear",
+					flipY: true,
 				});
 			}
 		})(),

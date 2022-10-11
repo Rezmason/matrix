@@ -134,8 +134,8 @@ export default ({ regl, config, lkg }) => {
 	// We render the code into an FBO using MSDFs: https://github.com/Chlumsky/msdfgen
 	const glyphMSDF = loadImage(regl, config.glyphMSDFURL);
 	const glintMSDF = loadImage(regl, config.glintMSDFURL);
-	const baseTexture = loadImage(regl, config.baseTextureURL);
-	const glintTexture = loadImage(regl, config.glintTextureURL);
+	const baseTexture = loadImage(regl, config.baseTextureURL, true);
+	const glintTexture = loadImage(regl, config.glintTextureURL, true);
 	const rainPassVert = loadText("shaders/glsl/rainPass.vert.glsl");
 	const rainPassFrag = loadText("shaders/glsl/rainPass.frag.glsl");
 	const output = makePassFBO(regl, config.useHalfFloat);

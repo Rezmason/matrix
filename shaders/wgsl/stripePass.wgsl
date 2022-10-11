@@ -51,7 +51,7 @@ fn getBrightness(uv : vec2<f32>) -> vec4<f32> {
 
 	var uv = vec2<f32>(coord) / vec2<f32>(screenSize);
 
-	var color = textureSampleLevel( stripeTex, linearSampler, uv, 0.0 ).rgb;
+	var color = textureSampleLevel( stripeTex, linearSampler, vec2<f32>(uv.x, 1.0 - uv.y), 0.0 ).rgb;
 
 	var brightness = getBrightness(uv);
 

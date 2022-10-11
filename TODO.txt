@@ -1,6 +1,17 @@
 TODO:
 
 Seems like bloom size and resolution impact the REGL and WebGPU bloom implementations differently
+  Ossify the REGL bloom
+    Load all the GLSL from files
+  Move high pass into WebGPU bloom
+
+Live config update roadmap
+
+Write an explanation of the rain pass (and include images)
+  Compute
+  Volumetric quads
+  Fullscreen quad and spacial mapping
+  MSDFs
 
 Audio system
   Toggle (or number representing frequency)
@@ -36,12 +47,6 @@ WebGPU
   Try using a buffer for the stripe pass 1D texture
 
 Improve loop support
-
-Write an explanation of the rain pass (and include images)
-  Compute
-  Volumetric quads
-  Fullscreen quad and spacial mapping
-  MSDFs
 
 Idea: Build a UI
   Replace versions with presets

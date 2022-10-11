@@ -1,4 +1,4 @@
-import { loadImage, loadText, makePassFBO, makePass } from "./utils.js";
+import { loadText, makePassFBO, makePass } from "./utils.js";
 
 let start;
 const numClicks = 5;

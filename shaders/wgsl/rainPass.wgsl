@@ -352,11 +352,10 @@ fn computeEffect (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, scre
 
 // Vertex shader
 
-// Firefox Nightly (that is to say, Naga) currently has a bug that mixes up these values from ones in the uniforms.
-// var<private> quadCorners : array<vec2<f32>, NUM_VERTICES_PER_QUAD> = array<vec2<f32>, NUM_VERTICES_PER_QUAD>(
-// 	vec2<f32>(0.0, 0.0), vec2<f32>(1.0, 0.0), vec2<f32>(0.0, 1.0),
-// 	vec2<f32>(1.0, 1.0), vec2<f32>(0.0, 1.0), vec2<f32>(1.0, 0.0)
-// );
+var<private> quadCorners : array<vec2<f32>, NUM_VERTICES_PER_QUAD> = array<vec2<f32>, NUM_VERTICES_PER_QUAD>(
+	vec2<f32>(0.0, 0.0), vec2<f32>(0.0, 1.0), vec2<f32>(1.0, 1.0),
+	vec2<f32>(0.0, 0.0), vec2<f32>(1.0, 1.0), vec2<f32>(1.0, 0.0)
+);
 
 @vertex fn vertMain(input : VertInput) -> VertOutput {
 
@@ -368,8 +367,7 @@ fn computeEffect (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, scre
 	var i = i32(input.index);
 	var quadIndex = i / NUM_VERTICES_PER_QUAD;
 
-	// var quadCorner = quadCorners[i % NUM_VERTICES_PER_QUAD];
-	var quadCorner = vec2<f32>(f32(i % 2), f32((i + 1) % 6 / 3));
+	var quadCorner = quadCorners[i % NUM_VERTICES_PER_QUAD];
 
 	var quadPosition = vec2<f32>(
 		f32(quadIndex % i32(quadGridSize.x)),
@@ -487,13 +485,13 @@ fn getBrightness(raindrop : vec4<f32>, effect : vec4<f32>, uv : vec2<f32>, quadD
 fn getSymbolUV(symbol : i32) -> vec2<f32> {
 	var symbolX = symbol % config.glyphTextureGridSize.x;
 	var symbolY = symbol / config.glyphTextureGridSize.x;
+	symbolY = config.glyphTextureGridSize.y - symbolY - 1;
 	return vec2<f32>(f32(symbolX), f32(symbolY));
 }
 
 fn getSymbol(cellUV : vec2<f32>, index : i32) -> vec2<f32> {
 	// resolve UV to cropped position of glyph in MSDF texture
 	var uv = fract(cellUV * config.gridSize);
-	uv.y = 1.0 - uv.y; // y-flip
 	uv -= 0.5;
 	uv *= clamp(1.0 - config.glyphEdgeCrop, 0.0, 1.0);
 	uv += 0.5;

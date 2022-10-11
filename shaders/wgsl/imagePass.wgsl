@@ -33,7 +33,7 @@ fn getBrightness(uv : vec2<f32>) -> vec4<f32> {
 
 	var uv = vec2<f32>(coord) / vec2<f32>(screenSize);
 
-	var bgColor = textureSampleLevel( backgroundTex, linearSampler, uv, 0.0 ).rgb;
+	var bgColor = textureSampleLevel( backgroundTex, linearSampler, vec2<f32>(uv.x, 1.0 - uv.y), 0.0 ).rgb;
 
 	// Combine the texture and bloom, then blow it out to reveal more of the image
 	var brightness = getBrightness(uv);
