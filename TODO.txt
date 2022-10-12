@@ -1,8 +1,6 @@
 TODO:
 
 Seems like bloom size and resolution impact the REGL and WebGPU bloom implementations differently
-  Ossify the REGL bloom
-    Load all the GLSL from files
   Move high pass into WebGPU bloom
 
 Live config update roadmap

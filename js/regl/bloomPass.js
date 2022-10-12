@@ -38,7 +38,7 @@ export default ({ regl, config }, inputs) => {
 	const output = makePassFBO(regl, config.useHalfFloat);
 
 	// The high pass restricts the blur to bright things in our input texture.
-	const highPassFrag = loadText("shaders/glsl/highPass.frag.glsl");
+	const highPassFrag = loadText("shaders/glsl/bloomPass.highPass.frag.glsl");
 	const highPass = regl({
 		frag: regl.prop("frag"),
 		uniforms: {
@@ -53,7 +53,7 @@ export default ({ regl, config }, inputs) => {
 	// by blurring them all, this basic blur approximates a more complex gaussian:
 	// https://web.archive.org/web/20191124072602/https://software.intel.com/en-us/articles/compute-shader-hdr-and-bloom
 
-	const blurFrag = loadText("shaders/glsl/blur.frag.glsl");
+	const blurFrag = loadText("shaders/glsl/bloomPass.blur.frag.glsl");
 	const blur = regl({
 		frag: regl.prop("frag"),
 		uniforms: {
@@ -66,18 +66,9 @@ export default ({ regl, config }, inputs) => {
 	});
 
 	// The pyramid of textures gets flattened (summed) into a final blurry "bloom" texture
-	const sumPyramid = regl({
-		frag: `
-			precision mediump float;
-			varying vec2 vUV;
-			${vBlurPyramid.map((_, index) => `uniform sampler2D pyr_${index};`).join("\n")}
-			uniform float bloomStrength;
-			void main() {
-				vec4 total = vec4(0.);
-				${vBlurPyramid.map((_, index) => `total += texture2D(pyr_${index}, vUV) * ${levelStrengths[index]};`).join("\n")}
-				gl_FragColor = total * bloomStrength;
-			}
-		`,
+	const combineFrag = loadText("shaders/glsl/bloomPass.combine.frag.glsl");
+	const combine = regl({
+		frag: regl.prop("frag"),
 		uniforms: {
 			bloomStrength,
 			...Object.fromEntries(vBlurPyramid.map((fbo, index) => [`pyr_${index}`, fbo])),
@@ -112,7 +103,7 @@ export default ({ regl, config }, inputs) => {
 				blur({ fbo: vBlurFBO, frag: blurFrag.text(), tex: hBlurFBO, direction: [0, 1] });
 			}
 
-			sumPyramid();
+			combine({ frag: combineFrag.text() });
 		}
 	);
 };
