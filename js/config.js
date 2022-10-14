@@ -50,6 +50,11 @@ const fonts = {
 		glyphSequenceLength: 38,
 		glyphTextureGridSize: [8, 5],
 	},
+	neomatrixology: {
+		glyphMSDFURL: "assets/neomatrixology_msdf.png",
+		glyphSequenceLength: 12,
+		glyphTextureGridSize: [4, 4],
+	}
 };
 
 const textureURLs = {
@@ -127,6 +132,18 @@ const versions = {
 		font: "megacity",
 		animationSpeed: 0.5,
 		width: 40,
+	},
+	neomatrixology: {
+		font: "neomatrixology",
+		animationSpeed: 0.8,
+		width: 40,
+		palette: [
+			{ color: hsl(0.15, 0.9, 0.0), at: 0.0 },
+			{ color: hsl(0.15, 0.9, 0.2), at: 0.2 },
+			{ color: hsl(0.15, 0.9, 0.7), at: 0.7 },
+			{ color: hsl(0.15, 0.9, 0.8), at: 0.8 },
+		],
+		cursorColor: rgb(2, 2, 1)
 	},
 	operator: {
 		cursorColor: { space: "rgb", values: [1.0, 3, 1.5] },
