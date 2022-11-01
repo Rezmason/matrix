@@ -7,6 +7,7 @@ uniform sampler2D stripeTex;
 uniform float ditherMagnitude;
 uniform float time;
 uniform vec3 backgroundColor, cursorColor, glintColor;
+uniform float cursorIntensity, glintIntensity;
 varying vec2 vUV;
 
 highp float rand( const in vec2 uv, const in float t ) {
@@ -31,8 +32,8 @@ void main() {
 	
 	gl_FragColor = vec4(
 		color * brightness.r
-			+ min(cursorColor * brightness.g, vec3(1.0))
-			+ min(glintColor * brightness.b, vec3(1.0))
+			+ min(cursorColor * cursorIntensity * brightness.g, vec3(1.0))
+			+ min(glintColor * glintIntensity * brightness.b, vec3(1.0))
 			+ backgroundColor,
 		1.0
 	);

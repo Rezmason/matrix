@@ -75,6 +75,8 @@ export default ({ config, device, timeBuffer }) => {
 			backgroundColor: colorToRGB(config.backgroundColor),
 			cursorColor: colorToRGB(config.cursorColor),
 			glintColor: colorToRGB(config.glintColor),
+			cursorIntensity: config.cursorIntensity,
+			glintIntensity: config.glintIntensity,
 		});
 	})();
 

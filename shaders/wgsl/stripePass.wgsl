@@ -3,6 +3,8 @@ struct Config {
 	backgroundColor : vec3<f32>,
 	cursorColor : vec3<f32>,
 	glintColor : vec3<f32>,
+	cursorIntensity : f32,
+	glintIntensity : f32,
 };
 
 struct Time {
@@ -60,8 +62,8 @@ fn getBrightness(uv : vec2<f32>) -> vec4<f32> {
 
 	textureStore(outputTex, coord, vec4<f32>(
 		color * brightness.r
-			+ min(config.cursorColor * brightness.g, vec3<f32>(1.0))
-			+ min(config.glintColor * brightness.b, vec3<f32>(1.0))
+			+ min(config.cursorColor * config.cursorIntensity * brightness.g, vec3<f32>(1.0))
+			+ min(config.glintColor * config.glintIntensity * brightness.b, vec3<f32>(1.0))
 			+ config.backgroundColor,
 		1.0
 	));

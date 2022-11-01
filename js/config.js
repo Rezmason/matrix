@@ -54,7 +54,7 @@ const fonts = {
 		glyphMSDFURL: "assets/neomatrixology_msdf.png",
 		glyphSequenceLength: 12,
 		glyphTextureGridSize: [4, 4],
-	}
+	},
 };
 
 const textureURLs = {
@@ -73,11 +73,13 @@ const defaults = {
 	baseTexture: null, // The name of the texture to apply to the base layer of the glyphs
 	glintTexture: null, // The name of the texture to apply to the glint layer of the glyphs
 	useCamera: false,
-	backgroundColor: { space: "rgb", values: [0, 0, 0] }, // The color "behind" the glyphs
+	backgroundColor: hsl(0, 0, 0), // The color "behind" the glyphs
 	isolateCursor: true, // Whether the "cursor"— the brightest glyph at the bottom of a raindrop— has its own color
-	cursorColor: { space: "rgb", values: [1.5, 2, 0.9] }, // The color of the cursor
+	cursorColor: hsl(0.242, 1, 0.73), // The color of the cursor
+	cursorIntensity: 2, // The intensity of the cursor
 	isolateGlint: false, // Whether the "glint"— highlights on certain symbols in the font— should appear
-	glintColor: { space: "rgb", values: [1, 1, 1] }, // The color of the glint
+	glintColor: hsl(0, 0, 1), // The color of the glint
+	glintIntensity: 1, // The intensity of the glint
 	volumetric: false, // A mode where the raindrops appear in perspective
 	animationSpeed: 1, // The global rate that all animations progress
 	fps: 60, // The target frame rate (frames per second) of the effect
@@ -143,10 +145,12 @@ const versions = {
 			{ color: hsl(0.15, 0.9, 0.7), at: 0.7 },
 			{ color: hsl(0.15, 0.9, 0.8), at: 0.8 },
 		],
-		cursorColor: rgb(2, 2, 1)
+		cursorColor: hsl(0.167, 1, 0.75),
+		cursorIntensity: 2,
 	},
 	operator: {
-		cursorColor: { space: "rgb", values: [1.0, 3, 1.5] },
+		cursorColor: hsl(0.375, 1, 0.66),
+		cursorIntensity: 3,
 		bloomSize: 0.6,
 		bloomStrength: 0.75,
 		highPassThreshold: 0.0,
@@ -212,7 +216,8 @@ const versions = {
 	resurrections: {
 		font: "resurrections",
 		glyphEdgeCrop: 0.1,
-		cursorColor: { space: "rgb", values: [1.4, 2, 1.2] },
+		cursorColor: hsl(0.292, 1, 0.8),
+		cursorIntensity: 2,
 		baseBrightness: -0.7,
 		baseContrast: 1.17,
 		highPassThreshold: 0,
@@ -231,9 +236,11 @@ const versions = {
 		glintTexture: "metal",
 		baseTexture: "pixels",
 		glyphEdgeCrop: 0.1,
-		cursorColor: { space: "rgb", values: [1.4, 2, 1.2] },
+		cursorColor: hsl(0.292, 1, 0.8),
+		cursorIntensity: 2,
 		isolateGlint: true,
-		glintColor: { space: "rgb", values: [3, 2.5, 0.6] },
+		glintColor: hsl(0.131, 1, 0.6),
+		glintIntensity: 3,
 		glintBrightness: -0.5,
 		glintContrast: 1.5,
 		baseBrightness: -0.4,
@@ -258,9 +265,11 @@ const versions = {
 		glintTexture: "mesh",
 		baseTexture: "metal",
 		glyphEdgeCrop: 0.1,
-		cursorColor: { space: "rgb", values: [1.4, 2, 1.4] },
+		cursorColor: hsl(0.333, 1, 0.85),
+		cursorIntensity: 2,
 		isolateGlint: true,
-		glintColor: { space: "rgb", values: [0, 2, 0.8] },
+		glintColor: hsl(0.4, 1, 0.5),
+		glintIntensity: 2,
 		glintBrightness: -1.5,
 		glintContrast: 3,
 		baseBrightness: -0.3,
@@ -285,9 +294,11 @@ const versions = {
 		glintTexture: "sand",
 		baseTexture: "metal",
 		glyphEdgeCrop: 0.1,
-		cursorColor: { space: "rgb", values: [0.6, 1, 2] },
+		cursorColor: hsl(0.619, 1, 0.65),
+		cursorIntensity: 2,
 		isolateGlint: true,
-		glintColor: { space: "rgb", values: [0.6, 1.2, 3] },
+		glintColor: hsl(0.625, 1, 0.6),
+		glintIntensity: 3,
 		glintBrightness: -1,
 		glintContrast: 3,
 		baseBrightness: -0.3,
@@ -323,7 +334,8 @@ const versions = {
 	},
 	twilight: {
 		font: "huberfishD",
-		cursorColor: { space: "rgb", values: [1.5, 1, 0.9] },
+		cursorColor: hsl(0.167, 1, 0.8),
+		cursorIntensity: 1.5,
 		bloomStrength: 0.1,
 		numColumns: 50,
 		raindropLength: 0.9,
@@ -342,9 +354,11 @@ const versions = {
 		font: "resurrections",
 		glintTexture: "metal",
 		glyphEdgeCrop: 0.1,
-		cursorColor: { space: "rgb", values: [1.4, 2, 1.2] },
+		cursorColor: hsl(0.292, 1, 0.8),
+		cursorIntensity: 2,
 		isolateGlint: true,
-		glintColor: { space: "rgb", values: [3, 2.5, 0.6] },
+		glintColor: hsl(0.131, 1, 0.6),
+		glintIntensity: 3,
 		glintBrightness: -0.5,
 		glintContrast: 1.5,
 		baseBrightness: -0.4,
@@ -474,6 +488,16 @@ const paramMapping = {
 	cursorHSL: { key: "cursorColor", parser: parseColor(true) },
 	glintHSL: { key: "glintColor", parser: parseColor(true) },
 
+	cursorIntensity: {
+		key: "cursorIntensity",
+		parser: (s) => nullNaN(range(parseFloat(s), 0, Infinity)),
+	},
+
+	glyphIntensity: {
+		key: "glyphIntensity",
+		parser: (s) => nullNaN(range(parseFloat(s), 0, Infinity)),
+	},
+
 	volumetric: { key: "volumetric", parser: (s) => s.toLowerCase().includes("true") },
 	loops: { key: "loops", parser: (s) => s.toLowerCase().includes("true") },
 	fps: { key: "fps", parser: (s) => nullNaN(range(parseFloat(s), 0, 60)) },
@@ -503,11 +527,19 @@ export default (urlParams) => {
 
 	if (validParams.effect != null) {
 		if (validParams.cursorColor == null) {
-			validParams.cursorColor = { space: "rgb", values: [2, 2, 2] };
+			validParams.cursorColor = hsl(0, 0, 1);
+		}
+
+		if (validParams.cursorIntensity == null) {
+			validParams.cursorIntensity = 2;
 		}
 
 		if (validParams.glintColor == null) {
-			validParams.glintColor = { space: "rgb", values: [1, 1, 1] };
+			validParams.glintColor = hsl(0, 0, 1);
+		}
+
+		if (validParams.glyphIntensity == null) {
+			validParams.glyphIntensity = 1;
 		}
 	}
 
