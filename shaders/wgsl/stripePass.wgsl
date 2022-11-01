@@ -44,7 +44,7 @@ fn getBrightness(uv : vec2<f32>) -> vec4<f32> {
 @compute @workgroup_size(32, 1, 1) fn computeMain(input : ComputeInput) {
 
 	// Resolve the invocation ID to a texel coordinate
-	var coord = vec2<i32>(input.id.xy);
+	var coord = vec2<u32>(input.id.xy);
 	var screenSize = textureDimensions(tex);
 
 	if (coord.x >= screenSize.x) {

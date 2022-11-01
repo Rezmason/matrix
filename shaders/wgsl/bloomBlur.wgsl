@@ -22,7 +22,7 @@ fn gaussianPDF(x : f32) -> f32 {
 
 @compute @workgroup_size(32, 1, 1) fn computeMain(input : ComputeInput) {
 
-	var coord = vec2<i32>(input.id.xy);
+	var coord = vec2<u32>(input.id.xy);
 	var outputSize = textureDimensions(outputTex);
 
 	if (coord.x >= outputSize.x) {
