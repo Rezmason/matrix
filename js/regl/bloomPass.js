@@ -4,10 +4,6 @@ import { loadText, makePassFBO, makePass } from "./utils.js";
 // The blur approximation is the sum of a pyramid of downscaled, blurred textures.
 
 const pyramidHeight = 5;
-const levelStrengths = Array(pyramidHeight)
-	.fill()
-	.map((_, index) => Math.pow(index / (pyramidHeight * 2) + 0.5, 1 / 3).toPrecision(5))
-	.reverse();
 
 // A pyramid is just an array of FBOs, where each FBO is half the width
 // and half the height of the FBO below it.

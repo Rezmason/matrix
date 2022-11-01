@@ -6,10 +6,6 @@ struct Config {
 @group(0) @binding(0) var<uniform> config : Config;
 @group(0) @binding(1) var linearSampler : sampler;
 
-// Currently mipmap textures aren't working as expected in Firefox Nightly
-// @group(0) @binding(2) var tex : texture_2d<f32>;
-// @group(0) @binding(3) var outputTex : texture_storage_2d<rgba8unorm, write>;
-
 @group(0) @binding(2) var tex1 : texture_2d<f32>;
 @group(0) @binding(3) var tex2 : texture_2d<f32>;
 @group(0) @binding(4) var tex3 : texture_2d<f32>;
