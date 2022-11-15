@@ -1,9 +1,23 @@
 TODO:
 
+Live config update roadmap
+  Modify regl pass
+    async build(config, inputs)
+      loads all required stuff
+    async resize - adjusts the sizes
+    run — performs the GPU operation
+  Rewrite main code to accept changes to config
+  Build a Tweakpane for config
+    https://cocopon.github.io/tweakpane
+    Show a gear emoji in the top right on mouse move
+      Hide after three seconds
+      If tapped, show the tweakpane
+
 Seems like bloom size and resolution impact the REGL and WebGPU bloom implementations differently
   Move high pass into WebGPU bloom
 
-Live config update roadmap
+Dithering bug on mobile?
+  Looks like a subtle fade occurring at a per-second interval
 
 Write an explanation of the rain pass (and include images)
   Compute
