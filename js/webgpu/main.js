@@ -63,7 +63,6 @@ export default async (canvas, config) => {
 	canvasContext.configure({
 		device,
 		format: canvasFormat,
-		alphaMode: "opaque",
 		usage:
 			// GPUTextureUsage.STORAGE_BINDING |
 			GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST,

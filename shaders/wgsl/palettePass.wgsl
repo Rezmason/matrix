@@ -1,6 +1,5 @@
 struct Config {
 	ditherMagnitude : f32,
-	backgroundColor : vec3<f32>,
 	cursorColor : vec3<f32>,
 	glintColor : vec3<f32>,
 	cursorIntensity : f32,
@@ -68,9 +67,8 @@ fn getBrightness(uv : vec2<f32>) -> vec4<f32> {
 	textureStore(outputTex, coord, vec4<f32>(
 		palette.colors[paletteIndex]
 			+ min(config.cursorColor * config.cursorIntensity * brightness.g, vec3<f32>(1.0))
-			+ min(config.glintColor * config.glintIntensity * brightness.b, vec3<f32>(1.0))
-			+ config.backgroundColor,
-		1.0
+			+ min(config.glintColor * config.glintIntensity * brightness.b, vec3<f32>(1.0)),
+		0.0
 	));
 }
 
