@@ -38,5 +38,5 @@ fn getBrightness(uv : vec2<f32>) -> vec4<f32> {
 	// Combine the texture and bloom, then blow it out to reveal more of the image
 	var brightness = getBrightness(uv);
 
-	textureStore(outputTex, coord, vec4<f32>(bgColor * (brightness.r + brightness.g * 2.0), 1.0));
+	textureStore(outputTex, coord, vec4<f32>(bgColor * (brightness.r + brightness.g * 2.0), 0.0));
 }

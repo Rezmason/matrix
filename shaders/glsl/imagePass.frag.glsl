@@ -16,5 +16,5 @@ void main() {
 	// Combine the texture and bloom, then blow it out to reveal more of the image
 	vec4 brightness = getBrightness(vUV);
 	
-	gl_FragColor = vec4(bgColor * (brightness.r + brightness.g * 2.0), 1.0);
+	gl_FragColor = vec4(bgColor * (brightness.r + brightness.g * 2.0), 0.0);
 }
