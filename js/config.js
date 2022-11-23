@@ -476,6 +476,7 @@ const paramMapping = {
 		parser: (s) => nullNaN(range(parseFloat(s), 0, 1)),
 	},
 	glyphURL: { key: "glyphBGURL", parser: (s) => s },
+	bgURL: { key: "pageBGURL", parser: (s) => s },
 	palette: { key: "palette", parser: parsePalette(false) },
 	stripeColors: { key: "stripeColors", parser: parseColors(false) },
 	backgroundColor: { key: "backgroundColor", parser: parseColor(false) },

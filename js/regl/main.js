@@ -9,6 +9,7 @@ import makeQuiltPass from "./quiltPass.js";
 import makeMirrorPass from "./mirrorPass.js";
 import { setupCamera, cameraCanvas, cameraAspectRatio } from "../camera.js";
 import getLKG from "./lkgHelper.js";
+import colorToRGB from "../colorToRGB.js";
 
 const effects = {
 	none: null,
@@ -36,6 +37,15 @@ const loadJS = (src) =>
 
 export default async (canvas, config) => {
 	await Promise.all([loadJS("lib/regl.min.js"), loadJS("lib/gl-matrix.js")]);
+
+	if (config.pageBGURL) {
+		document.body.style.backgroundImage = `url(${config.pageBGURL})`
+	}
+	else {
+		let colors = colorToRGB(config.backgroundColor).map( e => e * 100 );
+		let colorStyle = `rgb(${colors[0]}%, ${colors[1]}%, ${colors[2]}%)`;
+		document.body.style.backgroundColor = colorStyle;
+	}
 
 	const resize = () => {
 		const devicePixelRatio = window.devicePixelRatio ?? 1;

@@ -136,6 +136,7 @@ Now you know link fu. Here's a list of customization options:
 - `cursorIntensity`, — the brightness of cursors' glow. Can be any number greater than zero. Default is 2.0.
 - `glintIntensity` — the brightness of glint glow, if there is any glint. Can be any number greater than zero. Default is 1.0.
 - `glyphURL` - if you set the effect to "image", this is how you specify which image to load. It doesn't work with any URL; I suggest grabbing them from Wikipedia: [https://rezmason.github.io/matrix/?effect=image&glyphURL=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg](https://rezmason.github.io/matrix/?effect=image&glyphURL=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg)
+- `bgURL` - set the page background to a picture given by the url. The `backgroundColor` or `backgroundHSL` won't take effect if this is set.
 - `loops` - (WIP) if set to "true", this causes the effect to loop, so that it can be converted into a looping video.
 - `fps` — the framerate of the effect. Can be any number between 0 and 60. Default is 60.
 
