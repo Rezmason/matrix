@@ -62,6 +62,7 @@ export default async (canvas, config) => {
 
 	canvasContext.configure({
 		device,
+		alphaMode: "premultiplied",
 		format: canvasFormat,
 		usage:
 			// GPUTextureUsage.STORAGE_BINDING |
