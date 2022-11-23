@@ -3,11 +3,11 @@ import { makeComputeTarget, makeUniformBuffer, loadTexture, loadShader, makeBind
 
 // Multiplies the rendered rain and bloom by a loaded in image
 
-const defaultBGURL = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Flammarion_Colored.jpg/917px-Flammarion_Colored.jpg";
+const defaultGlyphBGURL = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Flammarion_Colored.jpg/917px-Flammarion_Colored.jpg";
 
 export default ({ config, device }) => {
-	const bgURL = "bgURL" in config ? config.bgURL : defaultBGURL;
-	const assets = [loadTexture(device, bgURL), loadShader(device, "shaders/wgsl/imagePass.wgsl")];
+	const GlyphBGURL = "glyphBGURL" in config ? config.glyphBGURL : defaultGlyphBGURL;
+	const assets = [loadTexture(device, GlyphBGURL), loadShader(device, "shaders/wgsl/imagePass.wgsl")];
 
 	const linearSampler = device.createSampler({
 		magFilter: "linear",
