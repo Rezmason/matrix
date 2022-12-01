@@ -18,12 +18,12 @@ const isRunningSwiftShader = () => {
 };
 
 document.body.onload = async () => {
-	const urlParams = Object.fromEntries(new URLSearchParams(window.location.search).entries());
-	const config = makeConfig(urlParams);
+	const urlParams = new URLSearchParams(window.location.search);
+	const config = makeConfig(Object.fromEntries(urlParams.entries()));
 	const useWebGPU = (await supportsWebGPU()) && ["webgpu"].includes(config.renderer?.toLowerCase());
 	const solution = import(`./${useWebGPU ? "webgpu" : "regl"}/main.js`);
 
-	if (isRunningSwiftShader()) {
+	if (isRunningSwiftShader() && !config.suppressWarnings) {
 		const notice = document.createElement("notice");
 		notice.innerHTML = `<div class="notice">
 		<p>Wake up, Neo... you've got hardware acceleration disabled.</p>
@@ -34,6 +34,9 @@ document.body.onload = async () => {
 		canvas.style.display = "none";
 		document.body.appendChild(notice);
 		document.querySelector(".blue.pill").addEventListener("click", async () => {
+			config.suppressWarnings = true;
+			urlParams.set("suppressWarnings", true);
+			history.replaceState({}, "", "?" + unescape(urlParams.toString()));
 			(await solution).default(canvas, config);
 			canvas.style.display = "unset";
 			document.body.removeChild(notice);

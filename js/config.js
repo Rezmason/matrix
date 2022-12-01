@@ -121,6 +121,7 @@ const defaults = {
 	resolution: 0.75, // An overall scale multiplier
 	useHalfFloat: false,
 	renderer: "regl", // The preferred web graphics API
+	suppressWarnings: false, // Whether to show warnings to visitors on load
 	isometric: false,
 	useHoloplay: false,
 	loops: false,
@@ -401,6 +402,7 @@ versions["2021"] = versions.resurrections;
 
 const range = (f, min = -Infinity, max = Infinity) => Math.max(min, Math.min(max, f));
 const nullNaN = (f) => (isNaN(f) ? null : f);
+const isTrue = (s) => s.toLowerCase().includes("true");
 
 const parseColor = (isHSL) => (s) => ({
 	space: isHSL ? "hsl" : "rgb",
@@ -440,7 +442,7 @@ const paramMapping = {
 	version: { key: "version", parser: (s) => s },
 	font: { key: "font", parser: (s) => s },
 	effect: { key: "effect", parser: (s) => s },
-	camera: { key: "useCamera", parser: (s) => s.toLowerCase().includes("true") },
+	camera: { key: "useCamera", parser: isTrue },
 	width: { key: "numColumns", parser: (s) => nullNaN(parseInt(s)) },
 	numColumns: { key: "numColumns", parser: (s) => nullNaN(parseInt(s)) },
 	density: { key: "density", parser: (s) => nullNaN(range(parseFloat(s), 0)) },
@@ -498,13 +500,14 @@ const paramMapping = {
 		parser: (s) => nullNaN(range(parseFloat(s), 0, Infinity)),
 	},
 
-	volumetric: { key: "volumetric", parser: (s) => s.toLowerCase().includes("true") },
-	loops: { key: "loops", parser: (s) => s.toLowerCase().includes("true") },
+	volumetric: { key: "volumetric", parser: isTrue },
+	loops: { key: "loops", parser: isTrue },
 	fps: { key: "fps", parser: (s) => nullNaN(range(parseFloat(s), 0, 60)) },
-	skipIntro: { key: "skipIntro", parser: (s) => s.toLowerCase().includes("true") },
+	skipIntro: { key: "skipIntro", parser: isTrue },
 	renderer: { key: "renderer", parser: (s) => s },
-	once: { key: "once", parser: (s) => s.toLowerCase().includes("true") },
-	isometric: { key: "isometric", parser: (s) => s.toLowerCase().includes("true") },
+	suppressWarnings: { key: "suppressWarnings", parser: isTrue },
+	once: { key: "once", parser: isTrue },
+	isometric: { key: "isometric", parser: isTrue },
 };
 
 paramMapping.paletteRGB = paramMapping.palette;
