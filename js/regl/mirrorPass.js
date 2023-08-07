@@ -1,4 +1,5 @@
 import { loadText, makePassFBO, makePass } from "./utils.js";
+import mirrorPassFrag from "../../shaders/glsl/mirrorPass.frag.glsl";
 
 let start;
 const numClicks = 5;
@@ -15,7 +16,6 @@ window.onclick = (e) => {
 
 export default ({ regl, config, cameraTex, cameraAspectRatio }, inputs) => {
 	const output = makePassFBO(regl, config.useHalfFloat);
-	const mirrorPassFrag = loadText("shaders/glsl/mirrorPass.frag.glsl");
 	const render = regl({
 		frag: regl.prop("frag"),
 		uniforms: {
@@ -36,14 +36,14 @@ export default ({ regl, config, cameraTex, cameraAspectRatio }, inputs) => {
 		{
 			primary: output,
 		},
-		Promise.all([mirrorPassFrag.loaded]),
+		null, // No async loading, glsl bundled and loaded into memory at document load
 		(w, h) => {
 			output.resize(w, h);
 			aspectRatio = w / h;
 		},
 		(shouldRender) => {
 			if (shouldRender) {
-				render({ frag: mirrorPassFrag.text() });
+				render({ frag: mirrorPassFrag });
 			}
 		}
 	);
