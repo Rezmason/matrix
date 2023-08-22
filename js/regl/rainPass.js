@@ -29,7 +29,7 @@ const blVert = [1, 0];
 const brVert = [1, 1];
 const quadVertices = [tlVert, trVert, brVert, tlVert, brVert, blVert];
 
-export default ({ regl, config, lkg }) => {
+export default ({ regl, config }) => {
 	// The volumetric mode multiplies the number of columns
 	// to reach the desired density, and then overlaps them
 	const volumetric = config.volumetric;
@@ -198,8 +198,6 @@ export default ({ regl, config, lkg }) => {
 			screenSize: regl.prop("screenSize"),
 		},
 
-		viewport: regl.prop("viewport"),
-
 		attributes: {
 			aPosition: quadPositions,
 			aCorner: Array(numQuads).fill(quadVertices),
@@ -218,16 +216,10 @@ export default ({ regl, config, lkg }) => {
 		mat4.rotateY(transform, transform, (Math.PI * 1) / 4);
 		mat4.translate(transform, transform, vec3.fromValues(0, 0, -1));
 		mat4.scale(transform, transform, vec3.fromValues(1, 1, 2));
-	} else if (lkg.enabled) {
-		mat4.translate(transform, transform, vec3.fromValues(0, 0, -1.1));
-		mat4.scale(transform, transform, vec3.fromValues(1, 1, 1));
-		mat4.scale(transform, transform, vec3.fromValues(0.15, 0.15, 0.15));
 	} else {
 		mat4.translate(transform, transform, vec3.fromValues(0, 0, -1));
 	}
 	const camera = mat4.create();
-
-	const vantagePoints = [];
 
 	return makePass(
 		{
@@ -248,48 +240,16 @@ export default ({ regl, config, lkg }) => {
 			output.resize(w, h);
 			const aspectRatio = w / h;
 
-			const [numTileColumns, numTileRows] = [lkg.tileX, lkg.tileY];
-			const numVantagePoints = numTileRows * numTileColumns;
-			const tileWidth = Math.floor(w / numTileColumns);
-			const tileHeight = Math.floor(h / numTileRows);
-			vantagePoints.length = 0;
-			for (let row = 0; row < numTileRows; row++) {
-				for (let column = 0; column < numTileColumns; column++) {
-					const index = column + row * numTileColumns;
-					const camera = mat4.create();
-
-					if (volumetric && config.isometric) {
-						if (aspectRatio > 1) {
-							mat4.ortho(camera, -1.5 * aspectRatio, 1.5 * aspectRatio, -1.5, 1.5, -1000, 1000);
-						} else {
-							mat4.ortho(camera, -1.5, 1.5, -1.5 / aspectRatio, 1.5 / aspectRatio, -1000, 1000);
-						}
-					} else if (lkg.enabled) {
-						mat4.perspective(camera, (Math.PI / 180) * lkg.fov, lkg.quiltAspect, 0.0001, 1000);
-
-						const distanceToTarget = -1; // TODO: Get from somewhere else
-						let vantagePointAngle = (Math.PI / 180) * lkg.viewCone * (index / (numVantagePoints - 1) - 0.5);
-						if (isNaN(vantagePointAngle)) {
-							vantagePointAngle = 0;
-						}
-						const xOffset = distanceToTarget * Math.tan(vantagePointAngle);
-
-						mat4.translate(camera, camera, vec3.fromValues(xOffset, 0, 0));
-
-						camera[8] = -xOffset / (distanceToTarget * Math.tan((Math.PI / 180) * 0.5 * lkg.fov) * lkg.quiltAspect); // Is this right??
-					} else {
-						mat4.perspective(camera, (Math.PI / 180) * 90, aspectRatio, 0.0001, 1000);
-					}
-
-					const viewport = {
-						x: column * tileWidth,
-						y: row * tileHeight,
-						width: tileWidth,
-						height: tileHeight,
-					};
-					vantagePoints.push({ camera, viewport });
+			if (volumetric && config.isometric) {
+				if (aspectRatio > 1) {
+					mat4.ortho(camera, -1.5 * aspectRatio, 1.5 * aspectRatio, -1.5, 1.5, -1000, 1000);
+				} else {
+					mat4.ortho(camera, -1.5, 1.5, -1.5 / aspectRatio, 1.5 / aspectRatio, -1000, 1000);
 				}
+			} else {
+				mat4.perspective(camera, (Math.PI / 180) * 90, aspectRatio, 0.0001, 1000);
 			}
+
 			[screenSize[0], screenSize[1]] = aspectRatio > 1 ? [1, aspectRatio] : [1 / aspectRatio, 1];
 		},
 		(shouldRender) => {
@@ -305,9 +265,7 @@ export default ({ regl, config, lkg }) => {
 					framebuffer: output,
 				});
 
-				for (const vantagePoint of vantagePoints) {
-					render({ ...vantagePoint, transform, screenSize, vert: rainPassVert.text(), frag: rainPassFrag.text() });
-				}
+				render({ camera, transform, screenSize, vert: rainPassVert.text(), frag: rainPassFrag.text() });
 			}
 		}
 	);

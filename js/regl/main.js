@@ -3,25 +3,6 @@ import { makeFullScreenQuad, makePipeline } from "./utils.js";
 import makeRain from "./rainPass.js";
 import makeBloomPass from "./bloomPass.js";
 import makePalettePass from "./palettePass.js";
-import makeStripePass from "./stripePass.js";
-import makeImagePass from "./imagePass.js";
-import makeQuiltPass from "./quiltPass.js";
-import makeMirrorPass from "./mirrorPass.js";
-import { setupCamera, cameraCanvas, cameraAspectRatio } from "../camera.js";
-import getLKG from "./lkgHelper.js";
-
-const effects = {
-	none: null,
-	plain: makePalettePass,
-	palette: makePalettePass,
-	customStripes: makeStripePass,
-	stripes: makeStripePass,
-	pride: makeStripePass,
-	transPride: makeStripePass,
-	trans: makeStripePass,
-	image: makeImagePass,
-	mirror: makeMirrorPass,
-};
 
 const dimensions = { width: 1, height: 1 };
 
@@ -35,7 +16,7 @@ const loadJS = (src) =>
 	});
 
 export default async (canvas, config) => {
-	await Promise.all([loadJS("lib/regl.min.js"), loadJS("lib/gl-matrix.js")]);
+	await Promise.all([loadJS("lib/regl.js"), loadJS("lib/gl-matrix.js")]);
 
 	const resize = () => {
 		const devicePixelRatio = window.devicePixelRatio ?? 1;
@@ -78,14 +59,10 @@ export default async (canvas, config) => {
 
 	const regl = createREGL({ canvas, pixelRatio: 1, extensions, optionalExtensions });
 
-	const cameraTex = regl.texture(cameraCanvas);
-	const lkg = await getLKG(config.useHoloplay, true);
-
 	// All this takes place in a full screen quad.
 	const fullScreenQuad = makeFullScreenQuad(regl);
-	const effectName = config.effect in effects ? config.effect : "palette";
-	const context = { regl, config, lkg, cameraTex, cameraAspectRatio };
-	const pipeline = makePipeline(context, [makeRain, makeBloomPass, effects[effectName], makeQuiltPass]);
+	const context = { regl, config };
+	const pipeline = makePipeline(context, [makeRain, makeBloomPass, makePalettePass]);
 	const screenUniforms = { tex: pipeline[pipeline.length - 1].outputs.primary };
 	const drawToScreen = regl({ uniforms: screenUniforms });
 	await Promise.all(pipeline.map((step) => step.ready));

@@ -1,79 +1,10 @@
 TODO:
 
-Live config update roadmap
-  Modify regl pass
-    async build(config, inputs)
-      loads all required stuff
-    async resize - adjusts the sizes
-    run — performs the GPU operation
-  Rewrite main code to accept changes to config
-  Build a Tweakpane for config
-    https://cocopon.github.io/tweakpane
-    Show a gear emoji in the top right on mouse move
-      Hide after three seconds
-      If tapped, show the tweakpane
-
-Seems like bloom size and resolution impact the REGL and WebGPU bloom implementations differently
-  Move high pass into WebGPU bloom
-
-Dithering bug on mobile?
-  Looks like a subtle fade occurring at a per-second interval
-
-Write an explanation of the rain pass (and include images)
-  Compute
-  Volumetric quads
-  Fullscreen quad and spacial mapping
-  MSDFs
-
-Audio system
-  Toggle (or number representing frequency)
-  Load the sound effect
-  Play it multiple times with delay
-    Random pan
-    Random volume?
-    Randomize pitch a little?
-
-Playdate version
-  Audio system
-    Falling sound
-    Launch sound
-    Undocking sound
-    Docking sound
-    Maybe crank sounds? Not sure yet
-
-Support Resurrections SDF bevel and "lights"
-  https://shaderfun.com/2018/07/23/signed-distance-fields-part-8-gradients-bevels-and-noise/
-  Get the "normals" and color right
-    Note: even completely dark glyphs can have glint on their edges
-    "Golden hour"
-  Stuff MSDF-derived normal vectors from rain pass frag into two of its output channels
-  Anomaly mode toggles between this and anomaly streaks
-
-WebGPU
-  Try https://github.com/brendan-duncan/wgsl_reflect
-  Get rid of end pass once it's possible to copy a bgra8unorm to a canvas texture
-  Switch to rgba32float somehow?
-    Why isn't this straightforward?
-  Try shorthand
-  Share a bind group and layout just for time?
-  Try using a buffer for the stripe pass 1D texture
-
-Improve loop support
-
-Idea: Build a UI
-  Replace versions with presets
-  Simple changes update the values
-  Complex changes replace the pipeline
-  Make it a form, so it's accessible
-  Then, make it look cool like the UI from the old site
-
-Maybe pay someone to make Mac/Windows screensavers
-
-Zion Control's matrix variant
-  From Reloaded
-
-gpu-buffer, working title
-  Support type aliasing (type Q = array<i32, 5>)
-  Support shorthand (vec4f)
-  Build mocha tests, example project
-  Give it its own repo, microsite
+Simplify!
+  Get rid of everything inessential
+  Remove WebGPU
+  Remove config options
+  Remove features
+  Remove subsystems
+  Get as much into one file as you possibly can
+  Remove dependencies

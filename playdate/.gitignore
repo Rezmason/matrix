@@ -1,6 +1,0 @@
-matrix_c/build/*
-matrix_c/build-device/*
-
-*.pdx
-pdex.dylib
-pdex.bin

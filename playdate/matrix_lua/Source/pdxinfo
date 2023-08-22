@@ -1,8 +1,0 @@
-name=The Playtrix (Lua build)
-author=Rezmason
-description=A familiar animation of mysterious raining symbols.
-bundleID=net.rezmason.theplaytrix_lua
-version=1.0
-buildNumber=1
-imagePath=path/to/launcher/assets
-launchSoundPath=path/to/launch/sound/file
