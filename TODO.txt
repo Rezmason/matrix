@@ -1,10 +1,9 @@
 TODO:
 
 Simplify!
+  Pare down config
   Get rid of everything inessential
-  Remove WebGPU
-  Remove config options
   Remove features
   Remove subsystems
   Get as much into one file as you possibly can
-  Remove dependencies
+  Remove regl
