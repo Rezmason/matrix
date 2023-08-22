@@ -150,8 +150,6 @@ export default ({ regl, config }) => {
 			"baseContrast",
 			"glintBrightness",
 			"glintContrast",
-			"hasBaseTexture",
-			"hasGlintTexture",
 			"brightnessThreshold",
 			"brightnessOverride",
 			"isolateCursor",

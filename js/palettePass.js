@@ -1,4 +1,4 @@
-import colorToRGB from "../colorToRGB.js";
+import colorToRGB from "./colorToRGB.js";
 import { loadText, make1DTexture, makePassFBO, makePass } from "./utils.js";
 
 // Maps the brightness of the rendered rain and bloom to colors
