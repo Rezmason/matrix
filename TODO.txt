@@ -1,9 +1,6 @@
 TODO:
 
 Simplify!
-  Pare down config
-  Get rid of everything inessential
-  Remove features
-  Remove subsystems
   Get as much into one file as you possibly can
   Remove regl
+    Record WebGL debug calls

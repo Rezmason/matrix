@@ -1,79 +1,54 @@
-import colorToRGB from "./colorToRGB.js";
-import { loadText, make1DTexture, makePassFBO, makePass } from "./utils.js";
+import { make1DTexture, makePassFBO, makePass } from "./utils.js";
 
-// Maps the brightness of the rendered rain and bloom to colors
-// in a 1D gradient palette texture generated from the passed-in color sequence
-
-// This shader introduces noise into the renders, to avoid banding
-
-const makePalette = (regl, entries) => {
-	const PALETTE_SIZE = 2048;
-	const paletteColors = Array(PALETTE_SIZE);
-
-	// Convert HSL gradient into sorted RGB gradient, capping the ends
-	const sortedEntries = entries
-		.slice()
-		.sort((e1, e2) => e1.at - e2.at)
-		.map((entry) => ({
-			rgb: colorToRGB(entry.color),
-			arrayIndex: Math.floor(Math.max(Math.min(1, entry.at), 0) * (PALETTE_SIZE - 1)),
-		}));
-	sortedEntries.unshift({ rgb: sortedEntries[0].rgb, arrayIndex: 0 });
-	sortedEntries.push({
-		rgb: sortedEntries[sortedEntries.length - 1].rgb,
-		arrayIndex: PALETTE_SIZE - 1,
-	});
-
-	// Interpolate between the sorted RGB entries to generate
-	// the palette texture data
-	sortedEntries.forEach((entry, index) => {
-		paletteColors[entry.arrayIndex] = entry.rgb.slice();
-		if (index + 1 < sortedEntries.length) {
-			const nextEntry = sortedEntries[index + 1];
-			const diff = nextEntry.arrayIndex - entry.arrayIndex;
-			for (let i = 0; i < diff; i++) {
-				const ratio = i / diff;
-				paletteColors[entry.arrayIndex + i] = [
-					entry.rgb[0] * (1 - ratio) + nextEntry.rgb[0] * ratio,
-					entry.rgb[1] * (1 - ratio) + nextEntry.rgb[1] * ratio,
-					entry.rgb[2] * (1 - ratio) + nextEntry.rgb[2] * ratio,
-				];
-			}
-		}
-	});
-
-	return make1DTexture(
-		regl,
-		paletteColors.map((rgb) => [...rgb, 1])
-	);
-};
-
-// The rendered texture's values are mapped to colors in a palette texture.
-// A little noise is introduced, to hide the banding that appears
-// in subtle gradients. The noise is also time-driven, so its grain
-// won't persist across subsequent frames. This is a safe trick
-// in screen space.
-
-export default ({ regl, config }, inputs) => {
-	const output = makePassFBO(regl, config.useHalfFloat);
-	const paletteTex = makePalette(regl, config.palette);
-	const { backgroundColor, cursorColor, glintColor, cursorIntensity, glintIntensity, ditherMagnitude } = config;
-
-	const palettePassFrag = loadText("shaders/glsl/palettePass.frag.glsl");
-
+export default ({ regl }, inputs) => {
+	const output = makePassFBO(regl);
 	const render = regl({
-		frag: regl.prop("frag"),
+		frag: `
+			precision mediump float;
+			#define PI 3.14159265359
 
+			uniform sampler2D tex, bloomTex, paletteTex;
+			uniform float time;
+			varying vec2 vUV;
+
+			highp float rand( const in vec2 uv, const in float t ) {
+				const highp float a = 12.9898, b = 78.233, c = 43758.5453;
+				highp float dt = dot( uv.xy, vec2( a,b ) ), sn = mod( dt, PI );
+				return fract(sin(sn) * c + t);
+			}
+
+			void main() {
+				vec4 primary = texture2D(tex, vUV);
+				vec4 bloom = texture2D(bloomTex, vUV);
+				vec4 brightness = primary + bloom - rand( gl_FragCoord.xy, time ) * 0.0167;
+				gl_FragColor = vec4(
+					texture2D( paletteTex, vec2(brightness.r, 0.0)).rgb
+						+ min(vec3(0.756, 1.0, 0.46) * brightness.g * 2.0, vec3(1.0)),
+					1.0
+				);
+			}
+		`,
 		uniforms: {
-			backgroundColor: colorToRGB(backgroundColor),
-			cursorColor: colorToRGB(cursorColor),
-			glintColor: colorToRGB(glintColor),
-			cursorIntensity,
-			glintIntensity,
-			ditherMagnitude,
 			tex: inputs.primary,
 			bloomTex: inputs.bloom,
-			paletteTex,
+			paletteTex: make1DTexture(regl, [
+				[0.0, 0.0, 0.0, 1.0],
+				[0.03, 0.13, 0.0, 1.0],
+				[0.06, 0.25, 0.01, 1.0],
+				[0.09, 0.38, 0.02, 1.0],
+				[0.15, 0.46, 0.07, 1.0],
+				[0.21, 0.54, 0.13, 1.0],
+				[0.28, 0.63, 0.19, 1.0],
+				[0.34, 0.71, 0.25, 1.0],
+				[0.41, 0.8, 0.31, 1.0],
+				[0.47, 0.88, 0.37, 1.0],
+				[0.53, 0.97, 0.43, 1.0],
+				[0.61, 0.97, 0.52, 1.0],
+				[0.69, 0.98, 0.62, 1.0],
+				[0.69, 0.98, 0.62, 1.0],
+				[0.69, 0.98, 0.62, 1.0],
+				[0.69, 0.98, 0.62, 1.0],
+			]),
 		},
 		framebuffer: output,
 	});
@@ -82,12 +57,8 @@ export default ({ regl, config }, inputs) => {
 		{
 			primary: output,
 		},
-		palettePassFrag.loaded,
+		null,
 		(w, h) => output.resize(w, h),
-		(shouldRender) => {
-			if (shouldRender) {
-				render({ frag: palettePassFrag.text() });
-			}
-		}
+		() => render()
 	);
 };

@@ -27,28 +27,13 @@ const makeDoubleBuffer = (regl, props) => {
 
 const isPowerOfTwo = (x) => Math.log2(x) % 1 == 0;
 
-const loadImage = (regl, url, mipmap) => {
+const loadImage = (regl, url) => {
 	let texture = regl.texture([[0]]);
 	let loaded = false;
 	return {
-		texture: () => {
-			if (!loaded && url != null) {
-				console.warn(`texture still loading: ${url}`);
-			}
-			return texture;
-		},
-		width: () => {
-			if (!loaded && url != null) {
-				console.warn(`texture still loading: ${url}`);
-			}
-			return loaded ? texture.width : 1;
-		},
-		height: () => {
-			if (!loaded && url != null) {
-				console.warn(`texture still loading: ${url}`);
-			}
-			return loaded ? texture.height : 1;
-		},
+		texture: () => texture,
+		width: () => (loaded ? texture.width : 1),
+		height: () => (loaded ? texture.height : 1),
 		loaded: (async () => {
 			if (url != null) {
 				const data = new Image();
@@ -56,16 +41,10 @@ const loadImage = (regl, url, mipmap) => {
 				data.src = url;
 				await data.decode();
 				loaded = true;
-				if (mipmap) {
-					if (!isPowerOfTwo(data.width) || !isPowerOfTwo(data.height)) {
-						console.warn(`Can't mipmap a non-power-of-two image: ${url}`);
-					}
-					mipmap = false;
-				}
 				texture = regl.texture({
 					data,
 					mag: "linear",
-					min: mipmap ? "mipmap" : "linear",
+					min: "linear",
 					flipY: true,
 				});
 			}
@@ -77,12 +56,7 @@ const loadText = (url) => {
 	let text = "";
 	let loaded = false;
 	return {
-		text: () => {
-			if (!loaded) {
-				console.warn(`text still loading: ${url}`);
-			}
-			return text;
-		},
+		text: () => text,
 		loaded: (async () => {
 			if (url != null) {
 				text = await (await fetch(url)).text();
