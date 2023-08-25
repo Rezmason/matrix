@@ -115,14 +115,6 @@ export default ({ regl }) => {
 		framebuffer: computeDoubleBuffer.front,
 	});
 
-	const quadPositions = Array(1)
-		.fill()
-		.map((_, y) =>
-			Array(1)
-				.fill()
-				.map((_, x) => Array(numVerticesPerQuad).fill([x, y]))
-		);
-
 	// We render the code into an FBO using MSDFs: https://github.com/Chlumsky/msdfgen
 	const glyphMSDF = loadImage(regl, "assets/matrixcode_msdf.png");
 	const output = makePassFBO(regl);
@@ -137,13 +129,13 @@ export default ({ regl }) => {
 		vert: `
 			precision lowp float;
 
-			attribute vec2 aPosition, aCorner;
+			attribute vec2 aPosition;
 			uniform vec2 screenSize;
 			varying vec2 vUV;
 
 			void main() {
-				vUV = aPosition + aCorner;
-				gl_Position = vec4((aPosition + aCorner - 0.5) * 2.0 * screenSize, 0.0, 1.0);
+				vUV = aPosition;
+				gl_Position = vec4((aPosition - 0.5) * 2.0 * screenSize, 0.0, 1.0);
 			}
 		`,
 		frag: `
@@ -232,8 +224,7 @@ export default ({ regl }) => {
 		},
 
 		attributes: {
-			aPosition: quadPositions,
-			aCorner: quadVertices,
+			aPosition: quadVertices,
 		},
 		count: numVerticesPerQuad,
 
