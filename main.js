@@ -1,23 +1,10 @@
 import { init, load, resize, draw } from "./unraveled.js";
 
-const canvas = document.createElement("canvas");
-document.body.appendChild(canvas);
-document.addEventListener("touchmove", (e) => e.preventDefault(), {
-	passive: false,
-});
+document.body.onload = async () => {
 
-const dimensions = { width: 1, height: 1 };
-
-const loadJS = (src) =>
-	new Promise((resolve, reject) => {
-		const tag = document.createElement("script");
-		tag.onload = resolve;
-		tag.onerror = reject;
-		tag.src = src;
-		document.body.appendChild(tag);
-	});
-
-const start = async () => {
+	document.addEventListener("touchmove", (e) => e.preventDefault(), { passive: false });
+	const canvas = document.querySelector("canvas");
+	const dimensions = { width: 1, height: 1 };
 
 	const resizeViewport = () => {
 		const devicePixelRatio = window.devicePixelRatio ?? 1;
@@ -31,7 +18,7 @@ const start = async () => {
 
 	const image = new Image();
 	image.crossOrigin = "anonymous";
-	image.src = "./assets/matrixcode_msdf.png";
+	image.src = "msdf.png";
 	await image.decode();
 
 	const palette = [
@@ -73,8 +60,4 @@ const start = async () => {
 	}
 	update();
 
-};
-
-document.body.onload = () => {
-	start();
 };

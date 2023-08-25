@@ -1,6 +1,0 @@
-TODO:
-
-Simplify!
-  Get as much into one file as you possibly can
-  Remove regl
-    Record WebGL debug calls
