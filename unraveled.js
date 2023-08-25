@@ -1,7 +1,11 @@
 const extendedContext = {};
-const state = {};
+const programs = {};
 const textures = {};
-const textureSizes = { fullscreen: {scale: 1}};
+const dynamicSizes = { fullscreen: {scale: 1}};
+const framebuffers = {};
+const geometry = {};
+const attributes = {};
+const uniforms = {};
 
 const extensionNames = [
 	"oes_texture_half_float",
@@ -112,12 +116,13 @@ const rain_vert_shader_source = `
 	precision lowp float;
 
 	attribute vec2 aPosition;
-	uniform vec2 screenSize;
+	uniform vec2 size;
 	varying vec2 vUV;
 
 	void main() {
 		vUV = aPosition;
-		gl_Position = vec4((aPosition - 0.5) * 2.0 * screenSize, 0.0, 1.0);
+		vec2 proportion = (size.y > size.x ? vec2(size.y / size.x, 1.) : vec2(1., size.x / size.y));
+		gl_Position = vec4((aPosition - 0.5) * 2.0 * proportion, 0.0, 1.0);
 	}
 `;
 
@@ -216,19 +221,19 @@ const bloom_high_pass_shader_source = `
 const bloom_blur_shader_source = `
 	precision mediump float;
 
-	uniform float width, height;
+	uniform vec2 size;
 	uniform sampler2D tex;
 	uniform vec2 direction;
 
 	varying vec2 vUV;
 
 	void main() {
-		vec2 size = height > width ? vec2(height / width, 1.) : vec2(1., width / height);
+		vec2 proportion = (size.y > size.x ? vec2(size.y / size.x, 1.) : vec2(1., size.x / size.y));
 		gl_FragColor =
 			texture2D(tex, vUV) * 0.442 +
 			(
-				texture2D(tex, vUV + direction / max(height, width) * size) +
-				texture2D(tex, vUV - direction / max(height, width) * size)
+				texture2D(tex, vUV + direction / max(size.y, size.x) * proportion) +
+				texture2D(tex, vUV - direction / max(size.y, size.x) * proportion)
 			) * 0.279;
 	}
 `;
@@ -281,350 +286,172 @@ const init = (gl) => Object.assign(extendedContext, ...extensionNames.map(name =
 
 const load = (gl, msdfImage, palette) => {
 
-	state.fullscreen_frag_shader = gl.createShader(gl.FRAGMENT_SHADER); gl.shaderSource(state.fullscreen_frag_shader, fullscreen_frag_shader_source); gl.compileShader(state.fullscreen_frag_shader);
+	const buildShader = (source, isFragment) => {
+		const shader = gl.createShader(isFragment ? gl.FRAGMENT_SHADER : gl.VERTEX_SHADER);
+		gl.shaderSource(shader, source);
+		gl.compileShader(shader);
+		return shader;
+	};
 
-	state.fullscreen_vert_shader = gl.createShader(gl.VERTEX_SHADER); gl.shaderSource(state.fullscreen_vert_shader, fullscreen_vert_shader_source); gl.compileShader(state.fullscreen_vert_shader);
+	const buildProgram = (vertexShader, fragmentShader) => {
+		const program = gl.createProgram();
+		gl.attachShader(program, vertexShader);
+		gl.attachShader(program, fragmentShader);
+		gl.linkProgram(program);
+		return program;
+	};
 
-	state.rain_compute_shader = gl.createShader(gl.FRAGMENT_SHADER); gl.shaderSource(state.rain_compute_shader, rain_compute_shader_source); gl.compileShader(state.rain_compute_shader);
+	const fullscreen_frag_shader = buildShader(fullscreen_frag_shader_source, true);
+	const fullscreen_vert_shader = buildShader(fullscreen_vert_shader_source, false);
+	const rain_compute_shader = buildShader(rain_compute_shader_source, true);
+	const rain_frag_shader = buildShader(rain_frag_shader_source, true);
+	const rain_vert_shader = buildShader(rain_vert_shader_source, false);
+	const bloom_high_pass_shader = buildShader(bloom_high_pass_shader_source, true);
+	const bloom_blur_shader = buildShader(bloom_blur_shader_source, true);
+	const bloom_combine_shader = buildShader(bloom_combine_shader_source, true);
+	const palette_shader = buildShader(palette_shader_source, true);
 
-	state.rain_frag_shader = gl.createShader(gl.FRAGMENT_SHADER); gl.shaderSource(state.rain_frag_shader, rain_frag_shader_source); gl.compileShader(state.rain_frag_shader);
+	programs.fullscreen = buildProgram(fullscreen_vert_shader, fullscreen_frag_shader);
+	uniforms.rain_program_tex = gl.getUniformLocation(programs.fullscreen, "tex");
+	attributes.fullscreen_program_aPosition = gl.getAttribLocation(programs.fullscreen, "aPosition");
 
-	state.rain_vert_shader = gl.createShader(gl.VERTEX_SHADER); gl.shaderSource(state.rain_vert_shader, rain_vert_shader_source); gl.compileShader(state.rain_vert_shader);
+	programs.rain_compute = buildProgram(fullscreen_vert_shader, rain_compute_shader);
+	attributes.rain_compute_program_aPosition = gl.getAttribLocation(programs.rain_compute, "aPosition");
+	uniforms.rain_compute_program_time = gl.getUniformLocation(programs.rain_compute, "time");
+	uniforms.rain_compute_program_previousComputeState = gl.getUniformLocation(programs.rain_compute, "previousComputeState");
+	uniforms.rain_compute_program_tick = gl.getUniformLocation(programs.rain_compute, "tick");
+	gl.useProgram(programs.rain_compute);
+	gl.uniform1f(gl.getUniformLocation(programs.rain_compute, "numColumns"), 80);
+	gl.uniform1f(gl.getUniformLocation(programs.rain_compute, "glyphSequenceLength"), 57);
+	gl.uniform1f(gl.getUniformLocation(programs.rain_compute, "numRows"), 80);
+	gl.uniform1f(gl.getUniformLocation(programs.rain_compute, "fallSpeed"), 0.3);
+	gl.uniform1f(gl.getUniformLocation(programs.rain_compute, "raindropLength"), 0.75);
+	gl.uniform1f(gl.getUniformLocation(programs.rain_compute, "cycleSpeed"), 0.03);
 
-	state.bloom_high_pass_shader = gl.createShader(gl.FRAGMENT_SHADER); gl.shaderSource(state.bloom_high_pass_shader, bloom_high_pass_shader_source); gl.compileShader(state.bloom_high_pass_shader);
+	programs.rain = buildProgram(rain_vert_shader, rain_frag_shader);
+	attributes.rain_program_aPosition = gl.getAttribLocation(programs.rain, "aPosition");
+	uniforms.rain_program_size = gl.getUniformLocation(programs.rain, "size");
+	uniforms.rain_program_computeState = gl.getUniformLocation(programs.rain, "computeState");
+	uniforms.rain_program_glyphMSDF = gl.getUniformLocation(programs.rain, "glyphMSDF");
+	gl.useProgram(programs.rain);
+	gl.uniform2f(gl.getUniformLocation(programs.rain, "glyphTextureGridSize"), 8, 8);
+	gl.uniform1f(gl.getUniformLocation(programs.rain, "numColumns"), 80);
+	gl.uniform2f(gl.getUniformLocation(programs.rain, "glyphMSDFSize"), 512, 512);
+	gl.uniform1f(gl.getUniformLocation(programs.rain, "numRows"), 80);
+	gl.uniform1f(gl.getUniformLocation(programs.rain, "msdfPxRange"), 4);
 
-	state.bloom_blur_shader = gl.createShader(gl.FRAGMENT_SHADER); gl.shaderSource(state.bloom_blur_shader, bloom_blur_shader_source); gl.compileShader(state.bloom_blur_shader);
+	programs.bloom_high_pass = buildProgram(fullscreen_vert_shader, bloom_high_pass_shader);
+	attributes.bloom_high_pass_program_aPosition = gl.getAttribLocation(programs.bloom_high_pass, "aPosition");
+	uniforms.bloom_high_pass_program_tex = gl.getUniformLocation(programs.bloom_high_pass, "tex");
+	gl.useProgram(programs.bloom_high_pass);
+	gl.uniform1f(gl.getUniformLocation(programs.bloom_high_pass, "highPassThreshold"), 0.1);
 
-	state.bloom_combine_shader = gl.createShader(gl.FRAGMENT_SHADER); gl.shaderSource(state.bloom_combine_shader, bloom_combine_shader_source); gl.compileShader(state.bloom_combine_shader);
+	programs.bloom_blur = buildProgram(fullscreen_vert_shader, bloom_blur_shader);
+	attributes.bloom_blur_program_aPosition = gl.getAttribLocation(programs.bloom_blur, "aPosition");
+	uniforms.bloom_blur_program_tex = gl.getUniformLocation(programs.bloom_blur, "tex");
+	uniforms.bloom_blur_program_size = gl.getUniformLocation(programs.bloom_blur, "size");
+	uniforms.bloom_blur_program_direction = gl.getUniformLocation(programs.bloom_blur, "direction");
 
-	state.palette_shader = gl.createShader(gl.FRAGMENT_SHADER); gl.shaderSource(state.palette_shader, palette_shader_source); gl.compileShader(state.palette_shader);
+	programs.bloom_combine = buildProgram(fullscreen_vert_shader, bloom_combine_shader);
+	attributes.bloom_combine_program_aPosition = gl.getAttribLocation(programs.bloom_combine, "aPosition");
+	uniforms.bloom_combine_program_pyr_0 = gl.getUniformLocation(programs.bloom_combine, "pyr_0");
+	uniforms.bloom_combine_program_pyr_1 = gl.getUniformLocation(programs.bloom_combine, "pyr_1");
+	uniforms.bloom_combine_program_pyr_2 = gl.getUniformLocation(programs.bloom_combine, "pyr_2");
+	uniforms.bloom_combine_program_pyr_3 = gl.getUniformLocation(programs.bloom_combine, "pyr_3");
+	uniforms.bloom_combine_program_pyr_4 = gl.getUniformLocation(programs.bloom_combine, "pyr_4");
+	gl.useProgram(programs.bloom_combine);
+	gl.uniform1f(gl.getUniformLocation(programs.bloom_combine, "bloomStrength"), 0.7);
 
-	state.fullscreen_program = gl.createProgram(); gl.attachShader(state.fullscreen_program, state.fullscreen_vert_shader); gl.attachShader(state.fullscreen_program, state.fullscreen_frag_shader); gl.linkProgram(state.fullscreen_program);
-	state.rain_program_u_tex = gl.getUniformLocation(state.fullscreen_program, "tex");
-	state.fullscreen_program_a_aPosition = gl.getAttribLocation(state.fullscreen_program, "aPosition");
+	programs.palette = buildProgram(fullscreen_vert_shader, palette_shader);
+	attributes.palette_program_aPosition = gl.getAttribLocation(programs.palette, "aPosition");
+	uniforms.palette_program_tex = gl.getUniformLocation(programs.palette, "tex");
+	uniforms.palette_program_bloomTex = gl.getUniformLocation(programs.palette, "bloomTex");
+	uniforms.palette_program_time = gl.getUniformLocation(programs.palette, "time");
+	uniforms.palette_program_paletteTex = gl.getUniformLocation(programs.palette, "paletteTex");
 
-	state.rain_compute_program = gl.createProgram(); gl.attachShader(state.rain_compute_program, state.fullscreen_vert_shader); gl.attachShader(state.rain_compute_program, state.rain_compute_shader); gl.linkProgram(state.rain_compute_program);
-	state.rain_compute_program_a_aPosition = gl.getAttribLocation(state.rain_compute_program, "aPosition");
-	state.rain_compute_program_u_numColumns = gl.getUniformLocation(state.rain_compute_program, "numColumns");
-	state.rain_compute_program_u_glyphSequenceLength = gl.getUniformLocation(state.rain_compute_program, "glyphSequenceLength");
-	state.rain_compute_program_u_numRows = gl.getUniformLocation(state.rain_compute_program, "numRows");
-	state.rain_compute_program_u_fallSpeed = gl.getUniformLocation(state.rain_compute_program, "fallSpeed");
-	state.rain_compute_program_u_time = gl.getUniformLocation(state.rain_compute_program, "time");
-	state.rain_compute_program_u_raindropLength = gl.getUniformLocation(state.rain_compute_program, "raindropLength");
-	state.rain_compute_program_u_previousComputeState = gl.getUniformLocation(state.rain_compute_program, "previousComputeState");
-	state.rain_compute_program_u_tick = gl.getUniformLocation(state.rain_compute_program, "tick");
-	state.rain_compute_program_u_cycleSpeed = gl.getUniformLocation(state.rain_compute_program, "cycleSpeed");
-
-	gl.useProgram(state.rain_compute_program);
-	gl.uniform1f(state.rain_compute_program_u_numColumns, 80);
-	gl.uniform1f(state.rain_compute_program_u_glyphSequenceLength, 57);
-	gl.uniform1f(state.rain_compute_program_u_numRows, 80);
-	gl.uniform1f(state.rain_compute_program_u_fallSpeed, 0.3);
-	gl.uniform1f(state.rain_compute_program_u_raindropLength, 0.75);
-	gl.uniform1f(state.rain_compute_program_u_cycleSpeed, 0.03);
-
-	state.rain_program = gl.createProgram(); gl.attachShader(state.rain_program, state.rain_vert_shader); gl.attachShader(state.rain_program, state.rain_frag_shader); gl.linkProgram(state.rain_program);
-	state.rain_program_a_aPosition = gl.getAttribLocation(state.rain_program, "aPosition");
-	state.rain_program_u_glyphTextureGridSize = gl.getUniformLocation(state.rain_program, "glyphTextureGridSize");
-	state.rain_program_u_numColumns = gl.getUniformLocation(state.rain_program, "numColumns");
-	state.rain_program_u_glyphMSDFSize = gl.getUniformLocation(state.rain_program, "glyphMSDFSize");
-	state.rain_program_u_numRows = gl.getUniformLocation(state.rain_program, "numRows");
-	state.rain_program_u_msdfPxRange = gl.getUniformLocation(state.rain_program, "msdfPxRange");
-	state.rain_program_u_screenSize = gl.getUniformLocation(state.rain_program, "screenSize");
-	state.rain_program_u_computeState = gl.getUniformLocation(state.rain_program, "computeState");
-	state.rain_program_u_glyphMSDF = gl.getUniformLocation(state.rain_program, "glyphMSDF");
-
-	gl.useProgram(state.rain_program);
-	gl.uniform2f(state.rain_program_u_glyphTextureGridSize, 8, 8);
-	gl.uniform1f(state.rain_program_u_numColumns, 80);
-	gl.uniform2f(state.rain_program_u_glyphMSDFSize, 512, 512);
-	gl.uniform1f(state.rain_program_u_numRows, 80);
-	gl.uniform1f(state.rain_program_u_msdfPxRange, 4);
-
-	state.bloom_high_pass_program = gl.createProgram(); gl.attachShader(state.bloom_high_pass_program, state.fullscreen_vert_shader); gl.attachShader(state.bloom_high_pass_program, state.bloom_high_pass_shader); gl.linkProgram(state.bloom_high_pass_program);
-	state.bloom_high_pass_program_a_aPosition = gl.getAttribLocation(state.bloom_high_pass_program, "aPosition");
-	state.bloom_high_pass_program_u_tex = gl.getUniformLocation(state.bloom_high_pass_program, "tex");
-	state.bloom_high_pass_program_u_highPassThreshold = gl.getUniformLocation(state.bloom_high_pass_program, "highPassThreshold");
-
-	gl.useProgram(state.bloom_high_pass_program);
-	gl.uniform1f(state.bloom_high_pass_program_u_highPassThreshold, 0.1);
-
-	state.bloom_blur_program = gl.createProgram(); gl.attachShader(state.bloom_blur_program, state.fullscreen_vert_shader); gl.attachShader(state.bloom_blur_program, state.bloom_blur_shader); gl.linkProgram(state.bloom_blur_program);
-	state.bloom_blur_program_a_aPosition = gl.getAttribLocation(state.bloom_blur_program, "aPosition");
-	state.bloom_blur_program_u_tex = gl.getUniformLocation(state.bloom_blur_program, "tex");
-	state.bloom_blur_program_u_width = gl.getUniformLocation(state.bloom_blur_program, "width");
-	state.bloom_blur_program_u_height = gl.getUniformLocation(state.bloom_blur_program, "height");
-	state.bloom_blur_program_u_direction = gl.getUniformLocation(state.bloom_blur_program, "direction");
-
-	state.bloom_combine_program = gl.createProgram(); gl.attachShader(state.bloom_combine_program, state.fullscreen_vert_shader); gl.attachShader(state.bloom_combine_program, state.bloom_combine_shader); gl.linkProgram(state.bloom_combine_program);
-	state.bloom_combine_program_a_aPosition = gl.getAttribLocation(state.bloom_combine_program, "aPosition");
-	state.bloom_combine_program_u_pyr_0 = gl.getUniformLocation(state.bloom_combine_program, "pyr_0");
-	state.bloom_combine_program_u_pyr_1 = gl.getUniformLocation(state.bloom_combine_program, "pyr_1");
-	state.bloom_combine_program_u_pyr_2 = gl.getUniformLocation(state.bloom_combine_program, "pyr_2");
-	state.bloom_combine_program_u_pyr_3 = gl.getUniformLocation(state.bloom_combine_program, "pyr_3");
-	state.bloom_combine_program_u_pyr_4 = gl.getUniformLocation(state.bloom_combine_program, "pyr_4");
-	state.bloom_combine_program_u_bloomStrength = gl.getUniformLocation(state.bloom_combine_program, "bloomStrength");
-
-	state.palette_program = gl.createProgram(); gl.attachShader(state.palette_program, state.fullscreen_vert_shader); gl.attachShader(state.palette_program, state.palette_shader); gl.linkProgram(state.palette_program);
-	state.palette_program_a_aPosition = gl.getAttribLocation(state.palette_program, "aPosition");
-	state.palette_program_u_tex = gl.getUniformLocation(state.palette_program, "tex");
-	state.palette_program_u_bloomTex = gl.getUniformLocation(state.palette_program, "bloomTex");
-	state.palette_program_u_time = gl.getUniformLocation(state.palette_program, "time");
-	state.palette_program_u_paletteTex = gl.getUniformLocation(state.palette_program, "paletteTex");
-
-	state.rain_geometry = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, state.rain_geometry);
+	geometry.rain = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, geometry.rain);
 	gl.bufferData(gl.ARRAY_BUFFER, Float32Array.from([0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0]), gl.STATIC_DRAW);
 
-	state.fullscreen_geometry = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, state.fullscreen_geometry);
+	geometry.fullscreen = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, geometry.fullscreen);
 	gl.bufferData(gl.ARRAY_BUFFER, Float32Array.from([-4, -4, 4, -4, 0, 4]), gl.STATIC_DRAW);
 
-	textures.rain_compute_doublebuffer_1 = gl.createTexture();
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, textures.rain_compute_doublebuffer_1);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 80, 80, 0, gl.RGBA, extendedContext.HALF_FLOAT_OES, null);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+	const setTexParams = (texture, isLinear, data) => {
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, texture);
+		const filter = isLinear ? gl.LINEAR : gl.NEAREST;
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		if (data != null) {
+			if (data instanceof HTMLImageElement) {
+				gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+				gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, data);
+			} else {
+				gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, data.length, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, Uint8ClampedArray.from(data.flat()));
+			}
+		}
+	}
 
-	state.rain_compute_doublebuffer_1_framebuffer = gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.rain_compute_doublebuffer_1_framebuffer);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, textures.rain_compute_doublebuffer_1, 0);
+	for (let i = 0; i < 2; i++) {
+		const name = "rain_compute_doublebuffer_" + i;
+		const texture = gl.createTexture();
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, texture);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 80, 80, 0, gl.RGBA, extendedContext.HALF_FLOAT_OES, null);
+		setTexParams(texture, false);
 
-	textures.rain_compute_doublebuffer_2 = gl.createTexture();
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, textures.rain_compute_doublebuffer_2);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 80, 80, 0, gl.RGBA, extendedContext.HALF_FLOAT_OES, null);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		const framebuffer = gl.createFramebuffer();
+		gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
-	state.rain_compute_doublebuffer_2_framebuffer = gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.rain_compute_doublebuffer_2_framebuffer);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, textures.rain_compute_doublebuffer_2, 0);
+		textures[name] = texture;
+		framebuffers[name] = framebuffer;
+	}
 
-	textures.rain_output = gl.createTexture();
-	textureSizes.rain_output = {scale: 1};
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, textures.rain_output);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	state.rain_output_framebuffer = gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.rain_output_framebuffer);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, textures.rain_output, 0);
+	const buildAndAddRTT = (name, scale) => {
+		const texture = gl.createTexture();
+		dynamicSizes[name] = {scale};
+		setTexParams(texture, true);
+		const framebuffer = gl.createFramebuffer();
+		gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 
-	const bloomSize = 0.4;
+		textures[name] = texture;
+		framebuffers[name] = framebuffer;
+	};
 
-	textures.bloom_high_pass_pyr_0 = gl.createTexture();
-	textureSizes.bloom_high_pass_pyr_0 = {scale: bloomSize / (2 ** 0)};
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, textures.bloom_high_pass_pyr_0);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	state.bloom_high_pass_pyr_0_framebuffer = gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_high_pass_pyr_0_framebuffer);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, textures.bloom_high_pass_pyr_0, 0);
-
-	textures.bloom_high_pass_pyr_1 = gl.createTexture();
-	textureSizes.bloom_high_pass_pyr_1 = {scale: bloomSize / (2 ** 1)};
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, textures.bloom_high_pass_pyr_1);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	state.bloom_high_pass_pyr_1_framebuffer = gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_high_pass_pyr_1_framebuffer);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, textures.bloom_high_pass_pyr_1, 0);
-
-	textures.bloom_high_pass_pyr_2 = gl.createTexture();
-	textureSizes.bloom_high_pass_pyr_2 = {scale: bloomSize / (2 ** 2)};
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, textures.bloom_high_pass_pyr_2);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	state.bloom_high_pass_pyr_2_framebuffer = gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_high_pass_pyr_2_framebuffer);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, textures.bloom_high_pass_pyr_2, 0);
-
-	textures.bloom_high_pass_pyr_3 = gl.createTexture();
-	textureSizes.bloom_high_pass_pyr_3 = {scale: bloomSize / (2 ** 3)};
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, textures.bloom_high_pass_pyr_3);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	state.bloom_high_pass_pyr_3_framebuffer = gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_high_pass_pyr_3_framebuffer);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, textures.bloom_high_pass_pyr_3, 0);
-
-	textures.bloom_high_pass_pyr_4 = gl.createTexture();
-	textureSizes.bloom_high_pass_pyr_4 = {scale: bloomSize / (2 ** 4)};
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, textures.bloom_high_pass_pyr_4);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	state.bloom_high_pass_pyr_4_framebuffer = gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_high_pass_pyr_4_framebuffer);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, textures.bloom_high_pass_pyr_4, 0);
-
-	textures.bloom_h_blur_pyr_0 = gl.createTexture();
-	textureSizes.bloom_h_blur_pyr_0 = {scale: bloomSize / (2 ** 0)};
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, textures.bloom_h_blur_pyr_0);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	state.bloom_h_blur_pyr_0_framebuffer = gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_h_blur_pyr_0_framebuffer);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, textures.bloom_h_blur_pyr_0, 0);
-
-	textures.bloom_h_blur_pyr_1 = gl.createTexture();
-	textureSizes.bloom_h_blur_pyr_1 = {scale: bloomSize / (2 ** 1)};
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, textures.bloom_h_blur_pyr_1);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	state.bloom_h_blur_pyr_1_framebuffer = gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_h_blur_pyr_1_framebuffer);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, textures.bloom_h_blur_pyr_1, 0);
-
-	textures.bloom_h_blur_pyr_2 = gl.createTexture();
-	textureSizes.bloom_h_blur_pyr_2 = {scale: bloomSize / (2 ** 2)};
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, textures.bloom_h_blur_pyr_2);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	state.bloom_h_blur_pyr_2_framebuffer = gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_h_blur_pyr_2_framebuffer);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, textures.bloom_h_blur_pyr_2, 0);
-
-	textures.bloom_h_blur_pyr_3 = gl.createTexture();
-	textureSizes.bloom_h_blur_pyr_3 = {scale: bloomSize / (2 ** 3)};
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, textures.bloom_h_blur_pyr_3);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	state.bloom_h_blur_pyr_3_framebuffer = gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_h_blur_pyr_3_framebuffer);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, textures.bloom_h_blur_pyr_3, 0);
-
-	textures.bloom_h_blur_pyr_4 = gl.createTexture();
-	textureSizes.bloom_h_blur_pyr_4 = {scale: bloomSize / (2 ** 4)};
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, textures.bloom_h_blur_pyr_4);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	state.bloom_h_blur_pyr_4_framebuffer = gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_h_blur_pyr_4_framebuffer);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, textures.bloom_h_blur_pyr_4, 0);
-
-	textures.bloom_v_blur_pyr_0 = gl.createTexture();
-	textureSizes.bloom_v_blur_pyr_0 = {scale: bloomSize / (2 ** 0)};
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, textures.bloom_v_blur_pyr_0);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	state.bloom_v_blur_pyr_0_framebuffer = gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_v_blur_pyr_0_framebuffer);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, textures.bloom_v_blur_pyr_0, 0);
-
-	textures.bloom_v_blur_pyr_1 = gl.createTexture();
-	textureSizes.bloom_v_blur_pyr_1 = {scale: bloomSize / (2 ** 1)};
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, textures.bloom_v_blur_pyr_1);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	state.bloom_v_blur_pyr_1_framebuffer = gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_v_blur_pyr_1_framebuffer);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, textures.bloom_v_blur_pyr_1, 0);
-
-	textures.bloom_v_blur_pyr_2 = gl.createTexture();
-	textureSizes.bloom_v_blur_pyr_2 = {scale: bloomSize / (2 ** 2)};
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, textures.bloom_v_blur_pyr_2);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	state.bloom_v_blur_pyr_2_framebuffer = gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_v_blur_pyr_2_framebuffer);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, textures.bloom_v_blur_pyr_2, 0);
-
-	textures.bloom_v_blur_pyr_3 = gl.createTexture();
-	textureSizes.bloom_v_blur_pyr_3 = {scale: bloomSize / (2 ** 3)};
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, textures.bloom_v_blur_pyr_3);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	state.bloom_v_blur_pyr_3_framebuffer = gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_v_blur_pyr_3_framebuffer);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, textures.bloom_v_blur_pyr_3, 0);
-
-	textures.bloom_v_blur_pyr_4 = gl.createTexture();
-	textureSizes.bloom_v_blur_pyr_4 = {scale: bloomSize / (2 ** 4)};
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, textures.bloom_v_blur_pyr_4);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	state.bloom_v_blur_pyr_4_framebuffer = gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_v_blur_pyr_4_framebuffer);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, textures.bloom_v_blur_pyr_4, 0);
-
-	textures.bloom_output = gl.createTexture();
-	textureSizes.bloom_output = {scale: 1};
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, textures.bloom_output);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	state.bloom_output_framebuffer = gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_output_framebuffer);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, textures.bloom_output, 0);
-
-	textures.palette_output = gl.createTexture();
-	textureSizes.palette_output = {scale: 1};
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, textures.palette_output);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-	state.palette_output_framebuffer = gl.createFramebuffer();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.palette_output_framebuffer);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, textures.palette_output, 0);
+	buildAndAddRTT("rain_output", 1);
+	for (let i = 0; i < 5; i++) {
+		const scale = 0.4 / (2 ** i);
+		buildAndAddRTT("bloom_high_pass_pyr_" + i, scale);
+		buildAndAddRTT("bloom_h_blur_pyr_" + i, scale);
+		buildAndAddRTT("bloom_v_blur_pyr_" + i, scale);
+	}
+	buildAndAddRTT("bloom_output", 1);
+	buildAndAddRTT("palette_output", 1);
 
 	textures.palette = gl.createTexture();
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, textures.palette);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 16, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, Uint8ClampedArray.from(palette));
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+	setTexParams(textures.palette, true, palette);
 
 	textures.msdf = gl.createTexture();
-	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, textures.msdf);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, msdfImage);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+	setTexParams(textures.msdf, true, msdfImage);
+
+	gl.enableVertexAttribArray(0);
+	gl.disable(gl.DEPTH_TEST);
+	gl.blendFuncSeparate(1, 1, 1, 1);
+	gl.clearColor(0, 0, 0, 1);
 };
 
 const resize = (gl, width, height) => {
 
-	textureSizes.fullscreen.width = width;
-	textureSizes.fullscreen.height = height;
+	dynamicSizes.fullscreen.width = width;
+	dynamicSizes.fullscreen.height = height;
 
 	for (var name in textures) {
-		const size = textureSizes[name];
+		const size = dynamicSizes[name];
 		if (size == null) {
 			continue;
 		}
@@ -634,172 +461,120 @@ const resize = (gl, width, height) => {
 		gl.bindTexture(gl.TEXTURE_2D, textures[name]);
 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, size.width, size.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
 	}
+
+	gl.useProgram(programs.rain);
+	gl.uniform2f(uniforms.rain_program_size, width, height);
+};
+
+const setViewportSizeTo = (gl, name) => {
+	const size = dynamicSizes[name];
+	gl.viewport(0, 0, size.width, size.height);
+}
+
+const bindTextureTo = (gl, texName, uniformName, index) => {
+	gl.activeTexture(gl.TEXTURE0 + index);
+	gl.bindTexture(gl.TEXTURE_2D, textures[texName]);
+	gl.uniform1i(uniforms[uniformName], index);
+};
+
+const bindGeometryTo = (gl, geometryName, attributeName) => {
+	gl.bindBuffer(gl.ARRAY_BUFFER, geometry[geometryName]);
+	gl.vertexAttribPointer(attributes[attributeName], 2, gl.FLOAT, false, 0, 0);
 };
 
 const draw = (gl, tick, time) => {
 
-	const flip = tick % 2 == 0;
-	const doubleBufferFrontFBO = flip ? state.rain_compute_doublebuffer_2_framebuffer : state.rain_compute_doublebuffer_1_framebuffer;
-	const doubleBufferFrontTex = flip ? textures.rain_compute_doublebuffer_2 : textures.rain_compute_doublebuffer_1;
-	const doubleBufferBackTex = flip ? textures.rain_compute_doublebuffer_1 : textures.rain_compute_doublebuffer_2;
-	let size;
-
-	gl.enableVertexAttribArray(0);
-	gl.disable(gl.DEPTH_TEST);
-	gl.blendFuncSeparate(1, 1, 1, 1);
-	gl.clearColor(0, 0, 0, 1);
+	const doubleBufferFrontName = "rain_compute_doublebuffer_" + (tick % 2);
+	const doubleBufferBackName = "rain_compute_doublebuffer_" + ((tick + 1) % 2);
 
 	// rain compute
-	gl.bindFramebuffer(gl.FRAMEBUFFER, doubleBufferFrontFBO);
+	gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffers[doubleBufferFrontName]);
 	gl.viewport(0, 0, 80, 80);
-	gl.useProgram(state.rain_compute_program);
-	gl.bindBuffer(gl.ARRAY_BUFFER, state.fullscreen_geometry); gl.vertexAttribPointer(state.rain_compute_program_a_aPosition, 2, gl.FLOAT, false, 0, 0);
-	gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, doubleBufferBackTex); gl.uniform1i(state.rain_compute_program_u_previousComputeState, 0);
-	gl.uniform1f(state.rain_compute_program_u_time, time);
-	gl.uniform1f(state.rain_compute_program_u_tick, tick);
+	gl.useProgram(programs.rain_compute);
+	bindGeometryTo(gl, "fullscreen", "rain_compute_program_aPosition");
+	bindTextureTo(gl, doubleBufferBackName, "rain_compute_program_previousComputeState", 0);
+	gl.uniform1f(uniforms.rain_compute_program_time, time);
+	gl.uniform1f(uniforms.rain_compute_program_tick, tick);
 	gl.drawArrays(gl.TRIANGLES, 0, 3);
 
 	// rain
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.rain_output_framebuffer);
-	size = textureSizes.rain_output; gl.viewport(0, 0, size.width, size.height);
+	gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffers.rain_output);
+	setViewportSizeTo(gl, "rain_output");
 	gl.clear(gl.COLOR_BUFFER_BIT);
 	gl.enable(gl.BLEND);
-	gl.useProgram(state.rain_program);
-	gl.bindBuffer(gl.ARRAY_BUFFER, state.rain_geometry); gl.vertexAttribPointer(state.rain_program_a_aPosition, 2, gl.FLOAT, false, 0, 0);
+	gl.useProgram(programs.rain);
+	bindGeometryTo(gl, "rain", "rain_program_aPosition");
 
-	size = textureSizes.fullscreen;
-	const aspectRatio = size.width / size.height;
-	const screenSize = aspectRatio > 1 ? [1, aspectRatio] : [1 / aspectRatio, 1];
-
-	gl.uniform2f(state.rain_program_u_screenSize, screenSize[0], screenSize[1]);
-	gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, doubleBufferFrontTex); gl.uniform1i(state.rain_program_u_computeState, 0);
-	gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, textures.msdf); gl.uniform1i(state.rain_program_u_glyphMSDF, 1);
+	bindTextureTo(gl, doubleBufferFrontName, "rain_program_computeState", 0);
+	bindTextureTo(gl, "msdf", "rain_program_glyphMSDF", 1);
 	gl.drawArrays(gl.TRIANGLES, 0, 6);
 	gl.disable(gl.BLEND);
 
 	// high pass pyramid
-	gl.useProgram(state.bloom_high_pass_program);
-	gl.bindBuffer(gl.ARRAY_BUFFER, state.fullscreen_geometry); gl.vertexAttribPointer(state.bloom_high_pass_program_a_aPosition, 2, gl.FLOAT, false, 0, 0);
-
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_high_pass_pyr_0_framebuffer);
-	size = textureSizes.bloom_high_pass_pyr_0; gl.viewport(0, 0, size.width, size.height);
-	gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, textures.rain_output); gl.uniform1i(state.bloom_high_pass_program_u_tex, 0);
-	gl.drawArrays(gl.TRIANGLES, 0, 3);
-
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_high_pass_pyr_1_framebuffer);
-	size = textureSizes.bloom_high_pass_pyr_1; gl.viewport(0, 0, size.width, size.height);
-	gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, textures.bloom_high_pass_pyr_0); gl.uniform1i(state.bloom_high_pass_program_u_tex, 0);
-	gl.drawArrays(gl.TRIANGLES, 0, 3);
-
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_high_pass_pyr_2_framebuffer);
-	size = textureSizes.bloom_high_pass_pyr_2; gl.viewport(0, 0, size.width, size.height);
-	gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, textures.bloom_high_pass_pyr_1); gl.uniform1i(state.bloom_high_pass_program_u_tex, 0);
-	gl.drawArrays(gl.TRIANGLES, 0, 3);
-
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_high_pass_pyr_3_framebuffer);
-	size = textureSizes.bloom_high_pass_pyr_3; gl.viewport(0, 0, size.width, size.height);
-	gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, textures.bloom_high_pass_pyr_2); gl.uniform1i(state.bloom_high_pass_program_u_tex, 0);
-	gl.drawArrays(gl.TRIANGLES, 0, 3);
-
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_high_pass_pyr_4_framebuffer);
-	size = textureSizes.bloom_high_pass_pyr_4; gl.viewport(0, 0, size.width, size.height);
-	gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, textures.bloom_high_pass_pyr_3); gl.uniform1i(state.bloom_high_pass_program_u_tex, 0);
-	gl.drawArrays(gl.TRIANGLES, 0, 3);
+	gl.useProgram(programs.bloom_high_pass);
+	gl.bindBuffer(gl.ARRAY_BUFFER, geometry.fullscreen);
+	gl.vertexAttribPointer(attributes.bloom_high_pass_program_aPosition, 2, gl.FLOAT, false, 0, 0);
+	for (let i = 0; i < 5; i++) {
+		const name = "bloom_high_pass_pyr_" + i;
+		gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffers[name]);
+		const size = dynamicSizes[name];
+		gl.viewport(0, 0, size.width, size.height);
+		const src = (i === 0 ? textures.rain_output : textures["bloom_high_pass_pyr_" + (i - 1)]);
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, src);
+		gl.uniform1i(uniforms.bloom_high_pass_program_tex, 0);
+		gl.drawArrays(gl.TRIANGLES, 0, 3);
+	}
 
 	// blur pyramids
-	gl.useProgram(state.bloom_blur_program);
-	gl.bindBuffer(gl.ARRAY_BUFFER, state.fullscreen_geometry); gl.vertexAttribPointer(state.bloom_blur_program_a_aPosition, 2, gl.FLOAT, false, 0, 0);
-
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_h_blur_pyr_0_framebuffer);
-	size = textureSizes.bloom_h_blur_pyr_0; gl.viewport(0, 0, size.width, size.height);
-	gl.uniform1f(state.bloom_blur_program_u_width, size.width); gl.uniform1f(state.bloom_blur_program_u_height, size.height);
-	gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, textures.bloom_high_pass_pyr_0); gl.uniform1i(state.bloom_blur_program_u_tex, 0);
-	gl.uniform2f(state.bloom_blur_program_u_direction, 1, 0);
-	gl.drawArrays(gl.TRIANGLES, 0, 3);
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_v_blur_pyr_0_framebuffer);
-	size = textureSizes.bloom_v_blur_pyr_0; gl.viewport(0, 0, size.width, size.height);
-	gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, textures.bloom_h_blur_pyr_0); gl.uniform1i(state.bloom_blur_program_u_tex, 0);
-	gl.uniform2f(state.bloom_blur_program_u_direction, 0, 1);
-	gl.drawArrays(gl.TRIANGLES, 0, 3);
-
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_h_blur_pyr_1_framebuffer);
-	size = textureSizes.bloom_h_blur_pyr_1; gl.viewport(0, 0, size.width, size.height);
-	gl.uniform1f(state.bloom_blur_program_u_width, size.width); gl.uniform1f(state.bloom_blur_program_u_height, size.height);
-	gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, textures.bloom_high_pass_pyr_1); gl.uniform1i(state.bloom_blur_program_u_tex, 0);
-	gl.uniform2f(state.bloom_blur_program_u_direction, 1, 0);
-	gl.drawArrays(gl.TRIANGLES, 0, 3);
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_v_blur_pyr_1_framebuffer);
-	size = textureSizes.bloom_v_blur_pyr_1; gl.viewport(0, 0, size.width, size.height);
-	gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, textures.bloom_h_blur_pyr_1); gl.uniform1i(state.bloom_blur_program_u_tex, 0);
-	gl.uniform2f(state.bloom_blur_program_u_direction, 0, 1);
-	gl.drawArrays(gl.TRIANGLES, 0, 3);
-
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_h_blur_pyr_2_framebuffer);
-	size = textureSizes.bloom_h_blur_pyr_2; gl.viewport(0, 0, size.width, size.height);
-	gl.uniform1f(state.bloom_blur_program_u_width, size.width); gl.uniform1f(state.bloom_blur_program_u_height, size.height);
-	gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, textures.bloom_high_pass_pyr_2); gl.uniform1i(state.bloom_blur_program_u_tex, 0);
-	gl.uniform2f(state.bloom_blur_program_u_direction, 1, 0);
-	gl.drawArrays(gl.TRIANGLES, 0, 3);
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_v_blur_pyr_2_framebuffer);
-	size = textureSizes.bloom_v_blur_pyr_2; gl.viewport(0, 0, size.width, size.height);
-	gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, textures.bloom_h_blur_pyr_2); gl.uniform1i(state.bloom_blur_program_u_tex, 0);
-	gl.uniform2f(state.bloom_blur_program_u_direction, 0, 1);
-	gl.drawArrays(gl.TRIANGLES, 0, 3);
-
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_h_blur_pyr_3_framebuffer);
-	size = textureSizes.bloom_h_blur_pyr_3; gl.viewport(0, 0, size.width, size.height);
-	gl.uniform1f(state.bloom_blur_program_u_width, size.width); gl.uniform1f(state.bloom_blur_program_u_height, size.height);
-	gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, textures.bloom_high_pass_pyr_3); gl.uniform1i(state.bloom_blur_program_u_tex, 0);
-	gl.uniform2f(state.bloom_blur_program_u_direction, 1, 0);
-	gl.drawArrays(gl.TRIANGLES, 0, 3);
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_v_blur_pyr_3_framebuffer);
-	size = textureSizes.bloom_v_blur_pyr_3; gl.viewport(0, 0, size.width, size.height);
-	gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, textures.bloom_h_blur_pyr_3); gl.uniform1i(state.bloom_blur_program_u_tex, 0);
-	gl.uniform2f(state.bloom_blur_program_u_direction, 0, 1);
-	gl.drawArrays(gl.TRIANGLES, 0, 3);
-
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_h_blur_pyr_4_framebuffer);
-	size = textureSizes.bloom_h_blur_pyr_4; gl.viewport(0, 0, size.width, size.height);
-	gl.uniform1f(state.bloom_blur_program_u_width, size.width); gl.uniform1f(state.bloom_blur_program_u_height, size.height);
-	gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, textures.bloom_high_pass_pyr_4); gl.uniform1i(state.bloom_blur_program_u_tex, 0);
-	gl.uniform2f(state.bloom_blur_program_u_direction, 1, 0);
-	gl.drawArrays(gl.TRIANGLES, 0, 3);
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_v_blur_pyr_4_framebuffer);
-	size = textureSizes.bloom_v_blur_pyr_4; gl.viewport(0, 0, size.width, size.height);
-	gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, textures.bloom_h_blur_pyr_4); gl.uniform1i(state.bloom_blur_program_u_tex, 0);
-	gl.uniform2f(state.bloom_blur_program_u_direction, 0, 1);
-	gl.drawArrays(gl.TRIANGLES, 0, 3);
+	gl.useProgram(programs.bloom_blur);
+	gl.bindBuffer(gl.ARRAY_BUFFER, geometry.fullscreen);
+	gl.vertexAttribPointer(attributes.bloom_blur_program_aPosition, 2, gl.FLOAT, false, 0, 0);
+	for (let i = 0; i < 5; i++) {
+		gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffers["bloom_h_blur_pyr_" + i]);
+		const hSize = dynamicSizes["bloom_h_blur_pyr_" + i];
+		gl.viewport(0, 0, hSize.width, hSize.height);
+		gl.uniform2f(uniforms.bloom_blur_program_size, hSize.width, hSize.height);
+		bindTextureTo(gl, "bloom_high_pass_pyr_" + i, "bloom_blur_program_tex", 0);
+		gl.uniform2f(uniforms.bloom_blur_program_direction, 1, 0);
+		gl.drawArrays(gl.TRIANGLES, 0, 3);
+		gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffers["bloom_v_blur_pyr_" + i]);
+		const vSize = dynamicSizes["bloom_v_blur_pyr_" + i];
+		gl.viewport(0, 0, vSize.width, vSize.height);
+		bindTextureTo(gl, "bloom_h_blur_pyr_" + i, "bloom_blur_program_tex", 0);
+		gl.uniform2f(uniforms.bloom_blur_program_direction, 0, 1);
+		gl.drawArrays(gl.TRIANGLES, 0, 3);
+	}
 
 	// bloom combine
-	gl.useProgram(state.bloom_combine_program);
-	gl.bindBuffer(gl.ARRAY_BUFFER, state.fullscreen_geometry); gl.vertexAttribPointer(state.bloom_combine_program_a_aPosition, 2, gl.FLOAT, false, 0, 0);
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.bloom_output_framebuffer);
-	size = textureSizes.bloom_output; gl.viewport(0, 0, size.width, size.height);
-	gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, textures.bloom_v_blur_pyr_0); gl.uniform1i(state.bloom_combine_program_u_pyr_0, 0);
-	gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, textures.bloom_v_blur_pyr_1); gl.uniform1i(state.bloom_combine_program_u_pyr_1, 1);
-	gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, textures.bloom_v_blur_pyr_2); gl.uniform1i(state.bloom_combine_program_u_pyr_2, 2);
-	gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, textures.bloom_v_blur_pyr_3); gl.uniform1i(state.bloom_combine_program_u_pyr_3, 3);
-	gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D, textures.bloom_v_blur_pyr_4); gl.uniform1i(state.bloom_combine_program_u_pyr_4, 4);
-	gl.uniform1f(state.bloom_combine_program_u_bloomStrength, 0.7);
+	gl.useProgram(programs.bloom_combine);
+	bindGeometryTo(gl, "fullscreen", "bloom_combine_program_aPosition");
+	gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffers.bloom_output);
+	setViewportSizeTo(gl, "bloom_output");
+	for (let i = 0; i < 5; i++) {
+		gl.activeTexture(gl.TEXTURE0 + i);
+		gl.bindTexture(gl.TEXTURE_2D, textures["bloom_v_blur_pyr_" + i]);
+		gl.uniform1i(uniforms["bloom_combine_program_pyr_" + i], i);
+	}
 	gl.drawArrays(gl.TRIANGLES, 0, 3);
 
 	// palette
-	gl.bindFramebuffer(gl.FRAMEBUFFER, state.palette_output_framebuffer);
-	size = textureSizes.palette_output; gl.viewport(0, 0, size.width, size.height);
-	gl.useProgram(state.palette_program);
-	gl.bindBuffer(gl.ARRAY_BUFFER, state.fullscreen_geometry); gl.vertexAttribPointer(state.palette_program_a_aPosition, 2, gl.FLOAT, false, 0, 0);
-	gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, textures.rain_output); gl.uniform1i(state.palette_program_u_tex, 0);
-	gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, textures.bloom_output); gl.uniform1i(state.palette_program_u_bloomTex, 1);
-	gl.uniform1f(state.palette_program_u_time, 0);
-	gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, textures.palette); gl.uniform1i(state.palette_program_u_paletteTex, 2);
+	gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffers.palette_output);
+	setViewportSizeTo(gl, "palette_output");
+	gl.useProgram(programs.palette);
+	bindGeometryTo(gl, "fullscreen", "palette_program_aPosition");
+	bindTextureTo(gl, "rain_output", "palette_program_tex", 0);
+	bindTextureTo(gl, "bloom_output", "palette_program_bloomTex", 1);
+	gl.uniform1f(uniforms.palette_program_time, time);
+	bindTextureTo(gl, "palette", "palette_program_paletteTex", 2);
 	gl.drawArrays(gl.TRIANGLES, 0, 3);
 
 	// upscale
 	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-	size = textureSizes.fullscreen; gl.viewport(0, 0, size.width, size.height);
-	gl.useProgram(state.fullscreen_program);
-	gl.bindBuffer(gl.ARRAY_BUFFER, state.fullscreen_geometry); gl.vertexAttribPointer(state.fullscreen_program_a_aPosition, 2, gl.FLOAT, false, 0, 0);
-	gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, textures.palette_output); gl.uniform1i(state.fullscreen_program_u_tex, 0);
+	setViewportSizeTo(gl, "fullscreen");
+	gl.useProgram(programs.fullscreen);
+	bindGeometryTo(gl, "fullscreen", "fullscreen_program_aPosition");
+	bindTextureTo(gl, "palette_output", "fullscreen_program_tex", 0);
 	gl.drawArrays(gl.TRIANGLES, 0, 3);
 
 };

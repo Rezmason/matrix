@@ -38,7 +38,7 @@ document.body.onload = async () => {
 		[ 175, 249, 158, 255, ],
 		[ 175, 249, 158, 255, ],
 		[ 175, 249, 158, 255, ],
-	].flat();
+	];
 
 	init(gl);
 	load(gl, image, palette);
