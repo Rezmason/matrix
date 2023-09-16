@@ -520,7 +520,7 @@ paramMapping.dropLength = paramMapping.raindropLength;
 paramMapping.angle = paramMapping.slant;
 paramMapping.colors = paramMapping.stripeColors;
 
-export default (urlParams) => {
+export default function makeConfig(urlParams) {
 	const validParams = Object.fromEntries(
 		Array.from(Object.entries(urlParams))
 			.filter(([key]) => key in paramMapping)
