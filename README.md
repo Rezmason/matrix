@@ -1,6 +1,6 @@
-![Matrix screenshot](/screenshot.png?raw=true "Matrix's default appearance.")
+[![Matrix screenshot](/screenshot.png?raw=true "Matrix's default appearance.")](https://rezmason.github.io/matrix)
 
-# matrix (web-based green code rain, made with love)
+# [matrix](https://rezmason.github.io/matrix) (web-based green code rain, made with love)
 
 **_News Update September 2022:_** this project was [featured in Vice Motherboard](https://www.vice.com/en/article/88qvn3/coder-makes-matrix-green-rain-simulator-that-lilly-wachowski-says-is-better-than-the-original), along with insight into the effect from Lilly Wachowski.
 
