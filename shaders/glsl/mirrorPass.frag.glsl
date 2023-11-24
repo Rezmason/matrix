@@ -34,5 +34,5 @@ void main() {
 
 	vec3 code = mix(webcam, vec3(0.7, 1.0, 0.4), texture2D(tex, uv).r * (1.0 + intensity * 0.3) + texture2D(bloomTex, uv).r * 0.5);
 
-	gl_FragColor = vec4(code, 1.0);
+	gl_FragColor = vec4(code, 0.0);
 }

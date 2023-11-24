@@ -76,5 +76,5 @@ fn getBrightness(uv : vec2<f32>, intensity : f32) -> vec4<f32> {
 	webcam *= mix(vec3<f32>(0.1, 0.3, 0.0), vec3<f32>(0.9, 1.0, 0.7), 1.0 - length(uv - 0.5) * 1.5);
 
 	var code = mix(webcam, vec3<f32>(0.7, 1.0, 0.4), getBrightness(rippledUV, intensity).r);
-	textureStore(outputTex, coord, vec4<f32>(code, 1.0));
+	textureStore(outputTex, coord, vec4<f32>(code, 0.0));
 }

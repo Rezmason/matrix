@@ -6,7 +6,7 @@ uniform sampler2D bloomTex;
 uniform sampler2D paletteTex;
 uniform float ditherMagnitude;
 uniform float time;
-uniform vec3 backgroundColor, cursorColor, glintColor;
+uniform vec3 cursorColor, glintColor;
 uniform float cursorIntensity, glintIntensity;
 varying vec2 vUV;
 
@@ -32,8 +32,7 @@ void main() {
 	gl_FragColor = vec4(
 		texture2D( paletteTex, vec2(brightness.r, 0.0)).rgb
 			+ min(cursorColor * cursorIntensity * brightness.g, vec3(1.0))
-			+ min(glintColor * glintIntensity * brightness.b, vec3(1.0))
-			+ backgroundColor,
-		1.0
+			+ min(glintColor * glintIntensity * brightness.b, vec3(1.0)),
+		0.0
 	);
 }

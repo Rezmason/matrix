@@ -9,6 +9,7 @@ import makeImagePass from "./imagePass.js";
 import makeMirrorPass from "./mirrorPass.js";
 import makeEndPass from "./endPass.js";
 import { setupCamera, cameraCanvas, cameraAspectRatio, cameraSize } from "../camera.js";
+import colorToRGB from "../colorToRGB.js";
 
 const loadJS = (src) =>
 	new Promise((resolve, reject) => {
@@ -34,6 +35,15 @@ const effects = {
 
 export default async (canvas, config) => {
 	await loadJS("lib/gl-matrix.js");
+
+	if (config.pageBGURL) {
+		document.body.style.backgroundImage = `url(${config.pageBGURL})`
+	}
+	else {
+		let colors = colorToRGB(config.backgroundColor).map( e => e * 100 );
+		let colorStyle = `rgb(${colors[0]}%, ${colors[1]}%, ${colors[2]}%)`;
+		document.body.style.backgroundColor = colorStyle;
+	}
 
 	if (document.fullscreenEnabled || document.webkitFullscreenEnabled) {
 		window.ondblclick = () => {
@@ -62,8 +72,8 @@ export default async (canvas, config) => {
 
 	canvasContext.configure({
 		device,
+		alphaMode: "premultiplied",
 		format: canvasFormat,
-		alphaMode: "opaque",
 		usage:
 			// GPUTextureUsage.STORAGE_BINDING |
 			GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST,

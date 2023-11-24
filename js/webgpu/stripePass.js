@@ -72,7 +72,6 @@ export default ({ config, device, timeBuffer }) => {
 		const configUniforms = structs.from(stripeShader.code).Config;
 		configBuffer = makeUniformBuffer(device, configUniforms, {
 			ditherMagnitude: config.ditherMagnitude,
-			backgroundColor: colorToRGB(config.backgroundColor),
 			cursorColor: colorToRGB(config.cursorColor),
 			glintColor: colorToRGB(config.glintColor),
 			cursorIntensity: config.cursorIntensity,

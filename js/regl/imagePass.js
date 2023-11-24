@@ -2,12 +2,12 @@ import { loadImage, loadText, makePassFBO, makePass } from "./utils.js";
 
 // Multiplies the rendered rain and bloom by a loaded in image
 
-const defaultBGURL = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Flammarion_Colored.jpg/917px-Flammarion_Colored.jpg";
+const defaultGlyphBGURL = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Flammarion_Colored.jpg/917px-Flammarion_Colored.jpg";
 
 export default ({ regl, config }, inputs) => {
 	const output = makePassFBO(regl, config.useHalfFloat);
-	const bgURL = "bgURL" in config ? config.bgURL : defaultBGURL;
-	const background = loadImage(regl, bgURL);
+	const glyphBGURL = "glyphBGURL" in config ? config.glyphBGURL : defaultGlyphBGURL;
+	const background = loadImage(regl, glyphBGURL);
 	const imagePassFrag = loadText("shaders/glsl/imagePass.frag.glsl");
 	const render = regl({
 		frag: regl.prop("frag"),
