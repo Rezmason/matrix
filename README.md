@@ -39,6 +39,9 @@
 - [The free *Resurrections* font (TrueType).](https://github.com/Rezmason/matrix/raw/master/assets/Matrix-Resurrected.ttf)
 - [The unofficial glyph database.](https://docs.google.com/spreadsheets/d/1NRJP88EzQlj_ghBbtjkGi-NbluZzlWpAqVIAq1MDGJc)
 
+*Concept*
+- [(t,i,x,y) => (1-(sin(x*7)-(y/15)+(t+2))%1)/3)](https://tixy.land/?code=(1-(sin(x*7)-(y%2F15)%2B(t%2B2))%251)%2F3)
+- [Educational version in Scratch](https://scratch.mit.edu/projects/575890996/editor)
 
 ## Contents
 - [About](#about)
