@@ -10,6 +10,10 @@ import makeMirrorPass from './mirrorPass.js'
 import { setupCamera, cameraCanvas, cameraAspectRatio } from '../camera.js'
 import getLKG from './lkgHelper.js'
 
+// import createREGL from '/src/matrix/lib/regl.min.js';
+// import '/src/matrix/lib/gl-matrix.js';
+
+
 const effects = {
   none: null,
   plain: makePalettePass,
@@ -25,19 +29,51 @@ const effects = {
 
 const dimensions = { width: 1, height: 1 }
 
+// const loadJS = (src) =>
+//   new Promise((resolve, reject) => {
+//     const tag = document.createElement('script')
+//     tag.onload = resolve
+//     tag.onerror = reject
+//     tag.src = src
+//     document.body.appendChild(tag)
+//   })
+
 const loadJS = (src) =>
-  new Promise((resolve, reject) => {
-    const tag = document.createElement('script')
-    tag.onload = resolve
-    tag.onerror = reject
-    tag.src = src
-    document.body.appendChild(tag)
-  })
+new Promise((resolve, reject) => {
+  const tag = document.createElement('script');
+  tag.type = 'application/javascript';
+  tag.onload = () => {
+    console.log(`Successfully loaded ${src}`);
+    resolve();
+  };
+  tag.onerror = (e) => {
+    console.log(`Failed to load ${src}`, e);
+    reject(e);
+  };
+  tag.src = src;
+  document.body.appendChild(tag);
+});
+
+// const loadModule = async (path) => {
+//   try {
+//     await import(path);
+//     console.log(`Successfully loaded ${path}`);
+//   } catch (error) {
+//     console.log(`Failed to load ${path}`, error);
+//   }
+// };
+
+
 
 export default async (canvas, config) => {
   await Promise.all([
-    loadJS('./src/matrix/lib/regl.min.js'),
-    loadJS('./src/matrix/lib/gl-matrix.js')
+    // loadJS('/file.js'),
+    // loadJS('/src/matrix/lib/regl.min.js'),
+    // loadJS('/src/matrix/lib/gl-matrix.js'),
+    loadJS('/matrix/lib/gl-matrix.js'),
+    loadJS('/matrix/lib/regl.min.js'),
+    // loadModule('/src/matrix/lib/regl.min.js'),
+    // loadModule('/src/matrix/lib/gl-matrix.js'),
   ])
 
   const resize = () => {
@@ -99,7 +135,9 @@ export default async (canvas, config) => {
   ])
   const screenUniforms = { tex: pipeline[pipeline.length - 1].outputs.primary }
   const drawToScreen = regl({ uniforms: screenUniforms })
+  console.log("before")
   await Promise.all(pipeline.map((step) => step.ready))
+  console.log("after")
 
   const targetFrameTimeMilliseconds = 1000 / config.fps
   let last = NaN

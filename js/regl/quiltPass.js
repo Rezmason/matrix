@@ -10,7 +10,8 @@ export default ({ regl, config, lkg }, inputs) => {
   }
 
   const output = makePassFBO(regl, config.useHalfFloat)
-  const quiltPassFrag = loadText('src/matrix/shaders/glsl/quiltPass.frag.glsl')
+  // const quiltPassFrag = loadText('src/matrix/shaders/glsl/quiltPass.frag.glsl')
+  const quiltPassFrag = loadText('./matrix/shaders/glsl/quiltPass.frag.glsl')
   const render = regl({
     frag: regl.prop('frag'),
     uniforms: {

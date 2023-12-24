@@ -66,7 +66,8 @@ export default ({ regl, config }, inputs) => {
     ditherMagnitude
   } = config
 
-  const palettePassFrag = loadText('src/matrix/shaders/glsl/palettePass.frag.glsl')
+  // const palettePassFrag = loadText('src/matrix/shaders/glsl/palettePass.frag.glsl')
+  const palettePassFrag = loadText('./matrix/shaders/glsl/palettePass.frag.glsl')
 
   const render = regl({
     frag: regl.prop('frag'),

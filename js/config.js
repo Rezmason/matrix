@@ -1,67 +1,68 @@
 const fonts = {
 	coptic: {
 		// The script the Gnostic codices were written in
-		glyphMSDFURL: "src/matrix/assets/coptic_msdf.png",
+		// glyphMSDFURL: "src/matrix/assets/coptic_msdf.png",
+		glyphMSDFURL: "./matrix/assets/coptic_msdf.png",
 		glyphSequenceLength: 32,
 		glyphTextureGridSize: [8, 8],
 	},
 	gothic: {
 		// The script the Codex Argenteus was written in
-		glyphMSDFURL: "src/matrix/assets/gothic_msdf.png",
+		glyphMSDFURL: "./matrix/assets/gothic_msdf.png",
 		glyphSequenceLength: 27,
 		glyphTextureGridSize: [8, 8],
 	},
 	matrixcode: {
 		// The glyphs seen in the film trilogy
-		glyphMSDFURL: "src/matrix/assets/matrixcode_msdf.png",
+		glyphMSDFURL: "./matrix/assets/matrixcode_msdf.png",
 		glyphSequenceLength: 57,
 		glyphTextureGridSize: [8, 8],
 	},
 	megacity: {
 		// The glyphs seen in the film trilogy
-		glyphMSDFURL: "src/matrix/assets/megacity_msdf.png",
+		glyphMSDFURL: "./matrix/assets/megacity_msdf.png",
 		glyphSequenceLength: 64,
 		glyphTextureGridSize: [8, 8],
 	},
 	resurrections: {
 		// The glyphs seen in the film trilogy
-		glyphMSDFURL: "src/matrix/assets/resurrections_msdf.png",
-		glintMSDFURL: "src/matrix/assets/resurrections_glint_msdf.png",
+		glyphMSDFURL: "./matrix/assets/resurrections_msdf.png",
+		glintMSDFURL: "./matrix/assets/resurrections_glint_msdf.png",
 		glyphSequenceLength: 135,
 		glyphTextureGridSize: [13, 12],
 	},
 	huberfishA: {
-		glyphMSDFURL: "src/matrix/assets/huberfish_a_msdf.png",
+		glyphMSDFURL: "./matrix/assets/huberfish_a_msdf.png",
 		glyphSequenceLength: 34,
 		glyphTextureGridSize: [6, 6],
 	},
 	huberfishD: {
-		glyphMSDFURL: "src/matrix/assets/huberfish_d_msdf.png",
+		glyphMSDFURL: "./matrix/assets/huberfish_d_msdf.png",
 		glyphSequenceLength: 34,
 		glyphTextureGridSize: [6, 6],
 	},
 	gtarg_tenretniolleh: {
-		glyphMSDFURL: "src/matrix/assets/gtarg_tenretniolleh_msdf.png",
+		glyphMSDFURL: "./matrix/assets/gtarg_tenretniolleh_msdf.png",
 		glyphSequenceLength: 36,
 		glyphTextureGridSize: [6, 6],
 	},
 	gtarg_alientext: {
-		glyphMSDFURL: "src/matrix/assets/gtarg_alientext_msdf.png",
+		glyphMSDFURL: "./matrix/assets/gtarg_alientext_msdf.png",
 		glyphSequenceLength: 38,
 		glyphTextureGridSize: [8, 5],
 	},
 	neomatrixology: {
-		glyphMSDFURL: "src/matrix/assets/neomatrixology_msdf.png",
+		glyphMSDFURL: "./matrix/assets/neomatrixology_msdf.png",
 		glyphSequenceLength: 12,
 		glyphTextureGridSize: [4, 4],
 	},
 };
 
 const textureURLs = {
-	sand: "src/matrix/assets/sand.png",
-	pixels: "src/matrix/assets/pixel_grid.png",
-	mesh: "src/matrix/assets/mesh.png",
-	metal: "src/matrix/assets/metal.png",
+	sand: "./matrix/assets/sand.png",
+	pixels: "./matrix/assets/pixel_grid.png",
+	mesh: "./matrix/assets/mesh.png",
+	metal: "./matrix/assets/metal.png",
 };
 
 const hsl = (...values) => ({ space: "hsl", values });
@@ -521,6 +522,8 @@ paramMapping.angle = paramMapping.slant;
 paramMapping.colors = paramMapping.stripeColors;
 
 export default function makeConfig(urlParams) {
+	console.log("hello, world from config.js");
+	
 	const validParams = Object.fromEntries(
 		Array.from(Object.entries(urlParams))
 			.filter(([key]) => key in paramMapping)

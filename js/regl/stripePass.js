@@ -51,7 +51,8 @@ export default ({ regl, config }, inputs) => {
     stripeColors.map((color) => [...colorToRGB(color), 1])
   )
 
-  const stripePassFrag = loadText('src/matrix/shaders/glsl/stripePass.frag.glsl')
+  // const stripePassFrag = loadText('src/matrix/shaders/glsl/stripePass.frag.glsl')
+  const stripePassFrag = loadText('./matrix/shaders/glsl/stripePass.frag.glsl')
 
   const render = regl({
     frag: regl.prop('frag'),

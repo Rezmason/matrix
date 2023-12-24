@@ -9,7 +9,8 @@ export default ({ regl, config }, inputs) => {
   const output = makePassFBO(regl, config.useHalfFloat)
   const bgURL = 'bgURL' in config ? config.bgURL : defaultBGURL
   const background = loadImage(regl, bgURL)
-  const imagePassFrag = loadText('src/matrix/shaders/glsl/imagePass.frag.glsl')
+  // const imagePassFrag = loadText('src/matrix/shaders/glsl/imagePass.frag.glsl')
+  const imagePassFrag = loadText('./matrix/shaders/glsl/imagePass.frag.glsl')
   const render = regl({
     frag: regl.prop('frag'),
     uniforms: {
