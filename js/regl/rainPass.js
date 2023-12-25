@@ -62,8 +62,8 @@ export default ({ regl, config, lkg }) => {
   }
 
   const introDoubleBuffer = makeComputeDoubleBuffer(regl, 1, numColumns)
-  const rainPassIntro = loadText('src/matrix/shaders/glsl/rainPass.intro.frag.glsl')
-  // const rainPassIntro = loadText('../shaders/glsl/rainPass.intro.frag.glsl')
+  // const rainPassIntro = loadText('src/matrix/shaders/glsl/rainPass.intro.frag.glsl')
+  const rainPassIntro = loadText('./matrix/shaders/glsl/rainPass.intro.frag.glsl')
   const introUniforms = {
     ...commonUniforms,
     ...extractEntries(config, ['fallSpeed', 'skipIntro'])
@@ -79,8 +79,8 @@ export default ({ regl, config, lkg }) => {
   })
 
   const raindropDoubleBuffer = makeComputeDoubleBuffer(regl, numRows, numColumns)
-  const rainPassRaindrop = loadText('src/matrix/shaders/glsl/rainPass.raindrop.frag.glsl')
-  // const rainPassRaindrop = loadText('../shaders/glsl/rainPass.raindrop.frag.glsl')
+  // const rainPassRaindrop = loadText('src/matrix/shaders/glsl/rainPass.raindrop.frag.glsl')
+  const rainPassRaindrop = loadText('./matrix/shaders/glsl/rainPass.raindrop.frag.glsl')
   const raindropUniforms = {
     ...commonUniforms,
     ...extractEntries(config, [
@@ -103,8 +103,8 @@ export default ({ regl, config, lkg }) => {
   })
 
   const symbolDoubleBuffer = makeComputeDoubleBuffer(regl, numRows, numColumns)
-  const rainPassSymbol = loadText('src/matrix/shaders/glsl/rainPass.symbol.frag.glsl')
-  // const rainPassSymbol = loadText('../shaders/glsl/rainPass.symbol.frag.glsl')
+  // const rainPassSymbol = loadText('src/matrix/shaders/glsl/rainPass.symbol.frag.glsl')
+  const rainPassSymbol = loadText('./matrix/shaders/glsl/rainPass.symbol.frag.glsl')
   const symbolUniforms = {
     ...commonUniforms,
     ...extractEntries(config, ['cycleSpeed', 'cycleFrameSkip', 'loops'])
@@ -121,8 +121,8 @@ export default ({ regl, config, lkg }) => {
   })
 
   const effectDoubleBuffer = makeComputeDoubleBuffer(regl, numRows, numColumns)
-  const rainPassEffect = loadText('src/matrix/shaders/glsl/rainPass.effect.frag.glsl')
-  // const rainPassEffect = loadText('../shaders/glsl/rainPass.effect.frag.glsl')
+  // const rainPassEffect = loadText('src/matrix/shaders/glsl/rainPass.effect.frag.glsl')
+  const rainPassEffect = loadText('./matrix/shaders/glsl/rainPass.effect.frag.glsl')
   const effectUniforms = {
     ...commonUniforms,
     ...extractEntries(config, [

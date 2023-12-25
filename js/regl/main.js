@@ -10,7 +10,7 @@ import makeMirrorPass from './mirrorPass.js'
 import { setupCamera, cameraCanvas, cameraAspectRatio } from '../camera.js'
 import getLKG from './lkgHelper.js'
 
-// import createREGL from '/src/matrix/lib/regl.min.js';
+// import createREGL from '../../lib/regl.min.js';
 // import '/src/matrix/lib/gl-matrix.js';
 
 
@@ -72,6 +72,7 @@ export default async (canvas, config) => {
     // loadJS('/src/matrix/lib/gl-matrix.js'),
     loadJS('/matrix/lib/gl-matrix.js'),
     loadJS('/matrix/lib/regl.min.js'),
+    // loadJS('/matrix/lib/regl.js'),
     // loadModule('/src/matrix/lib/regl.min.js'),
     // loadModule('/src/matrix/lib/gl-matrix.js'),
   ])
@@ -135,9 +136,7 @@ export default async (canvas, config) => {
   ])
   const screenUniforms = { tex: pipeline[pipeline.length - 1].outputs.primary }
   const drawToScreen = regl({ uniforms: screenUniforms })
-  console.log("before")
   await Promise.all(pipeline.map((step) => step.ready))
-  console.log("after")
 
   const targetFrameTimeMilliseconds = 1000 / config.fps
   let last = NaN
