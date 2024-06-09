@@ -1,0 +1,36 @@
+{
+	"contentrating" : "Everyone",
+	"description" : "Query strings for each style:\n- classic/2003: version=classic\n- megacity: version=megacity&width=150\n- neomatrixology: version=neomatrixology&width=150\n- operator/throwback/1999: version=operator&width=150\n- nightmare: version=nightmare&width=150\n- paradise: version=paradise&width=150\n- resurrections/updated/2021: version=resurrections&width=150\n- trinity: version=trinity&width=150\n- morpheus: version=morpheus&width=150\n- bugs: version=bugs&width=150\n- palimpsest: version=palimpsest&width=150\n- twilight :version=twilight&width=150\n- holoplay: version=holoplay&width=150\n- 3D: version=3d&width=150\n\nSet 150 as default width (e.g. number of columns) for a sane default on a single monitor, but you can tweak around to your liking.\n\nProject code can be found here (along with all the other possible parameters and their descriptions): https://github.com/Rezmason/matrix",
+	"file" : "index.html",
+	"general" : 
+	{
+		"properties" : 
+		{
+			"schemecolor" : 
+			{
+				"order" : 0,
+				"text" : "ui_browse_properties_scheme_color",
+				"type" : "color",
+				"value" : "0 0 0"
+			},
+			"wallpaperenginequerystring" : 
+			{
+				"index" : 0,
+				"order" : 100,
+				"text" : "queryString",
+				"type" : "textinput",
+				"value" : "version=classic"
+			}
+		}
+	},
+	"preview" : "preview.gif",
+	"ratingsex" : "none",
+	"ratingviolence" : "none",
+	"snapshotformat" : 0,
+	"snapshotoverlay" : "",
+	"tags" : [ "Abstract" ],
+	"title" : "Configurable Matrix Rain",
+	"type" : "web",
+	"version" : 3,
+	"visibility" : "public"
+}

@@ -1,4 +1,5 @@
 import makeConfig from "./config.js";
+import './wallpaperEngine.js';
 
 const canvas = document.createElement("canvas");
 document.body.appendChild(canvas);
