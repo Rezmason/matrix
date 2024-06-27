@@ -20,6 +20,7 @@ const makeComputeDoubleBuffer = (regl, height, width) =>
 		height,
 		wrapT: "clamp",
 		type: "half float",
+		data: Array(width * height * 4).fill(0)
 	});
 
 const numVerticesPerQuad = 2 * 3;
