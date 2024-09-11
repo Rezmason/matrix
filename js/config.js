@@ -101,6 +101,8 @@ const defaults = {
 	glyphEdgeCrop: 0.0, // The border around a glyph in a font texture that should be cropped out
 	glyphHeightToWidth: 1, // The aspect ratio of glyphs
 	glyphVerticalSpacing: 1, // The ratio of the vertical distance between glyphs to their height
+	glyphFlip: false, // Whether to horizontally reflect the glyphs
+	glyphRotation: 0, // An angle to rotate the glyphs. Currently limited to 90° increments
 	hasThunder: false, // An effect that adds dramatic lightning flashes
 	isPolar: false, // Whether the glyphs arc across the screen or sit in a standard grid
 	rippleTypeName: null, // The variety of the ripple effect
@@ -134,12 +136,12 @@ const versions = {
 	megacity: {
 		font: "megacity",
 		animationSpeed: 0.5,
-		width: 40,
+		numColumns: 40,
 	},
 	neomatrixology: {
 		font: "neomatrixology",
 		animationSpeed: 0.8,
-		width: 40,
+		numColumns: 40,
 		palette: [
 			{ color: hsl(0.15, 0.9, 0.0), at: 0.0 },
 			{ color: hsl(0.15, 0.9, 0.2), at: 0.2 },
@@ -443,7 +445,6 @@ const paramMapping = {
 	font: { key: "font", parser: (s) => s },
 	effect: { key: "effect", parser: (s) => s },
 	camera: { key: "useCamera", parser: isTrue },
-	width: { key: "numColumns", parser: (s) => nullNaN(parseInt(s)) },
 	numColumns: { key: "numColumns", parser: (s) => nullNaN(parseInt(s)) },
 	density: { key: "density", parser: (s) => nullNaN(range(parseFloat(s), 0)) },
 	resolution: { key: "resolution", parser: (s) => nullNaN(parseFloat(s)) },
@@ -501,6 +502,11 @@ const paramMapping = {
 	},
 
 	volumetric: { key: "volumetric", parser: isTrue },
+	glyphFlip: { key: "glyphFlip", parser: isTrue },
+	glyphRotation: {
+		key: "glyphRotation",
+		parser: (s) => nullNaN(range(parseFloat(s), 0, Infinity)),
+	},
 	loops: { key: "loops", parser: isTrue },
 	fps: { key: "fps", parser: (s) => nullNaN(range(parseFloat(s), 0, 60)) },
 	skipIntro: { key: "skipIntro", parser: isTrue },
@@ -516,16 +522,17 @@ paramMapping.backgroundRGB = paramMapping.backgroundColor;
 paramMapping.cursorRGB = paramMapping.cursorColor;
 paramMapping.glintRGB = paramMapping.glintColor;
 
+paramMapping.width = paramMapping.numColumns;
 paramMapping.dropLength = paramMapping.raindropLength;
 paramMapping.angle = paramMapping.slant;
 paramMapping.colors = paramMapping.stripeColors;
 
 export default (urlParams) => {
 	const validParams = Object.fromEntries(
-		Array.from(Object.entries(urlParams))
+		Object.entries(urlParams)
 			.filter(([key]) => key in paramMapping)
 			.map(([key, value]) => [paramMapping[key].key, paramMapping[key].parser(value)])
-			.filter(([_, value]) => value != null)
+			.filter(([_, value]) => value != null),
 	);
 
 	if (validParams.effect != null) {

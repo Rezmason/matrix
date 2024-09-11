@@ -101,7 +101,7 @@ Some of the [earliest](https://github.com/ppetr/xlockmore/blob/master/modes/matr
 
 You can customize the digital rain quite a bit by stapling "URL variables" to its URL— by putting a '?' at the end of the link above, and then chaining together words, like this:
 
-[https://rezmason.github.io/matrix/?width=100&fallSpeed=-0.1&effect=none](https://rezmason.github.io/matrix/?width=100&fallSpeed=-0.1&effect=none)
+[https://rezmason.github.io/matrix/?numColumns=100&fallSpeed=-0.1&slant=200&glyphRotation=180](https://rezmason.github.io/matrix/?numColumns=100&fallSpeed=-0.1&slant=200&glyphRotation=180)
 
 Now you know link fu. Here's a list of customization options:
 
@@ -116,7 +116,9 @@ Now you know link fu. Here's a list of customization options:
   - "palimpsest" is a custom version inspired by the art and sound of [Rob Dougan](https://en.wikipedia.org/wiki/Rob_Dougan)'s [Furious Angels](https://en.wikipedia.org/wiki/Furious_Angels).
 - `skipIntro` - whether or not to start from a blank screen. Can be "true" or "false", default is *true*.
 - `font` - the set of glyphs to draw. Current options are "matrixcode", "resurrections", "gothic", "coptic", "huberfishA", and "huberfishD".
-- `width` - the number of columns (and rows) to draw. Default is 80.
+- `numColumns` - the number of columns (and rows) to draw. Default is 80.
+- `glyphFlip` - when set to "true", this flips the glyphs. Default is "false".
+- `glyphRotation` - the angle to rotate the glyphs in-place, in degrees. Default is 0. I suggest angles that are multiples of 90°.
 - `volumetric` - when set to "true", this renders the glyphs with depth, slowly approaching the eye. Default is "false".
 - `density` - the number of 3D raindrops to draw, proportional to the default. Default is 1.0.
 - `forwardSpeed` - the rate that the 3D raindrops approach. Default is 1.0.

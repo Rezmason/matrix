@@ -21,6 +21,8 @@ uniform bool showDebugView;
 uniform bool volumetric;
 uniform bool isolateCursor, isolateGlint;
 
+uniform mat2 glyphTransform;
+
 varying vec2 vUV;
 varying vec4 vRaindrop, vSymbol, vEffect;
 varying float vDepth;
@@ -110,6 +112,7 @@ vec2 getSymbol(vec2 uv, float index) {
 	// resolve UV to cropped position of glyph in MSDF texture
 	uv = fract(uv * vec2(numColumns, numRows));
 	uv -= 0.5;
+	uv = glyphTransform * uv;
 	uv *= clamp(1. - glyphEdgeCrop, 0., 1.);
 	uv += 0.5;
 	uv = (uv + getSymbolUV(index)) / glyphTextureGridSize;

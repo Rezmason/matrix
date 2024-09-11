@@ -7,6 +7,7 @@ struct Config {
 	glyphSequenceLength : f32,
 	glyphTextureGridSize : vec2<i32>,
 	glyphHeightToWidth : f32,
+	glyphTransform : mat2x2<f32>,
 	gridSize : vec2<f32>,
 	showDebugView : i32,
 
@@ -493,6 +494,7 @@ fn getSymbol(cellUV : vec2<f32>, index : i32) -> vec2<f32> {
 	// resolve UV to cropped position of glyph in MSDF texture
 	var uv = fract(cellUV * config.gridSize);
 	uv -= 0.5;
+	uv = config.glyphTransform * uv;
 	uv *= clamp(1.0 - config.glyphEdgeCrop, 0.0, 1.0);
 	uv += 0.5;
 	uv = (uv + getSymbolUV(index)) / vec2<f32>(config.glyphTextureGridSize);

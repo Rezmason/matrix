@@ -8,7 +8,7 @@ const rippleTypes = {
 
 const numVerticesPerQuad = 2 * 3;
 
-const makeConfigBuffer = (device, configUniforms, config, density, gridSize) => {
+const makeConfigBuffer = (device, configUniforms, config, density, gridSize, glyphTransform) => {
 	const configData = {
 		...config,
 		gridSize,
@@ -18,6 +18,7 @@ const makeConfigBuffer = (device, configUniforms, config, density, gridSize) => 
 		slantScale: 1 / (Math.abs(Math.sin(2 * config.slant)) * (Math.sqrt(2) - 1) + 1),
 		slantVec: [Math.cos(config.slant), Math.sin(config.slant)],
 		msdfPxRange: 4,
+		glyphTransform,
 	};
 	// console.table(configData);
 
@@ -25,7 +26,7 @@ const makeConfigBuffer = (device, configUniforms, config, density, gridSize) => 
 };
 
 export default ({ config, device, timeBuffer }) => {
-	const { mat4, vec3 } = glMatrix;
+	const { mat2, mat4, vec2, vec3 } = glMatrix;
 
 	const assets = [
 		loadTexture(device, config.glyphMSDFURL),
@@ -44,6 +45,9 @@ export default ({ config, device, timeBuffer }) => {
 	// The volumetric mode requires us to create a grid of quads,
 	// rather than a single quad for our geometry
 	const numQuads = config.volumetric ? numCells : 1;
+
+	const glyphTransform = mat2.fromScaling(mat2.create(), vec2.fromValues(config.glyphFlip ? -1 : 1, 1));
+	mat2.rotate(glyphTransform, glyphTransform, (config.glyphRotation * Math.PI) / 180);
 
 	const transform = mat4.create();
 	if (config.volumetric && config.isometric) {
@@ -97,7 +101,7 @@ export default ({ config, device, timeBuffer }) => {
 		const [glyphMSDFTexture, glintMSDFTexture, baseTexture, glintTexture, rainShader] = await Promise.all(assets);
 
 		const rainShaderUniforms = structs.from(rainShader.code);
-		configBuffer = makeConfigBuffer(device, rainShaderUniforms.Config, config, density, gridSize);
+		configBuffer = makeConfigBuffer(device, rainShaderUniforms.Config, config, density, gridSize, glyphTransform);
 
 		const introCellsBuffer = device.createBuffer({
 			size: gridSize[0] * rainShaderUniforms.IntroCell.minSize,

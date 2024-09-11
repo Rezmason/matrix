@@ -31,6 +31,8 @@ const brVert = [1, 1];
 const quadVertices = [tlVert, trVert, brVert, tlVert, brVert, blVert];
 
 export default ({ regl, config, lkg }) => {
+	const { mat2, mat4, vec2, vec3 } = glMatrix;
+
 	// The volumetric mode multiplies the number of columns
 	// to reach the desired density, and then overlaps them
 	const volumetric = config.volumetric;
@@ -48,6 +50,9 @@ export default ({ regl, config, lkg }) => {
 	const slantVec = [Math.cos(config.slant), Math.sin(config.slant)];
 	const slantScale = 1 / (Math.abs(Math.sin(2 * config.slant)) * (Math.sqrt(2) - 1) + 1);
 	const showDebugView = config.effect === "none";
+
+	const glyphTransform = mat2.fromScaling(mat2.create(), vec2.fromValues(config.glyphFlip ? -1 : 1, 1));
+	mat2.rotate(glyphTransform, glyphTransform, (config.glyphRotation * Math.PI) / 180);
 
 	const commonUniforms = {
 		...extractEntries(config, ["animationSpeed", "glyphHeightToWidth", "glyphSequenceLength", "glyphTextureGridSize"]),
@@ -160,6 +165,7 @@ export default ({ regl, config, lkg }) => {
 			"glyphEdgeCrop",
 			"isPolar",
 		]),
+		glyphTransform,
 		density,
 		numQuadColumns,
 		numQuadRows,
@@ -212,7 +218,6 @@ export default ({ regl, config, lkg }) => {
 
 	// Camera and transform math for the volumetric mode
 	const screenSize = [1, 1];
-	const { mat4, vec3 } = glMatrix;
 	const transform = mat4.create();
 	if (volumetric && config.isometric) {
 		mat4.rotateX(transform, transform, (Math.PI * 1) / 8);
