@@ -1,5 +1,52 @@
 TODO:
 
+April 23, 2025
+
+Pixel grid texture in trinity version has way too much moire
+base64 string image support
+
+Create examples
+  Matrix as background
+  Matrix as layer of composition (look up old issue for this)
+  Matrix as transparent layer
+  Matrix as transition
+    Tweened, blended fade in/out from top to bottom
+
+Revisit list of features, properties of config (see below)
+  Maybe reconstruct config into a list of value receivers
+    A receiver can either update an existing uniform
+    or kick off a full rebuild of the pipeline
+
+Encode EVERY param as a URL variable
+  Naive implementation FIRST,
+  THEN see how bad it can get
+
+GUI time
+  Wiggle the mouse, GUI show/hide appears
+  (see below)
+
+Investigations
+  moving off of regl
+  arbitrary text (only in a branch)
+  alternative bloom implementations
+Investigate JS data source
+  API for creating raindrops and other matrix-y structures
+
+Create more examples
+  Custom font example
+  Matrix as object with params passed into it?
+  What else? Ask folks
+
+Audio
+Porting to other platforms, ie. screen savers
+
+Open issues:
+  skipIntro with negative fallSpeed yields unexpected behavior, and there's no intended behavior
+
+------------
+
+old TODO:
+
 Live config update roadmap
   Modify regl pass
     async build(config, inputs)
