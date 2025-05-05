@@ -8,7 +8,8 @@ const makePassTexture = (regl, halfFloat) =>
 		mag: "linear",
 	});
 
-const makePassFBO = (regl, halfFloat) => regl.framebuffer({ color: makePassTexture(regl, halfFloat) });
+const makePassFBO = (regl, halfFloat) =>
+	regl.framebuffer({ color: makePassTexture(regl, halfFloat) });
 
 const makeDoubleBuffer = (regl, props) => {
 	const state = Array(2)
@@ -17,7 +18,7 @@ const makeDoubleBuffer = (regl, props) => {
 			regl.framebuffer({
 				color: regl.texture(props),
 				depthStencil: false,
-			})
+			}),
 		);
 	return {
 		front: ({ tick }) => state[tick % 2],
@@ -149,6 +150,21 @@ const makePass = (outputs, ready, setSize, execute) => ({
 });
 
 const makePipeline = (context, steps) =>
-	steps.filter((f) => f != null).reduce((pipeline, f, i) => [...pipeline, f(context, i == 0 ? null : pipeline[i - 1].outputs)], []);
+	steps
+		.filter((f) => f != null)
+		.reduce(
+			(pipeline, f, i) => [...pipeline, f(context, i == 0 ? null : pipeline[i - 1].outputs)],
+			[],
+		);
 
-export { makePassTexture, makePassFBO, makeDoubleBuffer, loadImage, loadText, makeFullScreenQuad, make1DTexture, makePass, makePipeline };
+export {
+	makePassTexture,
+	makePassFBO,
+	makeDoubleBuffer,
+	loadImage,
+	loadText,
+	makeFullScreenQuad,
+	make1DTexture,
+	makePass,
+	makePipeline,
+};

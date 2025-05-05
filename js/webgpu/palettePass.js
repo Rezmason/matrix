@@ -1,6 +1,12 @@
 import colorToRGB from "../colorToRGB.js";
 import { structs } from "../../lib/gpu-buffer.js";
-import { loadShader, makeUniformBuffer, makeBindGroup, makeComputeTarget, makePass } from "./utils.js";
+import {
+	loadShader,
+	makeUniformBuffer,
+	makeBindGroup,
+	makeComputeTarget,
+	makePass,
+} from "./utils.js";
 
 // Maps the brightness of the rendered rain and bloom to colors
 // in a linear gradient buffer generated from the passed-in color sequence

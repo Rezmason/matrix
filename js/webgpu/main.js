@@ -74,7 +74,10 @@ export default async (canvas, config) => {
 	const cameraTex = device.createTexture({
 		size: cameraSize,
 		format: "rgba8unorm",
-		usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+		usage:
+			GPUTextureUsage.TEXTURE_BINDING |
+			GPUTextureUsage.COPY_DST |
+			GPUTextureUsage.RENDER_ATTACHMENT,
 	});
 
 	const context = {
@@ -90,7 +93,12 @@ export default async (canvas, config) => {
 	};
 
 	const effectName = config.effect in effects ? config.effect : "palette";
-	const pipeline = await makePipeline(context, [makeRain, makeBloomPass, effects[effectName], makeEndPass]);
+	const pipeline = await makePipeline(context, [
+		makeRain,
+		makeBloomPass,
+		effects[effectName],
+		makeEndPass,
+	]);
 
 	const targetFrameTimeMilliseconds = 1000 / config.fps;
 	let frames = 0;
@@ -107,7 +115,8 @@ export default async (canvas, config) => {
 			last = start;
 		}
 
-		const shouldRender = config.fps >= 60 || now - last >= targetFrameTimeMilliseconds || config.once;
+		const shouldRender =
+			config.fps >= 60 || now - last >= targetFrameTimeMilliseconds || config.once;
 		if (shouldRender) {
 			while (now - targetFrameTimeMilliseconds > last) {
 				last += targetFrameTimeMilliseconds;
@@ -125,10 +134,18 @@ export default async (canvas, config) => {
 		}
 
 		if (config.useCamera) {
-			device.queue.copyExternalImageToTexture({ source: cameraCanvas }, { texture: cameraTex }, cameraSize);
+			device.queue.copyExternalImageToTexture(
+				{ source: cameraCanvas },
+				{ texture: cameraTex },
+				cameraSize,
+			);
 		}
 
-		device.queue.writeBuffer(timeBuffer, 0, timeUniforms.toBuffer({ seconds: (now - start) / 1000, frames }));
+		device.queue.writeBuffer(
+			timeBuffer,
+			0,
+			timeUniforms.toBuffer({ seconds: (now - start) / 1000, frames }),
+		);
 		frames++;
 
 		const encoder = device.createCommandEncoder();

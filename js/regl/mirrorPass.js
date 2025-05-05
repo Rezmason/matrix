@@ -45,6 +45,6 @@ export default ({ regl, config, cameraTex, cameraAspectRatio }, inputs) => {
 			if (shouldRender) {
 				render({ frag: mirrorPassFrag });
 			}
-		}
+		},
 	);
 };

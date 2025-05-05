@@ -1,7 +1,7 @@
 import { makePassFBO, makePass } from "./utils";
-import highPassFrag  from '../../shaders/glsl/bloomPass.highPass.frag.glsl';
-import blurFrag      from '../../shaders/glsl/bloomPass.blur.frag.glsl';
-import combineFrag   from '../../shaders/glsl/bloomPass.combine.frag.glsl';
+import highPassFrag from "../../shaders/glsl/bloomPass.highPass.frag.glsl";
+import blurFrag from "../../shaders/glsl/bloomPass.blur.frag.glsl";
+import combineFrag from "../../shaders/glsl/bloomPass.combine.frag.glsl";
 
 // The bloom pass is basically an added high-pass blur.
 // The blur approximation is the sum of a pyramid of downscaled, blurred textures.
@@ -16,7 +16,9 @@ const makePyramid = (regl, height, halfFloat) =>
 		.map((_) => makePassFBO(regl, halfFloat));
 
 const resizePyramid = (pyramid, vw, vh, scale) =>
-	pyramid.forEach((fbo, index) => fbo.resize(Math.floor((vw * scale) / 2 ** index), Math.floor((vh * scale) / 2 ** index)));
+	pyramid.forEach((fbo, index) =>
+		fbo.resize(Math.floor((vw * scale) / 2 ** index), Math.floor((vh * scale) / 2 ** index)),
+	);
 
 export default ({ regl, config }, inputs) => {
 	const { bloomStrength, bloomSize, highPassThreshold } = config;
@@ -94,12 +96,16 @@ export default ({ regl, config }, inputs) => {
 				const highPassFBO = highPassPyramid[i];
 				const hBlurFBO = hBlurPyramid[i];
 				const vBlurFBO = vBlurPyramid[i];
-				highPass({ fbo: highPassFBO, frag: highPassFrag, tex: i === 0 ? inputs.primary : highPassPyramid[i - 1] });
+				highPass({
+					fbo: highPassFBO,
+					frag: highPassFrag,
+					tex: i === 0 ? inputs.primary : highPassPyramid[i - 1],
+				});
 				blur({ fbo: hBlurFBO, frag: blurFrag, tex: highPassFBO, direction: [1, 0] });
 				blur({ fbo: vBlurFBO, frag: blurFrag, tex: hBlurFBO, direction: [0, 1] });
 			}
 
 			combine({ frag: combineFrag });
-		}
+		},
 	);
 };

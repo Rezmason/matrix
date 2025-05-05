@@ -1,5 +1,11 @@
 import { structs } from "../../lib/gpu-buffer.js";
-import { makeComputeTarget, makeUniformBuffer, loadShader, makeBindGroup, makePass } from "./utils.js";
+import {
+	makeComputeTarget,
+	makeUniformBuffer,
+	loadShader,
+	makeBindGroup,
+	makePass,
+} from "./utils.js";
 
 let start;
 const numTouches = 5;
@@ -77,7 +83,11 @@ export default ({ config, device, cameraTex, cameraAspectRatio, timeBuffer }) =>
 		]);
 
 		const screenAspectRatio = size[0] / size[1];
-		device.queue.writeBuffer(sceneBuffer, 0, sceneUniforms.toBuffer({ screenAspectRatio, cameraAspectRatio }));
+		device.queue.writeBuffer(
+			sceneBuffer,
+			0,
+			sceneUniforms.toBuffer({ screenAspectRatio, cameraAspectRatio }),
+		);
 
 		return { primary: output };
 	};

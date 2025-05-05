@@ -45,7 +45,10 @@ export default ({ device, canvasFormat, canvasContext }) => {
 	})();
 
 	const build = (size, inputs) => {
-		renderBindGroup = makeBindGroup(device, renderPipeline, 0, [nearestSampler, inputs.primary.createView()]);
+		renderBindGroup = makeBindGroup(device, renderPipeline, 0, [
+			nearestSampler,
+			inputs.primary.createView(),
+		]);
 		return null;
 	};
 

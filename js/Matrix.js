@@ -107,34 +107,32 @@ import makeConfig from "./utils/config";
 
 /** @param {MatrixProps} props */
 export const Matrix = memo((props) => {
-  const { style, className, ...rest } = props;
-  const elProps = { style, className };
-  const matrix = useRef(null);
-  const rainRef = useRef(null);
-  const canvasRef = useRef(null);
+	const { style, className, ...rest } = props;
+	const elProps = { style, className };
+	const matrix = useRef(null);
+	const rainRef = useRef(null);
+	const canvasRef = useRef(null);
 
-  useEffect(() => {
-    const canvas = document.createElement("canvas");
-    canvas.style.width = "100%";
-    canvas.style.height = "100%";
-    canvasRef.current = canvas;
-  }, []);
+	useEffect(() => {
+		const canvas = document.createElement("canvas");
+		canvas.style.width = "100%";
+		canvas.style.height = "100%";
+		canvasRef.current = canvas;
+	}, []);
 
-  useEffect(() => {
-    matrix.current.appendChild(canvasRef.current);
-    const gl = canvasRef.current.getContext("webgl");
-    createRain(canvasRef.current, makeConfig({ ...rest }), gl).then(
-      (handles) => {
-        rainRef.current = handles;
-      }
-    );
+	useEffect(() => {
+		matrix.current.appendChild(canvasRef.current);
+		const gl = canvasRef.current.getContext("webgl");
+		createRain(canvasRef.current, makeConfig({ ...rest }), gl).then((handles) => {
+			rainRef.current = handles;
+		});
 
-    return () => {
-      if (rainRef.current) {
-        destroyRain(rainRef.current);
-      }
-    };
-  }, [props]);
+		return () => {
+			if (rainRef.current) {
+				destroyRain(rainRef.current);
+			}
+		};
+	}, [props]);
 
-  return <div ref={matrix} {...elProps}></div>;
+	return <div ref={matrix} {...elProps}></div>;
 });

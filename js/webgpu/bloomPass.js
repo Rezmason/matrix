@@ -1,5 +1,11 @@
 import { structs } from "../../lib/gpu-buffer.js";
-import { makeComputeTarget, loadShader, makeUniformBuffer, makeBindGroup, makePass } from "./utils.js";
+import {
+	makeComputeTarget,
+	loadShader,
+	makeUniformBuffer,
+	makeBindGroup,
+	makePass,
+} from "./utils.js";
 
 // const makePyramid = makeComputeTarget;
 
@@ -20,8 +26,8 @@ const makePyramid = (device, size, pyramidHeight) =>
 		.map((_, index) =>
 			makeComputeTarget(
 				device,
-				size.map((x) => Math.floor(x * 2 ** -index))
-			)
+				size.map((x) => Math.floor(x * 2 ** -index)),
+			),
 		);
 
 const destroyPyramid = (pyramid) => pyramid?.forEach((texture) => texture.destroy());
@@ -47,7 +53,10 @@ export default ({ config, device }) => {
 		return makePass("No Bloom", null, (size, inputs) => ({ ...inputs, bloom: emptyTexture }));
 	}
 
-	const assets = [loadShader(device, "shaders/wgsl/bloomBlur.wgsl"), loadShader(device, "shaders/wgsl/bloomCombine.wgsl")];
+	const assets = [
+		loadShader(device, "shaders/wgsl/bloomBlur.wgsl"),
+		loadShader(device, "shaders/wgsl/bloomCombine.wgsl"),
+	];
 
 	const linearSampler = device.createSampler({
 		magFilter: "linear",
@@ -122,12 +131,27 @@ export default ({ config, device }) => {
 		for (let i = 0; i < pyramidHeight; i++) {
 			const hBlurPyramidView = makePyramidLevelView(hBlurPyramid, i);
 			const vBlurPyramidView = makePyramidLevelView(vBlurPyramid, i);
-			hBlurBindGroups[i] = makeBindGroup(device, blurPipeline, 0, [hBlurBuffer, linearSampler, srcView, hBlurPyramidView]);
-			vBlurBindGroups[i] = makeBindGroup(device, blurPipeline, 0, [vBlurBuffer, linearSampler, hBlurPyramidView, vBlurPyramidView]);
+			hBlurBindGroups[i] = makeBindGroup(device, blurPipeline, 0, [
+				hBlurBuffer,
+				linearSampler,
+				srcView,
+				hBlurPyramidView,
+			]);
+			vBlurBindGroups[i] = makeBindGroup(device, blurPipeline, 0, [
+				vBlurBuffer,
+				linearSampler,
+				hBlurPyramidView,
+				vBlurPyramidView,
+			]);
 			srcView = hBlurPyramidView;
 		}
 
-		combineBindGroup = makeBindGroup(device, combinePipeline, 0, [combineBuffer, linearSampler, ...makePyramidViews(vBlurPyramid), output.createView()]);
+		combineBindGroup = makeBindGroup(device, combinePipeline, 0, [
+			combineBuffer,
+			linearSampler,
+			...makePyramidViews(vBlurPyramid),
+			output.createView(),
+		]);
 
 		return {
 			...inputs,
@@ -144,7 +168,11 @@ export default ({ config, device }) => {
 
 		computePass.setPipeline(blurPipeline);
 		for (let i = 0; i < pyramidHeight; i++) {
-			const dispatchSize = [Math.ceil(Math.floor(scaledScreenSize[0] * 2 ** -i) / 32), Math.floor(Math.floor(scaledScreenSize[1] * 2 ** -i)), 1];
+			const dispatchSize = [
+				Math.ceil(Math.floor(scaledScreenSize[0] * 2 ** -i) / 32),
+				Math.floor(Math.floor(scaledScreenSize[1] * 2 ** -i)),
+				1,
+			];
 			computePass.setBindGroup(0, hBlurBindGroups[i]);
 			computePass.dispatchWorkgroups(...dispatchSize);
 			computePass.setBindGroup(0, vBlurBindGroups[i]);

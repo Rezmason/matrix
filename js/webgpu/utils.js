@@ -3,7 +3,10 @@ const loadTexture = async (device, url) => {
 		return device.createTexture({
 			size: [1, 1, 1],
 			format: "rgba8unorm",
-			usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+			usage:
+				GPUTextureUsage.TEXTURE_BINDING |
+				GPUTextureUsage.COPY_DST |
+				GPUTextureUsage.RENDER_ATTACHMENT,
 		});
 	}
 
@@ -15,7 +18,10 @@ const loadTexture = async (device, url) => {
 	const texture = device.createTexture({
 		size,
 		format: "rgba8unorm",
-		usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+		usage:
+			GPUTextureUsage.TEXTURE_BINDING |
+			GPUTextureUsage.COPY_DST |
+			GPUTextureUsage.RENDER_ATTACHMENT,
 	});
 
 	device.queue.copyExternalImageToTexture({ source, flipY: true }, { texture }, size);
@@ -28,7 +34,11 @@ const makeRenderTarget = (device, size, format, mipLevelCount = 1) =>
 		size: [...size, 1],
 		mipLevelCount,
 		format,
-		usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+		usage:
+			GPUTextureUsage.TEXTURE_BINDING |
+			GPUTextureUsage.COPY_SRC |
+			GPUTextureUsage.COPY_DST |
+			GPUTextureUsage.RENDER_ATTACHMENT,
 	});
 
 const makeComputeTarget = (device, size, mipLevelCount = 1) =>
@@ -36,7 +46,11 @@ const makeComputeTarget = (device, size, mipLevelCount = 1) =>
 		size: [...size, 1],
 		mipLevelCount,
 		format: "rgba8unorm",
-		usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.STORAGE_BINDING,
+		usage:
+			GPUTextureUsage.TEXTURE_BINDING |
+			GPUTextureUsage.COPY_SRC |
+			GPUTextureUsage.COPY_DST |
+			GPUTextureUsage.STORAGE_BINDING,
 	});
 
 const loadShader = async (device, url) => {
@@ -105,4 +119,14 @@ const makePipeline = async (context, steps) => {
 	};
 };
 
-export { makeRenderTarget, makeComputeTarget, make1DTexture, loadTexture, loadShader, makeUniformBuffer, makePass, makePipeline, makeBindGroup };
+export {
+	makeRenderTarget,
+	makeComputeTarget,
+	make1DTexture,
+	loadTexture,
+	loadShader,
+	makeUniformBuffer,
+	makePass,
+	makePipeline,
+	makeBindGroup,
+};

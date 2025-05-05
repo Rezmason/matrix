@@ -7,7 +7,11 @@ document.addEventListener("touchmove", (e) => e.preventDefault(), {
 });
 
 const supportsWebGPU = async () => {
-	return window.GPUQueue != null && navigator.gpu != null && navigator.gpu.getPreferredCanvasFormat != null;
+	return (
+		window.GPUQueue != null &&
+		navigator.gpu != null &&
+		navigator.gpu.getPreferredCanvasFormat != null
+	);
 };
 
 const isRunningSwiftShader = () => {

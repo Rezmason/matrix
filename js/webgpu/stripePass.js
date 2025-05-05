@@ -1,6 +1,13 @@
 import colorToRGB from "../colorToRGB.js";
 import { structs } from "../../lib/gpu-buffer.js";
-import { loadShader, make1DTexture, makeUniformBuffer, makeBindGroup, makeComputeTarget, makePass } from "./utils.js";
+import {
+	loadShader,
+	make1DTexture,
+	makeUniformBuffer,
+	makeBindGroup,
+	makeComputeTarget,
+	makePass,
+} from "./utils.js";
 
 // Multiplies the rendered rain and bloom by a 1D gradient texture
 // generated from the passed-in color sequence
@@ -38,10 +45,15 @@ const numVerticesPerQuad = 2 * 3;
 
 export default ({ config, device, timeBuffer }) => {
 	// Expand and convert stripe colors into 1D texture data
-	const stripeColors = "stripeColors" in config ? config.stripeColors : config.effect === "pride" ? prideStripeColors : transPrideStripeColors;
+	const stripeColors =
+		"stripeColors" in config
+			? config.stripeColors
+			: config.effect === "pride"
+				? prideStripeColors
+				: transPrideStripeColors;
 	const stripeTex = make1DTexture(
 		device,
-		stripeColors.map((color) => [...colorToRGB(color), 1])
+		stripeColors.map((color) => [...colorToRGB(color), 1]),
 	);
 
 	const linearSampler = device.createSampler({
