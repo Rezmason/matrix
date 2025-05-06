@@ -14,7 +14,6 @@ const versions = [
 	"paradise",
 	"resurrections",
 	"operator",
-	"holoplay",
 	"throwback",
 	"updated",
 	"1999",

@@ -6,7 +6,6 @@ import {
 	makeBindGroup,
 	makePass,
 } from "./utils.js";
-import mirrorPassShader from "../../shaders/wgsl/mirrorPass.wgsl";
 
 let start;
 const numTouches = 5;
@@ -26,7 +25,7 @@ window.onclick = (e) => {
 };
 
 export default ({ config, device, cameraTex, cameraAspectRatio, timeBuffer }) => {
-	const assets = [loadShader(device, mirrorPassShader)];
+	const assets = [loadShader(device, "shaders/wgsl/mirrorPass.wgsl")];
 
 	const linearSampler = device.createSampler({
 		magFilter: "linear",

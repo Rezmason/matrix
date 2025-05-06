@@ -1,4 +1,4 @@
-import makeConfig from "./config.js";
+import makeConfig from "./utils/config.js";
 
 const canvas = document.createElement("canvas");
 document.body.appendChild(canvas);
@@ -27,6 +27,12 @@ document.body.onload = async () => {
 	const useWebGPU = (await supportsWebGPU()) && ["webgpu"].includes(config.renderer?.toLowerCase());
 	const solution = import(`./${useWebGPU ? "webgpu" : "regl"}/main.js`);
 
+	const initialize = async (canvas, config) => {
+		const { init, formulate } = await solution;
+		const rain = await init(canvas);
+		await formulate(rain, config);
+	};
+
 	if (isRunningSwiftShader() && !config.suppressWarnings) {
 		const notice = document.createElement("notice");
 		notice.innerHTML = `<div class="notice">
@@ -41,11 +47,11 @@ document.body.onload = async () => {
 			config.suppressWarnings = true;
 			urlParams.set("suppressWarnings", true);
 			history.replaceState({}, "", "?" + unescape(urlParams.toString()));
-			(await solution).default(canvas, config);
+			await initialize(canvas, config);
 			canvas.style.display = "unset";
 			document.body.removeChild(notice);
 		});
 	} else {
-		(await solution).default(canvas, config);
+		await initialize(canvas, config);
 	}
 };

@@ -7,7 +7,6 @@ import {
 	makeComputeTarget,
 	makePass,
 } from "./utils.js";
-import palettePassShader from "../../shaders/wgsl/palettePass.wgsl";
 
 // Maps the brightness of the rendered rain and bloom to colors
 // in a linear gradient buffer generated from the passed-in color sequence
@@ -87,7 +86,7 @@ export default ({ config, device, timeBuffer }) => {
 	let output;
 	let screenSize;
 
-	const assets = [loadShader(device, palettePassShader)];
+	const assets = [loadShader(device, "shaders/wgsl/palettePass.wgsl")];
 
 	const loaded = (async () => {
 		const [paletteShader] = await Promise.all(assets);

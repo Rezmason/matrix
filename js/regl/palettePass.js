@@ -1,6 +1,5 @@
-import colorToRGB from "../utils/colorToRGB";
-import { make1DTexture, makePassFBO, makePass } from "./utils.js";
-import palettePassFrag from "../../shaders/glsl/palettePass.frag.glsl";
+import colorToRGB from "../utils/colorToRGB.js";
+import { loadText, make1DTexture, makePassFBO, makePass } from "./utils.js";
 
 // Maps the brightness of the rendered rain and bloom to colors
 // in a 1D gradient palette texture generated from the passed-in color sequence
@@ -55,7 +54,7 @@ const makePalette = (regl, entries) => {
 // won't persist across subsequent frames. This is a safe trick
 // in screen space.
 
-export default ({ regl, config }, inputs) => {
+export default ({ regl, cache, config }, inputs) => {
 	const output = makePassFBO(regl, config.useHalfFloat);
 	const paletteTex = makePalette(regl, config.palette);
 	const {
@@ -67,6 +66,7 @@ export default ({ regl, config }, inputs) => {
 		ditherMagnitude,
 	} = config;
 
+	const palettePassFrag = loadText(cache, "shaders/glsl/palettePass.frag.glsl");
 	const render = regl({
 		frag: regl.prop("frag"),
 
@@ -92,7 +92,7 @@ export default ({ regl, config }, inputs) => {
 		(w, h) => output.resize(w, h),
 		(shouldRender) => {
 			if (shouldRender) {
-				render({ frag: palettePassFrag });
+				render({ frag: palettePassFrag.text() });
 			}
 		},
 	);

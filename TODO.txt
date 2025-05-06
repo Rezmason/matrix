@@ -1,4 +1,9 @@
 TODO:
+  TTF --> MSDF
+  Isolate fun stuff from core
+    Separate configs
+    Separate assets
+
 
 Live config update roadmap
   Modify regl pass

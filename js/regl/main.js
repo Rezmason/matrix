@@ -1,5 +1,5 @@
 import { makeFullScreenQuad, makePipeline } from "./utils.js";
-import createREGL from "regl";
+import fetchLibraries from "../fetchLibraries.js";
 import makeRain from "./rainPass.js";
 import makeBloomPass from "./bloomPass.js";
 import makePalettePass from "./palettePass.js";
@@ -21,7 +21,13 @@ const effects = {
 	mirror: makeMirrorPass,
 };
 
+let createREGL, glMatrix;
+
 export const init = async (canvas) => {
+	const libraries = await fetchLibraries();
+	createREGL = libraries.createREGL;
+	glMatrix = libraries.glMatrix;
+
 	const resize = () => {
 		const devicePixelRatio = window.devicePixelRatio ?? 1;
 		canvas.width = Math.ceil(canvas.clientWidth * devicePixelRatio * rain.resolution);
@@ -74,18 +80,12 @@ export const formulate = async (rain, config) => {
 	}
 
 	const cameraTex = regl.texture(cameraCanvas);
-	const lkg = await getLKG(config.useHoloplay, true);
 
 	// All this takes place in a full screen quad.
 	const fullScreenQuad = makeFullScreenQuad(regl);
 	const effectName = config.effect in effects ? config.effect : "palette";
-	const context = { regl, cache, config, lkg, cameraTex, cameraAspectRatio };
-	const pipeline = makePipeline(context, [
-		makeRain,
-		makeBloomPass,
-		effects[effectName],
-		makeQuiltPass,
-	]);
+	const context = { regl, cache, config, cameraTex, cameraAspectRatio, glMatrix };
+	const pipeline = makePipeline(context, [makeRain, makeBloomPass, effects[effectName]]);
 
 	const screenUniforms = { tex: pipeline[pipeline.length - 1].outputs.primary };
 	const drawToScreen = regl({ uniforms: screenUniforms });
@@ -150,7 +150,7 @@ export const formulate = async (rain, config) => {
 	rain.tick = tick;
 };
 
-export const destroy = ({ regl, resize, doubleClick, cache, tick, canvas }) => {
+export const destroy = ({ regl, cache, resize, doubleClick, tick, canvas }) => {
 	window.removeEventListener("resize", resize);
 	window.removeEventListener("dblclick", doubleClick);
 	cache.clear();

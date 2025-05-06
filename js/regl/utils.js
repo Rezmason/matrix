@@ -29,7 +29,6 @@ const makeDoubleBuffer = (regl, props) => {
 const isPowerOfTwo = (x) => Math.log2(x) % 1 == 0;
 
 const loadImage = (cache, regl, url, mipmap) => {
-
 	const key = `${url}_${mipmap}`;
 	if (cache.has(key)) {
 		return cache.get(key);

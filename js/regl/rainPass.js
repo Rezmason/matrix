@@ -1,11 +1,4 @@
-import { loadImage, makePassFBO, makeDoubleBuffer, makePass } from "./utils.js";
-import { mat4, vec3 } from "gl-matrix";
-import rainPassIntro from "../../shaders/glsl/rainPass.intro.frag.glsl";
-import rainPassRaindrop from "../../shaders/glsl/rainPass.raindrop.frag.glsl";
-import rainPassSymbol from "../../shaders/glsl/rainPass.symbol.frag.glsl";
-import rainPassEffect from "../../shaders/glsl/rainPass.effect.frag.glsl";
-import rainPassVert from "../../shaders/glsl/rainPass.vert.glsl";
-import rainPassFrag from "../../shaders/glsl/rainPass.frag.glsl";
+import { loadImage, loadText, makePassFBO, makeDoubleBuffer, makePass } from "./utils.js";
 
 const extractEntries = (src, keys) =>
 	Object.fromEntries(Array.from(Object.entries(src)).filter(([key]) => keys.includes(key)));
@@ -37,7 +30,8 @@ const blVert = [1, 0];
 const brVert = [1, 1];
 const quadVertices = [tlVert, trVert, brVert, tlVert, brVert, blVert];
 
-export default ({ regl, cache, config, lkg }) => {
+export default ({ regl, cache, config, glMatrix }) => {
+	const { mat4, vec3 } = glMatrix;
 	// The volumetric mode multiplies the number of columns
 	// to reach the desired density, and then overlaps them
 	const volumetric = config.volumetric;
@@ -69,6 +63,7 @@ export default ({ regl, cache, config, lkg }) => {
 	};
 
 	const introDoubleBuffer = makeComputeDoubleBuffer(regl, 1, numColumns);
+	const rainPassIntro = loadText(cache, "shaders/glsl/rainPass.intro.frag.glsl");
 
 	const introUniforms = {
 		...commonUniforms,
@@ -85,6 +80,7 @@ export default ({ regl, cache, config, lkg }) => {
 	});
 
 	const raindropDoubleBuffer = makeComputeDoubleBuffer(regl, numRows, numColumns);
+	const rainPassRaindrop = loadText(cache, "shaders/glsl/rainPass.raindrop.frag.glsl");
 
 	const raindropUniforms = {
 		...commonUniforms,
@@ -108,6 +104,7 @@ export default ({ regl, cache, config, lkg }) => {
 	});
 
 	const symbolDoubleBuffer = makeComputeDoubleBuffer(regl, numRows, numColumns);
+	const rainPassSymbol = loadText(cache, "shaders/glsl/rainPass.symbol.frag.glsl");
 
 	const symbolUniforms = {
 		...commonUniforms,
@@ -125,6 +122,7 @@ export default ({ regl, cache, config, lkg }) => {
 	});
 
 	const effectDoubleBuffer = makeComputeDoubleBuffer(regl, numRows, numColumns);
+	const rainPassEffect = loadText(cache, "shaders/glsl/rainPass.effect.frag.glsl");
 
 	const effectUniforms = {
 		...commonUniforms,
@@ -224,8 +222,6 @@ export default ({ regl, cache, config, lkg }) => {
 			screenSize: regl.prop("screenSize"),
 		},
 
-		viewport: regl.prop("viewport"),
-
 		attributes: {
 			aPosition: quadPositions,
 			aCorner: Array(numQuads).fill(quadVertices),
@@ -237,7 +233,6 @@ export default ({ regl, cache, config, lkg }) => {
 
 	// Camera and transform math for the volumetric mode
 	const screenSize = [1, 1];
-	//const { mat4, vec3 } = glMatrix;
 	const transform = mat4.create();
 	if (volumetric && config.isometric) {
 		mat4.rotateX(transform, transform, (Math.PI * 1) / 8);
@@ -253,7 +248,17 @@ export default ({ regl, cache, config, lkg }) => {
 		{
 			primary: output,
 		},
-		Promise.all([glyphMSDF.loaded, glintMSDF.loaded, baseTexture.loaded, glintTexture.loaded]),
+		Promise.all([
+			glyphMSDF.loaded,
+			glintMSDF.loaded,
+			baseTexture.loaded,
+			glintTexture.loaded,
+			rainPassIntro.loaded,
+			rainPassRaindrop.loaded,
+			rainPassSymbol.loaded,
+			rainPassVert.loaded,
+			rainPassFrag.loaded,
+		]),
 		(w, h) => {
 			output.resize(w, h);
 			const aspectRatio = w / h;
@@ -276,10 +281,10 @@ export default ({ regl, cache, config, lkg }) => {
 			[screenSize[0], screenSize[1]] = aspectRatio > 1 ? [1, aspectRatio] : [1 / aspectRatio, 1];
 		},
 		(shouldRender) => {
-			intro({ frag: rainPassIntro });
-			raindrop({ frag: rainPassRaindrop });
-			symbol({ frag: rainPassSymbol });
-			effect({ frag: rainPassEffect });
+			intro({ frag: rainPassIntro.text() });
+			raindrop({ frag: rainPassRaindrop.text() });
+			symbol({ frag: rainPassSymbol.text() });
+			effect({ frag: rainPassEffect.text() });
 
 			if (shouldRender) {
 				regl.clear({
@@ -292,8 +297,8 @@ export default ({ regl, cache, config, lkg }) => {
 					transform,
 					camera,
 					screenSize,
-					vert: rainPassVert,
-					frag: rainPassFrag,
+					vert: rainPassVert.text(),
+					frag: rainPassFrag.text(),
 					glyphTransform: [1, 0, 0, 1],
 				});
 			}

@@ -1,5 +1,4 @@
 import { loadImage, loadText, makePassFBO, makePass } from "./utils.js";
-import imagePassFrag from "../../shaders/glsl/imagePass.frag.glsl";
 
 // Multiplies the rendered rain and bloom by a loaded in image
 
@@ -10,6 +9,7 @@ export default ({ regl, cache, config }, inputs) => {
 	const output = makePassFBO(regl, config.useHalfFloat);
 	const bgURL = "bgURL" in config ? config.bgURL : defaultBGURL;
 	const background = loadImage(cache, regl, bgURL);
+	const imagePassFrag = loadText(cache, "shaders/glsl/imagePass.frag.glsl");
 	const render = regl({
 		frag: regl.prop("frag"),
 		uniforms: {
@@ -23,11 +23,11 @@ export default ({ regl, cache, config }, inputs) => {
 		{
 			primary: output,
 		},
-		Promise.all([background.loaded]),
+		Promise.all([background.loaded, imagePassFrag.loaded]),
 		(w, h) => output.resize(w, h),
 		(shouldRender) => {
 			if (shouldRender) {
-				render({ frag: imagePassFrag });
+				render({ frag: imagePassFrag.text() });
 			}
 		},
 	);

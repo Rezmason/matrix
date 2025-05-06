@@ -6,8 +6,6 @@ import {
 	makeBindGroup,
 	makePass,
 } from "./utils.js";
-import bloomBlurShader from "../../shaders/wgsl/bloomBlur.wgsl";
-import bloomCombineShader from "../../shaders/wgsl/bloomCombine.wgsl";
 
 // const makePyramid = makeComputeTarget;
 
@@ -56,8 +54,8 @@ export default ({ config, device }) => {
 	}
 
 	const assets = [
-		loadShader(device, bloomBlurShader),
-		loadShader(device, bloomCombineShader),
+		loadShader(device, "shaders/wgsl/bloomBlur.wgsl"),
+		loadShader(device, "shaders/wgsl/bloomCombine.wgsl"),
 	];
 
 	const linearSampler = device.createSampler({

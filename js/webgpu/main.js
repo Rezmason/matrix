@@ -1,5 +1,6 @@
 import { structs } from "../../lib/gpu-buffer.js";
 import { makeUniformBuffer, makePipeline } from "./utils.js";
+import fetchLibraries from "../fetchLibraries.js";
 
 import makeRain from "./rainPass.js";
 import makeBloomPass from "./bloomPass.js";
@@ -23,7 +24,12 @@ const effects = {
 	mirror: makeMirrorPass,
 };
 
+let glMatrix;
+
 export const init = async (canvas) => {
+	const libraries = await fetchLibraries();
+	glMatrix = libraries.glMatrix;
+
 	const resize = () => {
 		const devicePixelRatio = window.devicePixelRatio ?? 1;
 		canvas.width = Math.ceil(canvas.clientWidth * devicePixelRatio * rain.resolution);
@@ -50,7 +56,16 @@ export const init = async (canvas) => {
 	const device = await adapter.requestDevice();
 
 	const cache = new Map();
-	const rain = { canvas, resize, doubleClick, cache, canvasContext, adapter, device, resolution: 1 };
+	const rain = {
+		canvas,
+		resize,
+		doubleClick,
+		cache,
+		canvasContext,
+		adapter,
+		device,
+		resolution: 1,
+	};
 
 	window.addEventListener("dblclick", doubleClick);
 	window.addEventListener("resize", resize);
@@ -103,6 +118,7 @@ export const formulate = async (rain, config) => {
 		cameraTex,
 		cameraAspectRatio,
 		cameraSize,
+		glMatrix,
 	};
 
 	const effectName = config.effect in effects ? config.effect : "palette";

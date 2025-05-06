@@ -1,84 +1,71 @@
-import msdfCoptic from "../../assets/coptic_msdf.png";
-import msdfGothic from "../../assets/gothic_msdf.png";
-import msdfMatrixCode from "../../assets/matrixcode_msdf.png";
-import msdfRes from "../../assets/resurrections_msdf.png";
-import megacity from "../../assets/megacity_msdf.png";
-import msdfResGlint from "../../assets/resurrections_glint_msdf.png";
-import msdfHuberfishA from "../../assets/huberfish_a_msdf.png";
-import msdfHuberfishD from "../../assets/huberfish_d_msdf.png";
-import msdfGtargTenretni from "../../assets/gtarg_tenretniolleh_msdf.png";
-import msdfGtargAlienText from "../../assets/gtarg_alientext_msdf.png";
-import msdfNeoMatrixology from "../../assets/neomatrixology_msdf.png";
-
-import texSand from "../../assets/sand.png";
-import texPixels from "../../assets/pixel_grid.png";
-import texMesh from "../../assets/mesh.png";
-import texMetal from "../../assets/metal.png";
-
 const fonts = {
 	coptic: {
 		// The script the Gnostic codices were written in
-		glyphMSDFURL: msdfCoptic,
+		glyphMSDFURL: "assets/coptic_msdf.png",
 		glyphSequenceLength: 32,
 		glyphTextureGridSize: [8, 8],
 	},
 	gothic: {
 		// The script the Codex Argenteus was written in
-		glyphMSDFURL: msdfGothic,
+		glyphMSDFURL: "assets/gothic_msdf.png",
 		glyphSequenceLength: 27,
 		glyphTextureGridSize: [8, 8],
 	},
 	matrixcode: {
 		// The glyphs seen in the film trilogy
-		glyphMSDFURL: msdfMatrixCode,
+		glyphMSDFURL: "assets/matrixcode_msdf.png",
 		glyphSequenceLength: 57,
 		glyphTextureGridSize: [8, 8],
 	},
+	/*
 	megacity: {
 		// The glyphs seen in the film trilogy
-		glyphMSDFURL: megacity,
+		glyphMSDFURL: "assets/megacity_msdf.png",
 		glyphSequenceLength: 64,
 		glyphTextureGridSize: [8, 8],
 	},
+	*/
 	resurrections: {
 		// The glyphs seen in the film trilogy
-		glyphMSDFURL: msdfRes,
-		glintMSDFURL: msdfResGlint,
+		glyphMSDFURL: "assets/resurrections_msdf.png",
+		glintMSDFURL: "assets/resurrections_glint_msdf.png",
 		glyphSequenceLength: 135,
 		glyphTextureGridSize: [13, 12],
 	},
+	/*
 	huberfishA: {
-		glyphMSDFURL: msdfHuberfishA,
+		glyphMSDFURL: "assets/huberfish_a_msdf.png",
 		glyphSequenceLength: 34,
 		glyphTextureGridSize: [6, 6],
 	},
 	huberfishD: {
-		glyphMSDFURL: msdfHuberfishD,
+		glyphMSDFURL: "assets/huberfish_d_msdf.png",
 		glyphSequenceLength: 34,
 		glyphTextureGridSize: [6, 6],
 	},
 	gtarg_tenretniolleh: {
-		glyphMSDFURL: msdfGtargTenretni,
+		glyphMSDFURL: "assets/gtarg_tenretniolleh_msdf.png",
 		glyphSequenceLength: 36,
 		glyphTextureGridSize: [6, 6],
 	},
 	gtarg_alientext: {
-		glyphMSDFURL: msdfGtargAlienText,
+		glyphMSDFURL: "assets/gtarg_alientext_msdf.png",
 		glyphSequenceLength: 38,
 		glyphTextureGridSize: [8, 5],
 	},
 	neomatrixology: {
-		glyphMSDFURL: msdfNeoMatrixology,
+		glyphMSDFURL: "assets/neomatrixology_msdf.png",
 		glyphSequenceLength: 12,
 		glyphTextureGridSize: [4, 4],
 	},
+	*/
 };
 
 const textureURLs = {
-	sand: texSand,
-	pixels: texPixels,
-	mesh: texMesh,
-	metal: texMetal,
+	// sand: "assets/sand.png",
+	// pixels: "assets/pixel_grid.png",
+	mesh: "assets/mesh.png",
+	metal: "assets/metal.png",
 };
 
 const hsl = (...values) => ({ space: "hsl", values });
@@ -149,6 +136,7 @@ const defaults = {
 
 const versions = {
 	classic: {},
+	/*
 	megacity: {
 		font: "megacity",
 		animationSpeed: 0.5,
@@ -167,6 +155,7 @@ const versions = {
 		cursorColor: hsl(0.167, 1, 0.75),
 		cursorIntensity: 2,
 	},
+	*/
 	operator: {
 		cursorColor: hsl(0.375, 1, 0.66),
 		cursorIntensity: 3,
@@ -279,6 +268,7 @@ const versions = {
 		raindropLength: 0.3,
 		density: 0.75,
 	},
+	/*
 	morpheus: {
 		font: "resurrections",
 		glintTexture: "mesh",
@@ -368,7 +358,7 @@ const versions = {
 			// { color: hsl(0.1, 1.0, 0.9), at: 1.0 },
 		],
 	},
-
+	*/
 	["3d"]: {
 		volumetric: true,
 		fallSpeed: 0.5,

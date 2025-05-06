@@ -6,6 +6,7 @@ import url from "@rollup/plugin-url";
 import { visualizer } from "rollup-plugin-visualizer"; // <- size report
 import terser from "@rollup/plugin-terser";
 import { string } from "rollup-plugin-string";
+import image from "@rollup/plugin-image";
 
 export default {
 	input: "js/Matrix.js",
@@ -14,7 +15,8 @@ export default {
 		peerDepsExternal(), // auto-exclude peerDeps
 		nodeResolve(), // so Rollup can find deps in node_modules
 		string({ include: ["**/*.glsl"] }),
-		url({ include: ["**/*.png"], limit: 0 }),
+		string({ include: ["**/*.wgsl"] }),
+		image({ include: ["**/*.png"], limit: 0 }),
 		babel({
 			exclude: "node_modules/**", // transpile JSX
 			babelHelpers: "bundled",
@@ -34,6 +36,7 @@ export default {
 	],
 	output: [
 		{
+			inlineDynamicImports: true,
 			file: "dist/index.cjs.js",
 			format: "cjs",
 			exports: "named",

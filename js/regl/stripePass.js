@@ -1,6 +1,5 @@
-import colorToRGB from "../utils/colorToRGB";
-import { make1DTexture, makePassFBO, makePass } from "./utils";
-import stripePassFrag from "../../shaders/glsl/stripePass.frag.glsl";
+import colorToRGB from "../utils/colorToRGB.js";
+import { loadText, make1DTexture, makePassFBO, makePass } from "./utils.js";
 
 // Multiplies the rendered rain and bloom by a 1D gradient texture
 // generated from the passed-in color sequence
@@ -28,7 +27,7 @@ const prideStripeColors = [
 	.map((color) => Array(2).fill(color))
 	.flat();
 
-export default ({ regl, config }, inputs) => {
+export default ({ regl, cache, config }, inputs) => {
 	const output = makePassFBO(regl, config.useHalfFloat);
 
 	const {
@@ -52,6 +51,8 @@ export default ({ regl, config }, inputs) => {
 		stripeColors.map((color) => [...colorToRGB(color), 1]),
 	);
 
+	const stripePassFrag = loadText(cache, "shaders/glsl/stripePass.frag.glsl");
+
 	const render = regl({
 		frag: regl.prop("frag"),
 
@@ -73,11 +74,11 @@ export default ({ regl, config }, inputs) => {
 		{
 			primary: output,
 		},
-		null,
+		stripePassFrag.loaded,
 		(w, h) => output.resize(w, h),
 		(shouldRender) => {
 			if (shouldRender) {
-				render({ frag: stripePassFrag });
+				render({ frag: stripePassFrag.text() });
 			}
 		},
 	);

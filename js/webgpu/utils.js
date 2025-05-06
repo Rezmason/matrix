@@ -1,5 +1,4 @@
 const loadTexture = async (device, cache, url) => {
-
 	const key = url;
 	if (cache.has(key)) {
 		return cache.get(key);
@@ -63,9 +62,9 @@ const makeComputeTarget = (device, size, mipLevelCount = 1) =>
 			GPUTextureUsage.STORAGE_BINDING,
 	});
 
-const loadShader = async (device, code /*text*/) => {
-	// const response = await fetch(url);
-	// const code = await response.text();
+const loadShader = async (device, url) => {
+	const response = await fetch(url);
+	const code = await response.text();
 	return {
 		code,
 		module: device.createShaderModule({ code }),
