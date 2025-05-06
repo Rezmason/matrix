@@ -28,10 +28,16 @@ const makeDoubleBuffer = (regl, props) => {
 
 const isPowerOfTwo = (x) => Math.log2(x) % 1 == 0;
 
-const loadImage = (regl, url, mipmap) => {
+const loadImage = (cache, regl, url, mipmap) => {
+
+	const key = `${url}_${mipmap}`;
+	if (cache.has(key)) {
+		return cache.get(key);
+	}
+
 	let texture = regl.texture([[0]]);
 	let loaded = false;
-	return {
+	const resource = {
 		texture: () => {
 			if (!loaded && url != null) {
 				console.warn(`texture still loading: ${url}`);
@@ -72,12 +78,18 @@ const loadImage = (regl, url, mipmap) => {
 			}
 		})(),
 	};
+	cache.set(key, resource);
+	return resource;
 };
 
-const loadText = (url) => {
+const loadText = (cache, url) => {
+	const key = url;
+	if (cache.has(key)) {
+		return cache.get(key);
+	}
 	let text = "";
 	let loaded = false;
-	return {
+	const resource = {
 		text: () => {
 			if (!loaded) {
 				console.warn(`text still loading: ${url}`);
@@ -91,6 +103,8 @@ const loadText = (url) => {
 			}
 		})(),
 	};
+	cache.set(key, resource);
+	return resource;
 };
 
 const makeFullScreenQuad = (regl, uniforms = {}, context = {}) =>

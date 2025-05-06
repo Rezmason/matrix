@@ -23,7 +23,7 @@ const versions = [
 ];
 const App = () => {
 	const [version, setVersion] = React.useState(versions[0]);
-	// const [number, setNumber] = React.useState(0);
+	const [numColumns, setNumColumns] = React.useState(10);
 	const onButtonClick = () => {
 		setVersion((s) => {
 			const newVersion = versions[idx];
@@ -31,17 +31,19 @@ const App = () => {
 			console.log(newVersion);
 			return newVersion;
 		});
+		setNumColumns(() => {
+			const newColumns = 10 + Math.floor(Math.random() * 50);
+			console.log(newColumns);
+			return newColumns;
+		});
 	};
-	// const newNum = () => setNumber((n) => n + 1);
-	console.log("version", version);
-	// console.log("num", number);
 
 	return (
 		<div>
 			<h1>Rain</h1>
-			<button onClick={onButtonClick}>change version</button>
+			<button onClick={onButtonClick}>Change</button>
 			{/* <button onClick={newNum}>change number</button> */}
-			<Matrix version={version} density={7.0} />
+			<Matrix style={{width: "80vw", height: "45vh"}} version={version} numColumns={numColumns} density={2.0} />
 		</div>
 	);
 };

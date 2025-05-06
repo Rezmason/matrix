@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, memo } from "react";
-import { createRain, destroyRain } from "./regl/main";
+import React, { useEffect, useState, useRef, memo } from "react";
+import { init as initRain, formulate as refreshRain, destroy as destroyRain } from "./regl/main";
 import makeConfig from "./utils/config";
 
 /**
@@ -110,29 +110,33 @@ export const Matrix = memo((props) => {
 	const { style, className, ...rest } = props;
 	const elProps = { style, className };
 	const matrix = useRef(null);
-	const rainRef = useRef(null);
-	const canvasRef = useRef(null);
+	const [rain, setRain] = useState(null);
 
 	useEffect(() => {
 		const canvas = document.createElement("canvas");
+		matrix.current.appendChild(canvas);
 		canvas.style.width = "100%";
 		canvas.style.height = "100%";
-		canvasRef.current = canvas;
+		const init = async () => {
+			setRain(await initRain(canvas));
+		}
+		init();
+
+		return () => {
+			destroyRain(rain);
+			setRain(null);
+		};
 	}, []);
 
 	useEffect(() => {
-		matrix.current.appendChild(canvasRef.current);
-		const gl = canvasRef.current.getContext("webgl");
-		createRain(canvasRef.current, makeConfig({ ...rest }), gl).then((handles) => {
-			rainRef.current = handles;
-		});
-
-		return () => {
-			if (rainRef.current) {
-				destroyRain(rainRef.current);
-			}
+		if (rain == null) {
+			return;
+		}
+		const refresh = async () => {
+			await refreshRain(rain, makeConfig({ ...rest }));
 		};
-	}, [props]);
+		refresh();
+	}, [props, rain]);
 
 	return <div ref={matrix} {...elProps}></div>;
 });

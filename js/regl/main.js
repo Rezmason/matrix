@@ -23,45 +23,27 @@ const effects = {
 	mirror: makeMirrorPass,
 };
 
-const dimensions = { width: 1, height: 1 };
-
-// const loadJS = (src) =>
-//   new Promise((resolve, reject) => {
-//     const tag = document.createElement("script");
-//     tag.onload = resolve;
-//     tag.onerror = reject;
-//     tag.src = src;
-//     document.body.appendChild(tag);
-//   });
-
-// Promise.all([loadJS("lib/regl.min.js"), loadJS("lib/gl-matrix.js")]);
-
-export const createRain = async (canvas, config, gl) => {
+export const init = async (canvas) => {
 	const resize = () => {
-		const dpr = window.devicePixelRatio || 1;
-		canvas.width = Math.ceil(window.innerWidth * dpr * config.resolution);
-		canvas.height = Math.ceil(window.innerHeight * dpr * config.resolution);
+		const devicePixelRatio = window.devicePixelRatio ?? 1;
+		canvas.width = Math.ceil(canvas.clientWidth * devicePixelRatio * rain.resolution);
+		canvas.height = Math.ceil(canvas.clientHeight * devicePixelRatio * rain.resolution);
 	};
 
-	window.onresize = resize;
-	if (document.fullscreenEnabled || document.webkitFullscreenEnabled) {
-		window.ondblclick = () => {
-			if (document.fullscreenElement == null) {
-				if (canvas.webkitRequestFullscreen != null) {
-					canvas.webkitRequestFullscreen();
-				} else {
-					canvas.requestFullscreen();
-				}
-			} else {
-				document.exitFullscreen();
-			}
-		};
-	}
-	resize();
-
-	if (config.useCamera) {
-		await setupCamera();
-	}
+	const doubleClick = () => {
+		if (!document.fullscreenEnabled && !document.webkitFullscreenEnabled) {
+			return;
+		}
+		if (document.fullscreenElement != null) {
+			document.exitFullscreen();
+			return;
+		}
+		if (canvas.webkitRequestFullscreen != null) {
+			canvas.webkitRequestFullscreen();
+		} else {
+			canvas.requestFullscreen();
+		}
+	};
 
 	const extensions = ["OES_texture_half_float", "OES_texture_half_float_linear"];
 	// These extensions are also needed, but Safari misreports that they are missing
@@ -71,22 +53,35 @@ export const createRain = async (canvas, config, gl) => {
 		"OES_standard_derivatives",
 	];
 
-	switch (config.testFix) {
-		case "fwidth_10_1_2022_A":
-			extensions.push("OES_standard_derivatives");
-			break;
-		case "fwidth_10_1_2022_B":
-			optionalExtensions.forEach((ext) => extensions.push(ext));
-			extensions.length = 0;
-			break;
-	}
+	const regl = createREGL({ canvas, pixelRatio: 1, extensions, optionalExtensions });
+	const cache = new Map();
+	const rain = { canvas, resize, doubleClick, cache, regl, resolution: 1 };
 
-	const regl = createREGL({
-		gl,
-		pixelRatio: 1,
-		extensions,
-		optionalExtensions,
-	});
+	window.addEventListener("dblclick", doubleClick);
+	window.addEventListener("resize", resize);
+	resize();
+
+	return rain;
+};
+
+export const destroy = (rain) => {
+	rain.resizeObserver.disconnect();
+	window.removeEventListener("resize", resize);
+	window.removeEventListener("dblclick", doubleClick);
+	cache.clear();
+};
+
+export const formulate = async (rain, config) => {
+
+	const { resize, canvas, cache, regl } = rain;
+	rain.resolution = config.resolution;
+	resize();
+
+	const dimensions = { width: 1, height: 1 };
+
+	if (config.useCamera) {
+		await setupCamera();
+	}
 
 	const cameraTex = regl.texture(cameraCanvas);
 	const lkg = await getLKG(config.useHoloplay, true);
@@ -94,7 +89,7 @@ export const createRain = async (canvas, config, gl) => {
 	// All this takes place in a full screen quad.
 	const fullScreenQuad = makeFullScreenQuad(regl);
 	const effectName = config.effect in effects ? config.effect : "palette";
-	const context = { regl, config, lkg, cameraTex, cameraAspectRatio };
+	const context = { regl, cache, config, lkg, cameraTex, cameraAspectRatio };
 	const pipeline = makePipeline(context, [
 		makeRain,
 		makeBloomPass,
@@ -111,6 +106,14 @@ export const createRain = async (canvas, config, gl) => {
 
 	const targetFrameTimeMilliseconds = 1000 / config.fps;
 	let last = NaN;
+
+	resetREGLTime: {
+		const reset = regl.frame(o => {
+			o.time = 0;
+			o.tick = 0;
+			reset.cancel();
+		})
+	}
 
 	const tick = regl.frame(({ viewportWidth, viewportHeight }) => {
 		if (config.once) {
@@ -150,10 +153,15 @@ export const createRain = async (canvas, config, gl) => {
 		});
 	});
 
-	return { regl, tick, canvas };
+	if (rain.tick != null) {
+		rain.tick.cancel();
+	}
+
+	rain.tick = tick;
 };
 
-export const destroyRain = ({ regl, tick, canvas }) => {
+export const destroyRain = ({ regl, cache, tick, canvas }) => {
+	cache.clear();
 	tick.cancel(); // stop RAF
 	regl.destroy(); // release all GPU resources & event listeners
 	//canvas.remove();   // drop from the DOM

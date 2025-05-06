@@ -37,7 +37,7 @@ const blVert = [1, 0];
 const brVert = [1, 1];
 const quadVertices = [tlVert, trVert, brVert, tlVert, brVert, blVert];
 
-export default ({ regl, config, lkg }) => {
+export default ({ regl, cache, config, lkg }) => {
 	// The volumetric mode multiplies the number of columns
 	// to reach the desired density, and then overlaps them
 	const volumetric = config.volumetric;
@@ -157,10 +157,10 @@ export default ({ regl, config, lkg }) => {
 		);
 
 	// We render the code into an FBO using MSDFs: https://github.com/Chlumsky/msdfgen
-	const glyphMSDF = loadImage(regl, config.glyphMSDFURL);
-	const glintMSDF = loadImage(regl, config.glintMSDFURL);
-	const baseTexture = loadImage(regl, config.baseTextureURL, true);
-	const glintTexture = loadImage(regl, config.glintTextureURL, true);
+	const glyphMSDF = loadImage(cache, regl, config.glyphMSDFURL);
+	const glintMSDF = loadImage(cache, regl, config.glintMSDFURL);
+	const baseTexture = loadImage(cache, regl, config.baseTextureURL, true);
+	const glintTexture = loadImage(cache, regl, config.glintTextureURL, true);
 	const output = makePassFBO(regl, config.useHalfFloat);
 	const renderUniforms = {
 		...commonUniforms,

@@ -6,10 +6,10 @@ import imagePassFrag from "../../shaders/glsl/imagePass.frag.glsl";
 const defaultBGURL =
 	"https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Flammarion_Colored.jpg/917px-Flammarion_Colored.jpg";
 
-export default ({ regl, config }, inputs) => {
+export default ({ regl, cache, config }, inputs) => {
 	const output = makePassFBO(regl, config.useHalfFloat);
 	const bgURL = "bgURL" in config ? config.bgURL : defaultBGURL;
-	const background = loadImage(regl, bgURL);
+	const background = loadImage(cache, regl, bgURL);
 	const render = regl({
 		frag: regl.prop("frag"),
 		uniforms: {
