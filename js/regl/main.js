@@ -5,10 +5,8 @@ import makeBloomPass from "./bloomPass.js";
 import makePalettePass from "./palettePass.js";
 import makeStripePass from "./stripePass.js";
 import makeImagePass from "./imagePass.js";
-import makeQuiltPass from "./quiltPass.js";
 import makeMirrorPass from "./mirrorPass.js";
 import { setupCamera, cameraCanvas, cameraAspectRatio } from "../utils/camera.js";
-import getLKG from "./lkgHelper.js";
 
 const effects = {
 	none: null,
