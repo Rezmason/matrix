@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, memo } from "react";
-import { init as initRain, formulate as refreshRain, destroy as destroyRain } from "./regl/main";
+// import { init as initRain, formulate as refreshRain, destroy as destroyRain } from "./regl/main";
+import { init as initRain, formulate as refreshRain, destroy as destroyRain } from "./webgpu/main";
 import makeConfig from "./utils/config";
 
 /**
@@ -119,7 +120,7 @@ export const Matrix = memo((props) => {
 		canvas.style.height = "100%";
 		const init = async () => {
 			setRain(await initRain(canvas));
-		}
+		};
 		init();
 
 		return () => {

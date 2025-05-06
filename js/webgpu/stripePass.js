@@ -1,4 +1,4 @@
-import colorToRGB from "../colorToRGB.js";
+import colorToRGB from "../utils/colorToRGB.js";
 import { structs } from "../../lib/gpu-buffer.js";
 import {
 	loadShader,
@@ -8,6 +8,7 @@ import {
 	makeComputeTarget,
 	makePass,
 } from "./utils.js";
+import stripePassShader from "../../shaders/wgsl/stripePass.wgsl";
 
 // Multiplies the rendered rain and bloom by a 1D gradient texture
 // generated from the passed-in color sequence
@@ -68,7 +69,7 @@ export default ({ config, device, timeBuffer }) => {
 	let output;
 	let screenSize;
 
-	const assets = [loadShader(device, "shaders/wgsl/stripePass.wgsl")];
+	const assets = [loadShader(device, stripePassShader)];
 
 	const loaded = (async () => {
 		const [stripeShader] = await Promise.all(assets);

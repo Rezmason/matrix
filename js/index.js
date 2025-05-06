@@ -43,7 +43,12 @@ const App = () => {
 			<h1>Rain</h1>
 			<button onClick={onButtonClick}>Change</button>
 			{/* <button onClick={newNum}>change number</button> */}
-			<Matrix style={{width: "80vw", height: "45vh"}} version={version} numColumns={numColumns} density={2.0} />
+			<Matrix
+				style={{ width: "80vw", height: "45vh" }}
+				version={version}
+				numColumns={numColumns}
+				density={2.0}
+			/>
 		</div>
 	);
 };

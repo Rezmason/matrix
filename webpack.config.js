@@ -21,7 +21,7 @@ module.exports = {
 				type: "asset/resource",
 			},
 			{
-				test: /\.(glsl|frag|vert)$/i,
+				test: /\.(glsl|frag|vert|wgsl)$/i,
 				exclude: /node_modules/,
 				use: ["raw-loader"],
 			},

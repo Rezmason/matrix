@@ -1,6 +1,14 @@
-const loadTexture = async (device, url) => {
+const loadTexture = async (device, cache, url) => {
+
+	const key = url;
+	if (cache.has(key)) {
+		return cache.get(key);
+	}
+
+	let texture;
+
 	if (url == null) {
-		return device.createTexture({
+		texture = device.createTexture({
 			size: [1, 1, 1],
 			format: "rgba8unorm",
 			usage:
@@ -8,23 +16,25 @@ const loadTexture = async (device, url) => {
 				GPUTextureUsage.COPY_DST |
 				GPUTextureUsage.RENDER_ATTACHMENT,
 		});
+	} else {
+		const response = await fetch(url);
+		const data = await response.blob();
+		const source = await createImageBitmap(data);
+		const size = [source.width, source.height, 1];
+
+		texture = device.createTexture({
+			size,
+			format: "rgba8unorm",
+			usage:
+				GPUTextureUsage.TEXTURE_BINDING |
+				GPUTextureUsage.COPY_DST |
+				GPUTextureUsage.RENDER_ATTACHMENT,
+		});
+
+		device.queue.copyExternalImageToTexture({ source, flipY: true }, { texture }, size);
 	}
 
-	const response = await fetch(url);
-	const data = await response.blob();
-	const source = await createImageBitmap(data);
-	const size = [source.width, source.height, 1];
-
-	const texture = device.createTexture({
-		size,
-		format: "rgba8unorm",
-		usage:
-			GPUTextureUsage.TEXTURE_BINDING |
-			GPUTextureUsage.COPY_DST |
-			GPUTextureUsage.RENDER_ATTACHMENT,
-	});
-
-	device.queue.copyExternalImageToTexture({ source, flipY: true }, { texture }, size);
+	cache.set(key, texture);
 
 	return texture;
 };
@@ -53,9 +63,9 @@ const makeComputeTarget = (device, size, mipLevelCount = 1) =>
 			GPUTextureUsage.STORAGE_BINDING,
 	});
 
-const loadShader = async (device, url) => {
-	const response = await fetch(url);
-	const code = await response.text();
+const loadShader = async (device, code /*text*/) => {
+	// const response = await fetch(url);
+	// const code = await response.text();
 	return {
 		code,
 		module: device.createShaderModule({ code }),

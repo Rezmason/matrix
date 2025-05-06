@@ -64,15 +64,7 @@ export const init = async (canvas) => {
 	return rain;
 };
 
-export const destroy = (rain) => {
-	rain.resizeObserver.disconnect();
-	window.removeEventListener("resize", resize);
-	window.removeEventListener("dblclick", doubleClick);
-	cache.clear();
-};
-
 export const formulate = async (rain, config) => {
-
 	const { resize, canvas, cache, regl } = rain;
 	rain.resolution = config.resolution;
 	resize();
@@ -108,11 +100,11 @@ export const formulate = async (rain, config) => {
 	let last = NaN;
 
 	resetREGLTime: {
-		const reset = regl.frame(o => {
+		const reset = regl.frame((o) => {
 			o.time = 0;
 			o.tick = 0;
 			reset.cancel();
-		})
+		});
 	}
 
 	const tick = regl.frame(({ viewportWidth, viewportHeight }) => {
@@ -160,9 +152,10 @@ export const formulate = async (rain, config) => {
 	rain.tick = tick;
 };
 
-export const destroyRain = ({ regl, cache, tick, canvas }) => {
+export const destroy = ({ regl, resize, doubleClick, cache, tick, canvas }) => {
+	window.removeEventListener("resize", resize);
+	window.removeEventListener("dblclick", doubleClick);
 	cache.clear();
 	tick.cancel(); // stop RAF
 	regl.destroy(); // release all GPU resources & event listeners
-	//canvas.remove();   // drop from the DOM
 };

@@ -8,16 +8,7 @@ import makeStripePass from "./stripePass.js";
 import makeImagePass from "./imagePass.js";
 import makeMirrorPass from "./mirrorPass.js";
 import makeEndPass from "./endPass.js";
-import { setupCamera, cameraCanvas, cameraAspectRatio, cameraSize } from "../camera.js";
-
-const loadJS = (src) =>
-	new Promise((resolve, reject) => {
-		const tag = document.createElement("script");
-		tag.onload = resolve;
-		tag.onerror = reject;
-		tag.src = src;
-		document.body.appendChild(tag);
-	});
+import { setupCamera, cameraCanvas, cameraAspectRatio, cameraSize } from "../utils/camera.js";
 
 const effects = {
 	none: null,
@@ -32,31 +23,52 @@ const effects = {
 	mirror: makeMirrorPass,
 };
 
-export default async (canvas, config) => {
-	await loadJS("lib/gl-matrix.js");
+export const init = async (canvas) => {
+	const resize = () => {
+		const devicePixelRatio = window.devicePixelRatio ?? 1;
+		canvas.width = Math.ceil(canvas.clientWidth * devicePixelRatio * rain.resolution);
+		canvas.height = Math.ceil(canvas.clientHeight * devicePixelRatio * rain.resolution);
+	};
 
-	if (document.fullscreenEnabled || document.webkitFullscreenEnabled) {
-		window.ondblclick = () => {
-			if (document.fullscreenElement == null) {
-				if (canvas.webkitRequestFullscreen != null) {
-					canvas.webkitRequestFullscreen();
-				} else {
-					canvas.requestFullscreen();
-				}
-			} else {
-				document.exitFullscreen();
-			}
-		};
-	}
+	const doubleClick = () => {
+		if (!document.fullscreenEnabled && !document.webkitFullscreenEnabled) {
+			return;
+		}
+		if (document.fullscreenElement != null) {
+			document.exitFullscreen();
+			return;
+		}
+		if (canvas.webkitRequestFullscreen != null) {
+			canvas.webkitRequestFullscreen();
+		} else {
+			canvas.requestFullscreen();
+		}
+	};
+
+	const canvasContext = canvas.getContext("webgpu");
+	const adapter = await navigator.gpu.requestAdapter();
+	const device = await adapter.requestDevice();
+
+	const cache = new Map();
+	const rain = { canvas, resize, doubleClick, cache, canvasContext, adapter, device, resolution: 1 };
+
+	window.addEventListener("dblclick", doubleClick);
+	window.addEventListener("resize", resize);
+	resize();
+
+	return rain;
+};
+
+export const formulate = async (rain, config) => {
+	const { resize, canvas, cache, canvasContext, adapter, device } = rain;
+	rain.resolution = config.resolution;
+	resize();
 
 	if (config.useCamera) {
 		await setupCamera();
 	}
 
 	const canvasFormat = navigator.gpu.getPreferredCanvasFormat();
-	const adapter = await navigator.gpu.requestAdapter();
-	const device = await adapter.requestDevice();
-	const canvasContext = canvas.getContext("webgpu");
 
 	// console.table(device.limits);
 
@@ -82,6 +94,7 @@ export default async (canvas, config) => {
 
 	const context = {
 		config,
+		cache,
 		adapter,
 		device,
 		canvasContext,
@@ -127,7 +140,7 @@ export default async (canvas, config) => {
 		const canvasWidth = Math.ceil(canvas.clientWidth * devicePixelRatio * config.resolution);
 		const canvasHeight = Math.ceil(canvas.clientHeight * devicePixelRatio * config.resolution);
 		const canvasSize = [canvasWidth, canvasHeight];
-		if (canvas.width !== canvasWidth || canvas.height !== canvasHeight) {
+		if (outputs == null || canvas.width !== canvasWidth || canvas.height !== canvasHeight) {
 			canvas.width = canvasWidth;
 			canvas.height = canvasHeight;
 			outputs = pipeline.build(canvasSize);
@@ -159,5 +172,19 @@ export default async (canvas, config) => {
 		}
 	};
 
-	requestAnimationFrame(renderLoop);
+	if (rain.renderLoop != null) {
+		cancelAnimationFrame(rain.renderLoop);
+	}
+
+	renderLoop(performance.now());
+
+	rain.renderLoop = renderLoop;
+};
+
+export const destroy = ({ device, resize, doubleClick, cache, canvas }) => {
+	window.removeEventListener("resize", resize);
+	window.removeEventListener("dblclick", doubleClick);
+	cache.clear();
+	tick.cancel(); // stop RAF
+	// TODO: destroy WebGPU resources
 };

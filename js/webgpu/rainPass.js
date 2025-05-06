@@ -7,6 +7,8 @@ import {
 	makeBindGroup,
 	makePass,
 } from "./utils.js";
+import { mat2, mat4, vec2, vec3 } from "gl-matrix";
+import rainPassShader from "../../shaders/wgsl/rainPass.wgsl";
 
 const rippleTypes = {
 	box: 0,
@@ -29,18 +31,17 @@ const makeConfigBuffer = (device, configUniforms, config, density, gridSize, gly
 	};
 	// console.table(configData);
 
+	console.log(configUniforms, configData);
 	return makeUniformBuffer(device, configUniforms, configData);
 };
 
-export default ({ config, device, timeBuffer }) => {
-	const { mat2, mat4, vec2, vec3 } = glMatrix;
-
+export default ({ config, cache, device, timeBuffer }) => {
 	const assets = [
-		loadTexture(device, config.glyphMSDFURL),
-		loadTexture(device, config.glintMSDFURL),
-		loadTexture(device, config.baseTextureURL, false, true),
-		loadTexture(device, config.glintTextureURL, false, true),
-		loadShader(device, "shaders/wgsl/rainPass.wgsl"),
+		loadTexture(device, cache, config.glyphMSDFURL),
+		loadTexture(device, cache, config.glintMSDFURL),
+		loadTexture(device, cache, config.baseTextureURL, false, true),
+		loadTexture(device, cache, config.glintTextureURL, false, true),
+		loadShader(device, rainPassShader),
 	];
 
 	// The volumetric mode multiplies the number of columns

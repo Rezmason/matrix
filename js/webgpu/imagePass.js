@@ -7,15 +7,16 @@ import {
 	makeBindGroup,
 	makePass,
 } from "./utils.js";
+import imagePassShader from "../../shaders/wgsl/imagePass.wgsl";
 
 // Multiplies the rendered rain and bloom by a loaded in image
 
 const defaultBGURL =
 	"https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Flammarion_Colored.jpg/917px-Flammarion_Colored.jpg";
 
-export default ({ config, device }) => {
+export default ({ config, cache, device }) => {
 	const bgURL = "bgURL" in config ? config.bgURL : defaultBGURL;
-	const assets = [loadTexture(device, bgURL), loadShader(device, "shaders/wgsl/imagePass.wgsl")];
+	const assets = [loadTexture(device, cache, bgURL), loadShader(device, imagePassShader)];
 
 	const linearSampler = device.createSampler({
 		magFilter: "linear",

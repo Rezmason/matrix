@@ -1,5 +1,7 @@
 import { loadShader, makeBindGroup, makePass } from "./utils.js";
 
+import endPassShader from "../../shaders/wgsl/endPass.wgsl";
+
 // Eventually, WebGPU will allow the output of the final pass in the pipeline to be copied to the canvas texture.
 // Until then, this render pass does the job.
 
@@ -21,7 +23,7 @@ export default ({ device, canvasFormat, canvasContext }) => {
 	let renderPipeline;
 	let renderBindGroup;
 
-	const assets = [loadShader(device, "shaders/wgsl/endPass.wgsl")];
+	const assets = [loadShader(device, endPassShader)];
 
 	const loaded = (async () => {
 		const [imageShader] = await Promise.all(assets);

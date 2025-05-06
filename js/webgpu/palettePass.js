@@ -1,4 +1,4 @@
-import colorToRGB from "../colorToRGB.js";
+import colorToRGB from "../utils/colorToRGB.js";
 import { structs } from "../../lib/gpu-buffer.js";
 import {
 	loadShader,
@@ -7,6 +7,7 @@ import {
 	makeComputeTarget,
 	makePass,
 } from "./utils.js";
+import palettePassShader from "../../shaders/wgsl/palettePass.wgsl";
 
 // Maps the brightness of the rendered rain and bloom to colors
 // in a linear gradient buffer generated from the passed-in color sequence
@@ -86,7 +87,7 @@ export default ({ config, device, timeBuffer }) => {
 	let output;
 	let screenSize;
 
-	const assets = [loadShader(device, "shaders/wgsl/palettePass.wgsl")];
+	const assets = [loadShader(device, palettePassShader)];
 
 	const loaded = (async () => {
 		const [paletteShader] = await Promise.all(assets);
