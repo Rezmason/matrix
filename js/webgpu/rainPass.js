@@ -29,7 +29,6 @@ const makeConfigBuffer = (device, configUniforms, config, density, gridSize, gly
 	};
 	// console.table(configData);
 
-	console.log(configUniforms, configData);
 	return makeUniformBuffer(device, configUniforms, configData);
 };
 

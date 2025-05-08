@@ -9,7 +9,7 @@ import { string } from "rollup-plugin-string";
 import image from "@rollup/plugin-image";
 
 export default {
-	input: "js/Matrix.js",
+	input: "js/bundle-contents.js",
 	external: ["react", "react-dom"], // keep them out of your bundle
 	plugins: [
 		peerDepsExternal(), // auto-exclude peerDeps

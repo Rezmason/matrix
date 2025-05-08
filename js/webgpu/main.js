@@ -75,6 +75,9 @@ export const init = async (canvas) => {
 };
 
 export const formulate = async (rain, config) => {
+	if (rain.destroyed) {
+		throw new Error("Cannot formulate a destroyed rain instance.");
+	}
 	const { resize, canvas, cache, canvasContext, adapter, device } = rain;
 	rain.resolution = config.resolution;
 	resize();
@@ -197,10 +200,18 @@ export const formulate = async (rain, config) => {
 	rain.renderLoop = renderLoop;
 };
 
-export const destroy = ({ device, resize, doubleClick, cache, canvas }) => {
+export const destroy = (rain) => {
+	if (rain.destroyed) {
+		return;
+	}
+	const { device, resize, doubleClick, cache, canvas, renderLoop } = rain;
 	window.removeEventListener("resize", resize);
 	window.removeEventListener("dblclick", doubleClick);
 	cache.clear();
-	tick.cancel(); // stop RAF
+	cancelAnimationFrame(renderLoop); // stop RAF
 	// TODO: destroy WebGPU resources
+	device.destroy();
+	rain.destroyed = true;
 };
+
+export const type = "webgpu";

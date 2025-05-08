@@ -1,12 +1,5 @@
-import inclusions from "./inclusions";
-
 import React, { useEffect, useState, useRef, memo } from "react";
-import * as reglRenderer from "./regl/main";
-import * as webgpuRenderer from "./webgpu/main";
 import makeConfig from "./utils/config";
-
-globalThis.inclusions = inclusions;
-console.log(webgpuRenderer.init, webgpuRenderer.formulate, webgpuRenderer.destroy);
 
 /**
  * @typedef {object} Colour
@@ -115,33 +108,64 @@ export const Matrix = memo((props) => {
 	const { style, className, ...rest } = props;
 	const elProps = { style, className };
 	const matrix = useRef(null);
-	const [rain, setRain] = useState(null);
+	const [rCanvas, setCanvas] = useState(null);
+	const [rRenderer, setRenderer] = useState(null);
+	const [rRain, setRain] = useState(null);
+
+	const supportsWebGPU = () => {
+		return (
+			window.GPUQueue != null &&
+			navigator.gpu != null &&
+			navigator.gpu.getPreferredCanvasFormat != null
+		);
+	};
 
 	useEffect(() => {
+		const useWebGPU = supportsWebGPU() && ["webgpu"].includes(rest.renderer?.toLowerCase());
+		const isWebGPU = rRenderer?.type === "webgpu";
+
+		if (rRenderer != null && useWebGPU === isWebGPU) {
+			return;
+		}
+
+		if (rCanvas != null) {
+			matrix.current.removeChild(rCanvas);
+			setCanvas(null);
+		}
+
+		if (rRain != null) {
+			rRenderer?.destroy(rRain);
+			setRain(null);
+		}
+
+		if (rRenderer != null) {
+			setRenderer(null);
+		}
+
 		const canvas = document.createElement("canvas");
-		matrix.current.appendChild(canvas);
 		canvas.style.width = "100%";
 		canvas.style.height = "100%";
-		const init = async () => {
-			setRain(await reglRenderer.init(canvas));
-		};
-		init();
+		matrix.current.appendChild(canvas);
+		setCanvas(canvas);
 
-		return () => {
-			reglRenderer.destroy(rain);
-			setRain(null);
+		const loadRain = async () => {
+			const renderer = await import(`./${useWebGPU ? "webgpu" : "regl"}/main.js`);
+			setRenderer(renderer);
+			const rain = await renderer.init(canvas);
+			setRain(rain);
 		};
-	}, []);
+		loadRain();
+	}, [props.renderer]);
 
 	useEffect(() => {
-		if (rain == null) {
+		if (rRain == null || rRain.destroyed) {
 			return;
 		}
 		const refresh = async () => {
-			await reglRenderer.formulate(rain, makeConfig({ ...rest }));
+			await rRenderer.formulate(rRain, makeConfig({ ...rest }));
 		};
 		refresh();
-	}, [props, rain]);
+	}, [props, rRain]);
 
 	return <div ref={matrix} {...elProps}></div>;
 });

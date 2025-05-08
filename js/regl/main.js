@@ -69,6 +69,9 @@ export const init = async (canvas) => {
 };
 
 export const formulate = async (rain, config) => {
+	if (rain.destroyed) {
+		throw new Error("Cannot formulate a destroyed rain instance.");
+	}
 	const { resize, canvas, cache, regl } = rain;
 	rain.resolution = config.resolution;
 	resize();
@@ -150,10 +153,17 @@ export const formulate = async (rain, config) => {
 	rain.tick = tick;
 };
 
-export const destroy = ({ regl, cache, resize, doubleClick, tick, canvas }) => {
+export const destroy = (rain) => {
+	if (rain.destroyed) {
+		return;
+	}
+	const { regl, cache, resize, doubleClick, tick, canvas } = rain;
 	window.removeEventListener("resize", resize);
 	window.removeEventListener("dblclick", doubleClick);
 	cache.clear();
 	tick.cancel(); // stop RAF
 	regl.destroy(); // release all GPU resources & event listeners
+	rain.destroyed = true;
 };
+
+export const type = "regl";
