@@ -1,7 +1,5 @@
 import makeConfig from "./config.js";
 
-const canvas = document.createElement("canvas");
-document.body.appendChild(canvas);
 document.addEventListener("touchmove", (e) => e.preventDefault(), {
 	passive: false,
 });
@@ -21,9 +19,13 @@ document.body.onload = async () => {
 	const urlParams = new URLSearchParams(window.location.search);
 	const config = makeConfig(Object.fromEntries(urlParams.entries()));
 	const useWebGPU = (await supportsWebGPU()) && ["webgpu"].includes(config.renderer?.toLowerCase());
-	const solution = import(`./${useWebGPU ? "webgpu" : "regl"}/main.js`);
+	const useSVG = ["svg"].includes(config.renderer?.toLowerCase());
+	const solution = import(`./${useSVG ? "svg" : useWebGPU ? "webgpu" : "regl"}/main.js`);
 
-	if (isRunningSwiftShader() && !config.suppressWarnings) {
+	const element = document.createElement(useSVG ? "artboard" : "canvas");
+	document.body.appendChild(element);
+
+	if (!useSVG && isRunningSwiftShader() && !config.suppressWarnings) {
 		const notice = document.createElement("notice");
 		notice.innerHTML = `<div class="notice">
 		<p>Wake up, Neo... you've got hardware acceleration disabled.</p>
@@ -31,17 +33,17 @@ document.body.onload = async () => {
 		<button class="blue pill">Plug me in</button>
 		<a class="red pill" target="_blank" href="https://www.google.com/search?q=chrome+enable+hardware+acceleration">Free me</a>
 		`;
-		canvas.style.display = "none";
+		element.style.display = "none";
 		document.body.appendChild(notice);
 		document.querySelector(".blue.pill").addEventListener("click", async () => {
 			config.suppressWarnings = true;
 			urlParams.set("suppressWarnings", true);
 			history.replaceState({}, "", "?" + unescape(urlParams.toString()));
-			(await solution).default(canvas, config);
-			canvas.style.display = "unset";
+			(await solution).default(element, config);
+			element.style.display = "unset";
 			document.body.removeChild(notice);
 		});
 	} else {
-		(await solution).default(canvas, config);
+		(await solution).default(element, config);
 	}
 };
