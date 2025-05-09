@@ -1,5 +1,4 @@
 TODO:
-  Explicitly destroy what gets created
   Create multiple distributions
     core
       One embedded MSDF, combined from the two main glyph sets and their configs

@@ -209,8 +209,7 @@ export const destroy = (rain) => {
 	window.removeEventListener("dblclick", doubleClick);
 	cache.clear();
 	cancelAnimationFrame(renderLoop); // stop RAF
-	// TODO: destroy WebGPU resources
-	device.destroy();
+	device.destroy(); // This also destroys any objects created with the device
 	rain.destroyed = true;
 };
 

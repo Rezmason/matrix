@@ -162,7 +162,7 @@ export const destroy = (rain) => {
 	window.removeEventListener("dblclick", doubleClick);
 	cache.clear();
 	tick.cancel(); // stop RAF
-	regl.destroy(); // release all GPU resources & event listeners
+	regl.destroy(); // releases all GPU resources & event listeners
 	rain.destroyed = true;
 };
 
