@@ -14,6 +14,7 @@ const fonts = {
 	matrixcode: {
 		// The glyphs seen in the film trilogy
 		glyphMSDFURL: "assets/matrixcode_msdf.png",
+		glyphSVGURL: "assets/svg/matrixcode.svg",
 		glyphSequenceLength: 57,
 		glyphTextureGridSize: [8, 8],
 	},
@@ -27,6 +28,7 @@ const fonts = {
 		// The glyphs seen in the film trilogy
 		glyphMSDFURL: "assets/resurrections_msdf.png",
 		glintMSDFURL: "assets/resurrections_glint_msdf.png",
+		glyphSVGURL: "assets/svg/resurrections.svg",
 		glyphSequenceLength: 135,
 		glyphTextureGridSize: [13, 12],
 	},
@@ -555,7 +557,10 @@ export default (urlParams) => {
 
 	const version = validParams.version in versions ? versions[validParams.version] : versions.classic;
 	const fontName = [validParams.font, version.font, defaults.font].find((name) => name in fonts);
-	const font = fonts[fontName];
+	let font = fonts[fontName];
+	if (validParams.renderer === "svg" && font.glyphSVGURL == null) {
+		font = fonts.matrixcode;
+	}
 
 	const baseTextureURL = textureURLs[[version.baseTexture, defaults.baseTexture].find((name) => name in textureURLs)];
 	const hasBaseTexture = baseTextureURL != null;

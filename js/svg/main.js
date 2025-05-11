@@ -60,4 +60,6 @@ export default async (artboard, config) => {
 	for (const step of pipeline) {
 		step.execute(true);
 	}
+
+	// TODO: add output to artboard
 };

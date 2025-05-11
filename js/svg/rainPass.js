@@ -13,8 +13,9 @@ export default ({ artboard, config }) => {
 	// The volumetric mode multiplies the number of columns
 	// to reach the desired density, and then overlaps them
 	const volumetric = config.volumetric;
+	const numColumns = config.numColumns;
 	const density = volumetric && config.effect !== "none" ? config.density : 1;
-	const [numRows, numColumns] = [config.numColumns, Math.floor(config.numColumns * density)];
+	const [numGridRows, numGridColumns] = [config.numColumns, Math.floor(config.numColumns * density)];
 
 	// Various effect-related values
 	const rippleType = config.rippleTypeName in rippleTypes ? rippleTypes[config.rippleTypeName] : -1;
@@ -25,42 +26,47 @@ export default ({ artboard, config }) => {
 	const glyphTransform = mat2.fromScaling(mat2.create(), vec2.fromValues(config.glyphFlip ? -1 : 1, 1));
 	mat2.rotate(glyphTransform, glyphTransform, (config.glyphRotation * Math.PI) / 180);
 
-	const glyphPositions = Array(numRows)
+	const glyphPositions = Array(numGridRows)
 		.fill()
 		.map((_, y) =>
-			Array(numColumns)
+			Array(numGridColumns)
 				.fill()
 				.map((_, x) => vec2.fromValues(x, y))
 		).flat();
 
-	const glyphs = Array(numRows * numColumns).fill(null);
+	const glyphs = Array(numGridRows * numGridColumns).fill(null);
 
-	// We render the code into an FBO using MSDFs: https://github.com/Chlumsky/msdfgen
-	const glyphMSDF = loadImage(config.glyphMSDFURL);
-	const glintMSDF = loadImage(config.glintMSDFURL);
+	// We render the code into an SVG using the imported symbols
+	const glyphSVG = loadText(config.glyphSVGURL);
 	const baseTexture = loadImage(config.baseTextureURL, true);
 	const glintTexture = loadImage(config.glintTextureURL, true);
 	const output = makePassSVG();
+
+	const randomAB = vec2.fromValues(12.9898, 78.233);
+	const randomFloat = (uv) => {
+		const dt = vec2.dot(uv, randomAB);
+		return (Math.sin(dt % Math.PI) * 43758.5453) % 1;
+	}
 
 	const raindrop = () => {
 
 		const SQRT_2 = Math.sqrt(2);
 		const SQRT_5 = Math.sqrt(5);
 
-		const randomAB = vec2.fromValues(12.9898, 78.233);
-		const randomFloat = (uv) => {
-			const dt = vec2.dot(uv, randomAB);
-			return (Math.sin(dt % Math.PI) * 43758.5453) % 1;
-		}
-
 		const wobble = (x) => {
 			return x + 0.3 * Math.sin(SQRT_2 * x) + 0.2 * Math.sin(SQRT_5 * x);
 		}
 
 		const columnPos = vec2.create();
-		const getRainBrightness = (pos) => {
+		const getRainBrightness = (time, pos) => {
 			columnPos[0] = pos[0];
-			const columnTime = randomFloat(columnPos) * 1000;
+			const columnTimeOffset = randomFloat(columnPos) * 1000;
+			columnPos[0] += 0.1;
+			const columnSpeedOffset = randomFloat(columnPos) * 0.5 + 0.5;
+			if (config.loops) {
+				columnSpeedOffset = 0.5;
+			}
+			const columnTime = columnTimeOffset + time * config.fallSpeed * columnSpeedOffset;
 			let rainTime = (pos[1] * 0.01 + columnTime) / config.raindropLength;
 			if (!config.loops) {
 				rainTime = wobble(rainTime);
@@ -68,15 +74,20 @@ export default ({ artboard, config }) => {
 			return 1.0 - (rainTime % 1);
 		}
 
-		const gridSize = vec2.fromValues(numColumns, numRows);
+		const gridSize = vec2.fromValues(numGridColumns, numGridRows);
 		const posBelow = vec2.create();
+		const symbolCoord = vec2.create();
+		const time = 1 * config.animationSpeed;
 		for (let i = 0; i < glyphPositions.length; i++) {
 			const pos = glyphPositions[i];
 			vec2.set(posBelow, pos[0], pos[1] - 1);
-			const brightness = getRainBrightness(pos);
-			const brightnessBelow = getRainBrightness(posBelow);
+			const brightness = getRainBrightness(time, pos);
+			const brightnessBelow = getRainBrightness(time, posBelow);
 			const isCursor = brightness > brightnessBelow;
-			const symbol = Math.floor(config.glyphSequenceLength * Math.random());
+
+			vec2.divide(symbolCoord, pos, gridSize);
+			const symbol = Math.floor(config.glyphSequenceLength * randomFloat(symbolCoord));
+
 			glyphs[i] = {
 				pos, brightness, isCursor, symbol
 			};
@@ -84,21 +95,112 @@ export default ({ artboard, config }) => {
 	};
 
 	const glyphElements = [];
+	const xmlParser = new DOMParser();
 
 	const render = () => {
-		// TODO: rain pass vert, rain pass frag
+		output.setAttribute("viewBox", `0 0 ${numColumns} ${numColumns}`);
+		output.setAttribute("preserveAspectRatio", "xMidYMid slice");
 
+		const xml = xmlParser.parseFromString(glyphSVG.text(), "image/svg+xml");
+		const defs = xml.querySelector("defs");
+		const symbols = [...defs.querySelectorAll("symbol")];
+		const symbolsByID = new Map(symbols.map(symbol => (["#" + symbol.id, symbol])));
+		const symbolSize = symbols[0].getAttribute("width") || 64;
+		const time = 1 * config.animationSpeed;
+		// TODO: effect
+		// TODO: rain pass frag
+		// TODO: move on to next pass
+
+		const randPos = vec2.create();
+		const glyphPos = vec2.create();
+		const glyphScale = vec2.create();
+		const pos4 = vec4.create();
 		for (const {pos, brightness, isCursor, symbol} of glyphs) {
-			if (brightness < 0) {
+
+			if (brightness < 0.1) {
 				continue;
 			}
-			glyphElements.push(`<use fill="#${Math.floor(0xFF * brightness).toString(16)}" href="#sym_${symbol}" transform="translate(${pos[0]},${pos[1]})"></use>`);
+
+			// Calculate the world space position
+			let depth = 0.0;
+			if (volumetric) {
+				vec2.set(randPos, pos[0], 0);
+				let startDepth = randomFloat(randPos);
+				depth = (startDepth + time * config.animationSpeed * config.forwardSpeed) % 1;
+			}
+
+			vec2.set(glyphPos,
+				pos[0] * 1 / (numColumns * density),
+				pos[1] * config.glyphVerticalSpacing / numColumns
+			);
+			vec2.set(glyphScale, 1, config.glyphVerticalSpacing);
+
+			if (volumetric) {
+				vec2.set(randPos, pos[0], 1);
+				glyphPos[1] += randomFloat(randPos);
+
+
+				vec4.set(pos4,
+					(glyphPos[0] - 0.5) * 2,
+					(glyphPos[1] - 0.5) * 2,
+					depth,
+					1
+				);
+				// pos.x /= glyphHeightToWidth;
+				// pos = camera * transform * pos;
+				vec4.transformMat4(pos4, pos4, transform);
+				vec4.transformMat4(pos4, pos4, camera);
+				vec2.set(glyphPos,
+					(pos4[0] / pos4[3] / 2) + 0.5,
+					(pos4[1] / pos4[3] / 2) + 0.5,
+				);
+				vec2.scale(glyphScale, glyphScale, 1 / pos4[3]);
+				depth = pos4[2];
+			}
+
+			glyphPos[0] *= numColumns;
+			glyphPos[1] *= numColumns;
+
+			const glyphTransform = `translate(${
+				[glyphPos[0], (numColumns - 1) - glyphPos[1]].join(",")
+			}) rotate(${
+				0
+			}) scale(${
+				[glyphScale[0] / symbolSize, glyphScale[1] / symbolSize].join(",")
+			})`;
+
+			const base = `#sym_${symbol}`;
+			const baseBrightness = brightness ** 5;
+			const baseChannel = Math.floor(0xFF * baseBrightness);
+			const baseColor = "#" + (baseChannel << 8).toString(16).padStart(6, "0");
+			const cursorChannel = Math.floor(0xFF * brightness * 0.8);
+			const cursorColor = "#" + ((cursorChannel) << 16 | 0xFF << 8 | cursorChannel).toString(16).padStart(6, "0");
+
+			const group = [];
+
+			// group.push(`<rect fill="none" stroke="red" width="64" height="64" />`);
+			group.push(`<use fill="${isCursor ? cursorColor : baseColor}" href="${base}"></use>`);
+
+			const glintBrightness = brightness * 2 - 1;
+			const glint = `#sym_${symbol}_glint`;
+			if (glintBrightness > 0 && symbolsByID.has(glint)) {
+				const glintChannel = Math.floor(0xFF * glintBrightness);
+				const glintColor = "#" + (glintChannel << 16 | glintChannel << 8).toString(16).padStart(6, "0");
+				group.push(`<use fill="${glintColor}" href="${glint}"></use>`);
+			}
+
+			glyphElements.push([depth, `<g transform="${glyphTransform}">${group.join(" ")}</g>`]);
 		}
-		console.log(glyphElements.join("\n"));
+
+		glyphElements.sort((p, q) => q[0] - p[0])
+
+		output.innerHTML = `<style>path { mix-blend-mode: screen; }</style>${defs.outerHTML}${glyphElements.map(([depth, tag]) => tag).join("\n")}`;
+
+		artboard.appendChild(output);
 	};
 
 	// Camera and transform math for the volumetric mode
-	const screenSize = [1, 1];
+	const screenSize = vec2.fromValues(1, 1);
 	const transform = mat4.create();
 	if (volumetric && config.isometric) {
 		mat4.rotateX(transform, transform, (Math.PI * 1) / 8);
@@ -115,8 +217,7 @@ export default ({ artboard, config }) => {
 			primary: output,
 		},
 		Promise.all([
-			glyphMSDF.loaded,
-			glintMSDF.loaded,
+			glyphSVG.loaded,
 			baseTexture.loaded,
 			glintTexture.loaded,
 			// rainPassRaindrop.loaded,
@@ -125,7 +226,8 @@ export default ({ artboard, config }) => {
 			// rainPassFrag.loaded,
 		]),
 		(w, h) => {
-			// output.resize(w, h);
+			output.setAttribute("width", w);
+			output.setAttribute("height", h);
 			const aspectRatio = w / h;
 
 			if (volumetric && config.isometric) {
