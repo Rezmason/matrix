@@ -194,7 +194,12 @@ export default ({ artboard, config }) => {
 
 		glyphElements.sort((p, q) => q[0] - p[0])
 
-		output.innerHTML = `<style>path { mix-blend-mode: screen; }</style>${defs.outerHTML}${glyphElements.map(([depth, tag]) => tag).join("\n")}`;
+		output.innerHTML = [
+			`<style>path { mix-blend-mode: screen; }</style>`,
+			defs.outerHTML,
+			`<rect width="100%" height="100%" />`,
+			glyphElements.map(([depth, tag]) => tag).join("\n")
+		].join("\n");
 
 		artboard.appendChild(output);
 	};

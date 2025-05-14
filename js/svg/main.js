@@ -34,19 +34,14 @@ export default async (artboard, config) => {
 	const rect = artboard.getBoundingClientRect();
 	[dimensions.width, dimensions.height] = [rect.width, rect.height];
 
-	if (document.fullscreenEnabled || document.webkitFullscreenEnabled) {
-		window.ondblclick = () => {
-			if (document.fullscreenElement == null) {
-				if (artboard.webkitRequestFullscreen != null) {
-					artboard.webkitRequestFullscreen();
-				} else {
-					artboard.requestFullscreen();
-				}
-			} else {
-				document.exitFullscreen();
-			}
-		};
-	}
+	window.ondblclick = () => {
+		const blob = new Blob([artboard.querySelector("svg").outerHTML], { type: "image/svg+xml" });
+		const url = URL.createObjectURL(blob);
+		const aTag = document.createElement("a");
+		aTag.download = 'matrix.svg';
+		aTag.href = window.URL.createObjectURL(blob);
+		aTag.click();
+	};
 
 	const effectName = config.effect in effects ? config.effect : "palette";
 	const context = { artboard, config };

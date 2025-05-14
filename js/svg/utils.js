@@ -1,4 +1,9 @@
-const makePassSVG = () => document.createElementNS("http://www.w3.org/2000/svg", "svg");
+const svgNS = "http://www.w3.org/2000/svg";
+const makePassSVG = () => {
+	const svg = document.createElementNS(svgNS, "svg");
+	svg.setAttribute("xmlns", svgNS);
+	return svg;
+}
 
 const loadImage = (url) => {
 	const image = new Image();
