@@ -62,7 +62,7 @@ export default ({ artboard, config }) => {
 			columnPos[0] = pos[0];
 			const columnTimeOffset = randomFloat(columnPos) * 1000;
 			columnPos[0] += 0.1;
-			const columnSpeedOffset = randomFloat(columnPos) * 0.5 + 0.5;
+			let columnSpeedOffset = randomFloat(columnPos) * 0.5 + 0.5;
 			if (config.loops) {
 				columnSpeedOffset = 0.5;
 			}
@@ -104,7 +104,7 @@ export default ({ artboard, config }) => {
 		const xml = xmlParser.parseFromString(glyphSVG.text(), "image/svg+xml");
 		const defs = xml.querySelector("defs");
 		const symbols = [...defs.querySelectorAll("symbol")];
-		const symbolsByID = new Map(symbols.map(symbol => (["#" + symbol.id, symbol])));
+		const symbolsByID = new Map(symbols.map(symbol => (["#" + symbol.id, symbol.innerHTML])));
 		const symbolSize = symbols[0].getAttribute("width") || 64;
 		const time = 1 * config.animationSpeed;
 		// TODO: effect
@@ -117,7 +117,8 @@ export default ({ artboard, config }) => {
 		const pos4 = vec4.create();
 		for (const {pos, brightness, isCursor, symbol} of glyphs) {
 
-			if (brightness < 0.1) {
+			// TODO: use actual thresholds
+			if (brightness < 0.6) {
 				continue;
 			}
 
@@ -179,14 +180,14 @@ export default ({ artboard, config }) => {
 			const group = [];
 
 			// group.push(`<rect fill="none" stroke="red" width="64" height="64" />`);
-			group.push(`<use fill="${isCursor ? cursorColor : baseColor}" href="${base}"></use>`);
+			group.push(`<g fill="${isCursor ? cursorColor : baseColor}">${symbolsByID.get(base)}</g>`);
 
 			const glintBrightness = brightness * 2 - 1;
 			const glint = `#sym_${symbol}_glint`;
 			if (glintBrightness > 0 && symbolsByID.has(glint)) {
 				const glintChannel = Math.floor(0xFF * glintBrightness);
 				const glintColor = "#" + (glintChannel << 16 | glintChannel << 8).toString(16).padStart(6, "0");
-				group.push(`<use fill="${glintColor}" href="${glint}"></use>`);
+				group.push(`<g fill="${glintColor}">${symbolsByID.get(glint)}</g>`);
 			}
 
 			glyphElements.push([depth, `<g transform="${glyphTransform}">${group.join(" ")}</g>`]);
@@ -196,8 +197,7 @@ export default ({ artboard, config }) => {
 
 		output.innerHTML = [
 			`<style>path { mix-blend-mode: screen; }</style>`,
-			defs.outerHTML,
-			`<rect width="100%" height="100%" />`,
+			`<rect width="${numColumns}" height="${numColumns}" />`,
 			glyphElements.map(([depth, tag]) => tag).join("\n")
 		].join("\n");
 
