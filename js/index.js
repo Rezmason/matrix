@@ -6,24 +6,24 @@ import { Matrix } from "./Matrix";
 const root = createRoot(document.getElementById("root"));
 let idx = 1;
 const versions = [
+	"classic",
 	"3d",
-	"trinity",
-	"bugs",
+	"resurrections",
+	"operator",
 	"megacity",
 	"nightmare",
 	"paradise",
-	"resurrections",
-	"operator",
-	"throwback",
-	"updated",
-	"1999",
-	"2003",
-	"2021",
+	"trinity",
+	"bugs",
+	"morpheus",
 ];
 const App = () => {
-	const [version, setVersion] = React.useState(versions[0]);
-	const [numColumns, setNumColumns] = React.useState(10);
-	const [rendererType, setRendererType] = React.useState(null);
+	const [version, setVersion] = useState(versions[0]);
+	const [numColumns, setNumColumns] = useState(80);
+	const [cursorColor, setCursorColor] = useState(null);
+	const [backgroundColor, setBackgroundColor] = useState("0,0,0");
+	const [rendererType, setRendererType] = useState(null);
+	const [density, setDensity] = useState(2);
 	const [destroyed, setDestroyed] = useState(false);
 	const onButtonClick = () => {
 		setVersion((s) => {
@@ -32,11 +32,8 @@ const App = () => {
 			console.log(newVersion);
 			return newVersion;
 		});
-		setNumColumns(() => {
-			const newColumns = 10 + Math.floor(Math.random() * 50);
-			console.log(newColumns);
-			return newColumns;
-		});
+		setCursorColor(null);
+		setBackgroundColor(null);
 	};
 	const onRendererButtonClick = () => {
 		setRendererType(() => (rendererType === "webgpu" ? "regl" : "webgpu"));
@@ -48,15 +45,51 @@ const App = () => {
 	return (
 		<div>
 			<h1>Rain</h1>
-			<button onClick={onButtonClick}>Change properties</button>
+			<button onClick={onButtonClick}>Version: "{version}"</button>
 			<button onClick={onRendererButtonClick}>Renderer: {rendererType ?? "default (regl)"}</button>
 			<button onClick={onDestroyButtonClick}>Destroy</button>
+			<label htmlFor="cursor-color">Cursor color: </label>
+			<input
+				name="cursor-color"
+				type="color"
+				onChange={(e) => {
+					const values = e.target.value
+						.match(/[\da-fA-F]{2}/g)
+						.map((s) => parseInt(s, 16) / 0xff)
+						.join(",");
+					setCursorColor(values);
+				}}
+			/>
+			<label htmlFor="background-color">Background color: </label>
+			<input
+				name="background-color"
+				type="color"
+				onChange={(e) => {
+					const values = e.target.value
+						.match(/[\da-fA-F]{2}/g)
+						.map((s) => parseInt(s, 16) / 0xff)
+						.join(",");
+					setBackgroundColor(values);
+				}}
+			/>
+			<label htmlFor="num-columns"># of columns:</label>
+			<input
+				name="num-columns"
+				type="range"
+				min="10"
+				max="160"
+				step="1"
+				onInput={(e) => setNumColumns(parseInt(e.target.value))}
+			/>
+
 			{!destroyed && (
 				<Matrix
 					style={{ width: "80vw", height: "45vh" }}
 					version={version}
 					numColumns={numColumns}
 					renderer={rendererType}
+					cursorColor={cursorColor}
+					backgroundColor={backgroundColor}
 					density={2.0}
 				/>
 			)}

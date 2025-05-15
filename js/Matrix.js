@@ -105,12 +105,14 @@ import makeConfig from "./utils/config";
 
 /** @param {MatrixProps} props */
 export const Matrix = memo((props) => {
-	const { style, className, ...rest } = props;
+	const { style, className, ...rawConfigProps } = props;
 	const elProps = { style, className };
 	const matrix = useRef(null);
 	const [rCanvas, setCanvas] = useState(null);
 	const [rRenderer, setRenderer] = useState(null);
 	const [rRain, setRain] = useState(null);
+
+	const configProps = Object.fromEntries(Object.entries(rawConfigProps).filter(([_, value]) => value != null));
 
 	const supportsWebGPU = () => {
 		return (
@@ -137,7 +139,7 @@ export const Matrix = memo((props) => {
 	};
 
 	useEffect(() => {
-		const useWebGPU = supportsWebGPU() && ["webgpu"].includes(rest.renderer?.toLowerCase());
+		const useWebGPU = supportsWebGPU() && ["webgpu"].includes(configProps.renderer?.toLowerCase());
 		const isWebGPU = rRenderer?.type === "webgpu";
 
 		if (rRenderer != null && useWebGPU === isWebGPU) {
@@ -168,7 +170,7 @@ export const Matrix = memo((props) => {
 			return;
 		}
 		const refresh = async () => {
-			await rRenderer.formulate(rRain, makeConfig({ ...rest }));
+			await rRenderer.formulate(rRain, makeConfig(configProps));
 		};
 		refresh();
 	}, [props, rRain]);
