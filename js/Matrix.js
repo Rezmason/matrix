@@ -120,16 +120,9 @@ export const Matrix = memo((props) => {
 		);
 	};
 
-	useEffect(() => {
-		const useWebGPU = supportsWebGPU() && ["webgpu"].includes(rest.renderer?.toLowerCase());
-		const isWebGPU = rRenderer?.type === "webgpu";
-
-		if (rRenderer != null && useWebGPU === isWebGPU) {
-			return;
-		}
-
+	const cleanup = () => {
 		if (rCanvas != null) {
-			matrix.current.removeChild(rCanvas);
+			rCanvas.remove();
 			setCanvas(null);
 		}
 
@@ -141,6 +134,17 @@ export const Matrix = memo((props) => {
 		if (rRenderer != null) {
 			setRenderer(null);
 		}
+	};
+
+	useEffect(() => {
+		const useWebGPU = supportsWebGPU() && ["webgpu"].includes(rest.renderer?.toLowerCase());
+		const isWebGPU = rRenderer?.type === "webgpu";
+
+		if (rRenderer != null && useWebGPU === isWebGPU) {
+			return;
+		}
+
+		cleanup();
 
 		const canvas = document.createElement("canvas");
 		canvas.style.width = "100%";
@@ -155,6 +159,8 @@ export const Matrix = memo((props) => {
 			setRain(rain);
 		};
 		loadRain();
+
+		return cleanup;
 	}, [props.renderer]);
 
 	useEffect(() => {

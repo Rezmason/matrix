@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { unmountComponentAtNode } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { Matrix } from "./Matrix";
 
@@ -23,6 +24,7 @@ const App = () => {
 	const [version, setVersion] = React.useState(versions[0]);
 	const [numColumns, setNumColumns] = React.useState(10);
 	const [rendererType, setRendererType] = React.useState(null);
+	const [destroyed, setDestroyed] = useState(false);
 	const onButtonClick = () => {
 		setVersion((s) => {
 			const newVersion = versions[idx];
@@ -39,19 +41,25 @@ const App = () => {
 	const onRendererButtonClick = () => {
 		setRendererType(() => (rendererType === "webgpu" ? "regl" : "webgpu"));
 	};
+	const onDestroyButtonClick = () => {
+		setDestroyed(true);
+	};
 
 	return (
 		<div>
 			<h1>Rain</h1>
 			<button onClick={onButtonClick}>Change properties</button>
 			<button onClick={onRendererButtonClick}>Renderer: {rendererType ?? "default (regl)"}</button>
-			<Matrix
-				style={{ width: "80vw", height: "45vh" }}
-				version={version}
-				numColumns={numColumns}
-				renderer={rendererType}
-				density={2.0}
-			/>
+			<button onClick={onDestroyButtonClick}>Destroy</button>
+			{!destroyed && (
+				<Matrix
+					style={{ width: "80vw", height: "45vh" }}
+					version={version}
+					numColumns={numColumns}
+					renderer={rendererType}
+					density={2.0}
+				/>
+			)}
 		</div>
 	);
 };
