@@ -35,7 +35,7 @@ import palettePassShader from "../shaders/wgsl/palettePass.wgsl";
 import rainPassShader from "../shaders/wgsl/rainPass.wgsl";
 import stripePassShader from "../shaders/wgsl/stripePass.wgsl";
 
-const inclusions = [
+export default [
 	highPassFrag,
 	blurFrag,
 	combineFrag,
@@ -72,6 +72,4 @@ const inclusions = [
 	palettePassShader,
 	rainPassShader,
 	stripePassShader,
-].reduce((i, s) => s.length + i, 0);
-
-export default inclusions;
+];
