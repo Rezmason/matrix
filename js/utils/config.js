@@ -17,14 +17,12 @@ const fonts = {
 		glyphSequenceLength: 57,
 		glyphTextureGridSize: [8, 8],
 	},
-	/*
 	megacity: {
 		// The glyphs seen in the film trilogy
 		glyphMSDFURL: "assets/megacity_msdf.png",
 		glyphSequenceLength: 64,
 		glyphTextureGridSize: [8, 8],
 	},
-	*/
 	resurrections: {
 		// The glyphs seen in the film trilogy
 		glyphMSDFURL: "assets/resurrections_msdf.png",
@@ -32,7 +30,6 @@ const fonts = {
 		glyphSequenceLength: 135,
 		glyphTextureGridSize: [13, 12],
 	},
-	/*
 	huberfishA: {
 		glyphMSDFURL: "assets/huberfish_a_msdf.png",
 		glyphSequenceLength: 34,
@@ -58,12 +55,11 @@ const fonts = {
 		glyphSequenceLength: 12,
 		glyphTextureGridSize: [4, 4],
 	},
-	*/
 };
 
 const textureURLs = {
-	// sand: "assets/sand.png",
-	// pixels: "assets/pixel_grid.png",
+	sand: "assets/sand.png",
+	pixels: "assets/pixel_grid.png",
 	mesh: "assets/mesh.png",
 	metal: "assets/metal.png",
 };
@@ -136,7 +132,6 @@ const defaults = {
 
 const versions = {
 	classic: {},
-	/*
 	megacity: {
 		font: "megacity",
 		animationSpeed: 0.5,
@@ -155,7 +150,6 @@ const versions = {
 		cursorColor: hsl(0.167, 1, 0.75),
 		cursorIntensity: 2,
 	},
-	*/
 	operator: {
 		cursorColor: hsl(0.375, 1, 0.66),
 		cursorIntensity: 3,
@@ -268,7 +262,6 @@ const versions = {
 		raindropLength: 0.3,
 		density: 0.75,
 	},
-	/*
 	morpheus: {
 		font: "resurrections",
 		glintTexture: "mesh",
@@ -358,7 +351,6 @@ const versions = {
 			// { color: hsl(0.1, 1.0, 0.9), at: 1.0 },
 		],
 	},
-	*/
 	["3d"]: {
 		volumetric: true,
 		fallSpeed: 0.5,

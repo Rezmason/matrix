@@ -24,8 +24,8 @@ window.onclick = (e) => {
 	touchesChanged = true;
 };
 
-export default ({ config, device, cameraTex, cameraAspectRatio, timeBuffer }) => {
-	const assets = [loadShader(device, "shaders/wgsl/mirrorPass.wgsl")];
+export default ({ config, device, cache, cameraTex, cameraAspectRatio, timeBuffer }) => {
+	const assets = [loadShader(device, cache, "shaders/wgsl/mirrorPass.wgsl")];
 
 	const linearSampler = device.createSampler({
 		magFilter: "linear",

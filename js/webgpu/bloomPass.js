@@ -39,7 +39,7 @@ const makePyramidViews = (pyramid) => pyramid.map((tex) => tex.createView());
 // The bloom pass is basically an added blur of the rain pass's high-pass output.
 // The blur approximation is the sum of a pyramid of downscaled, blurred textures.
 
-export default ({ config, device }) => {
+export default ({ config, device, cache }) => {
 	const pyramidHeight = 4;
 	const bloomSize = config.bloomSize;
 	const bloomStrength = config.bloomStrength;
@@ -54,8 +54,8 @@ export default ({ config, device }) => {
 	}
 
 	const assets = [
-		loadShader(device, "shaders/wgsl/bloomBlur.wgsl"),
-		loadShader(device, "shaders/wgsl/bloomCombine.wgsl"),
+		loadShader(device, cache, "shaders/wgsl/bloomBlur.wgsl"),
+		loadShader(device, cache, "shaders/wgsl/bloomCombine.wgsl"),
 	];
 
 	const linearSampler = device.createSampler({

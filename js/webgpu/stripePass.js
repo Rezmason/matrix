@@ -43,7 +43,7 @@ const numVerticesPerQuad = 2 * 3;
 // won't persist across subsequent frames. This is a safe trick
 // in screen space.
 
-export default ({ config, device, timeBuffer }) => {
+export default ({ config, device, cache, timeBuffer }) => {
 	// Expand and convert stripe colors into 1D texture data
 	const stripeColors =
 		"stripeColors" in config
@@ -68,7 +68,7 @@ export default ({ config, device, timeBuffer }) => {
 	let output;
 	let screenSize;
 
-	const assets = [loadShader(device, "shaders/wgsl/stripePass.wgsl")];
+	const assets = [loadShader(device, cache, "shaders/wgsl/stripePass.wgsl")];
 
 	const loaded = (async () => {
 		const [stripeShader] = await Promise.all(assets);

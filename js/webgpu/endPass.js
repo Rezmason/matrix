@@ -5,7 +5,7 @@ import { loadShader, makeBindGroup, makePass } from "./utils.js";
 
 const numVerticesPerQuad = 2 * 3;
 
-export default ({ device, canvasFormat, canvasContext }) => {
+export default ({ device, cache, canvasFormat, canvasContext }) => {
 	const nearestSampler = device.createSampler();
 
 	const renderPassConfig = {
@@ -21,7 +21,7 @@ export default ({ device, canvasFormat, canvasContext }) => {
 	let renderPipeline;
 	let renderBindGroup;
 
-	const assets = [loadShader(device, "shaders/wgsl/endPass.wgsl")];
+	const assets = [loadShader(device, cache, "shaders/wgsl/endPass.wgsl")];
 
 	const loaded = (async () => {
 		const [imageShader] = await Promise.all(assets);

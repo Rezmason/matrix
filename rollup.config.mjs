@@ -8,40 +8,65 @@ import terser from "@rollup/plugin-terser";
 import { string } from "rollup-plugin-string";
 import image from "@rollup/plugin-image";
 
-export default {
-	input: "js/bundle-contents.js",
-	external: ["react", "react-dom"], // keep them out of your bundle
-	plugins: [
-		peerDepsExternal(), // auto-exclude peerDeps
-		nodeResolve(), // so Rollup can find deps in node_modules
-		string({ include: ["**/*.glsl"] }),
-		string({ include: ["**/*.wgsl"] }),
-		image({ include: ["**/*.png"], limit: 0 }),
-		babel({
-			exclude: "node_modules/**", // transpile JSX
-			babelHelpers: "bundled",
-			presets: ["@babel/preset-react", "@babel/preset-env"],
-		}),
-		commonjs(), // turn CJS deps into ES
-		terser({
-			sourceMap: false, // <- suppress .map generation
-			format: { comments: false },
-		}),
-		visualizer({
-			filename: "dist/stats.html",
-			gzipSize: true,
-			brotliSize: true,
-			includeAssets: true,
-		}), // bundle-size treemap
-	],
-	output: [
-		{
+export default [
+	{
+		input: "js/bundle-contents.js",
+		external: ["react", "react-dom"], // keep them out of your bundle
+		plugins: [
+			peerDepsExternal(), // auto-exclude peerDeps
+			nodeResolve(), // so Rollup can find deps in node_modules
+			string({ include: ["**/*.glsl"] }),
+			string({ include: ["**/*.wgsl"] }),
+			image({ include: ["**/*.png"], limit: 0 }),
+			babel({
+				exclude: "node_modules/**", // transpile JSX
+				babelHelpers: "bundled",
+				presets: ["@babel/preset-react", "@babel/preset-env"],
+			}),
+			commonjs(), // turn CJS deps into ES
+			terser({
+				sourceMap: false, // <- suppress .map generation
+				format: { comments: false },
+			}),
+			visualizer({
+				filename: "dist/stats.html",
+				gzipSize: true,
+				brotliSize: true,
+				includeAssets: true,
+			}), // bundle-size treemap
+		],
+		output: {
 			inlineDynamicImports: true,
-			file: "dist/index.cjs.js",
+			file: "dist/digital-rain.cjs.js",
 			format: "cjs",
 			exports: "named",
 			sourcemap: false,
 		},
-		// { file: 'dist/index.esm.js', format: 'es' }               // optional ESM build
-	],
-};
+	},
+	{
+		input: "js/bundle-contents.js",
+		external: ["react", "react-dom"], // keep them out of your bundle
+		plugins: [
+			peerDepsExternal(), // auto-exclude peerDeps
+			nodeResolve(), // so Rollup can find deps in node_modules
+			string({ include: ["**/*.glsl"] }),
+			string({ include: ["**/*.wgsl"] }),
+			image({ include: ["**/*.png"], limit: 0 }),
+			babel({
+				exclude: "node_modules/**", // transpile JSX
+				babelHelpers: "bundled",
+				presets: ["@babel/preset-react", "@babel/preset-env"],
+			}),
+			commonjs(), // turn CJS deps into ES
+		],
+		output: [
+			{
+				inlineDynamicImports: true,
+				file: "dist/digital-rain.module.js",
+				format: "es",
+				exports: "named",
+				sourcemap: true,
+			},
+		],
+	},
+];

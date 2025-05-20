@@ -4,7 +4,6 @@ import { createRoot } from "react-dom/client";
 import { Matrix } from "./Matrix";
 
 const root = createRoot(document.getElementById("root"));
-let idx = 1;
 const versions = [
 	"classic",
 	"3d",
@@ -17,20 +16,38 @@ const versions = [
 	"bugs",
 	"morpheus",
 ];
+const effects = ["none", "plain", "palette", "stripes", "pride", "trans", "image", "mirror"];
 const App = () => {
 	const [version, setVersion] = useState(versions[0]);
+	const [effect, setEffect] = useState("plain");
 	const [numColumns, setNumColumns] = useState(80);
 	const [cursorColor, setCursorColor] = useState(null);
 	const [backgroundColor, setBackgroundColor] = useState("0,0,0");
 	const [rendererType, setRendererType] = useState(null);
 	const [density, setDensity] = useState(2);
 	const [destroyed, setDestroyed] = useState(false);
-	const onButtonClick = () => {
+	const onVersionButtonClick = () => {
 		setVersion((s) => {
-			const newVersion = versions[idx];
-			idx = (idx + 1) % versions.length;
-			console.log(newVersion);
+			let index = versions.indexOf(version) + 1;
+			if (index === versions.length) {
+				index = 0;
+			}
+			const newVersion = versions[index];
+			console.log("version:", newVersion);
 			return newVersion;
+		});
+		setCursorColor(null);
+		setBackgroundColor(null);
+	};
+	const onEffectButtonClick = () => {
+		setEffect((s) => {
+			let index = effects.indexOf(effect) + 1;
+			if (index === effects.length) {
+				index = 0;
+			}
+			const newEffect = effects[index];
+			console.log("effect:", newEffect);
+			return newEffect;
 		});
 		setCursorColor(null);
 		setBackgroundColor(null);
@@ -45,7 +62,8 @@ const App = () => {
 	return (
 		<div>
 			<h1>Rain</h1>
-			<button onClick={onButtonClick}>Version: "{version}"</button>
+			<button onClick={onVersionButtonClick}>Version: "{version}"</button>
+			<button onClick={onEffectButtonClick}>Effect: "{effect}"</button>
 			<button onClick={onRendererButtonClick}>Renderer: {rendererType ?? "default (regl)"}</button>
 			<button onClick={onDestroyButtonClick}>Destroy</button>
 			<label htmlFor="cursor-color">Cursor color: </label>
@@ -86,6 +104,7 @@ const App = () => {
 				<Matrix
 					style={{ width: "80vw", height: "45vh" }}
 					version={version}
+					effect={effect}
 					numColumns={numColumns}
 					renderer={rendererType}
 					cursorColor={cursorColor}

@@ -1,10 +1,21 @@
 {
-	"name": "react-matrix-rain",
-	"version": "1.0.0",
-	"description": "web-based green code rain, made with love, for react",
-	"main": "dist/index.cjs.js",
+	"name": "digital-rain",
+	"version": "0.1.0",
+	"description": "web-based green code rain, made with love",
+	"type": "module",
+	"main": "./dist/digital-rain.cjs",
+	"module": "./dist/digital-rain.module.js",
+	"exports": {
+		".": {
+			"import": "./dist/digital-rain.module.js",
+			"require": "./dist/digital-rain.cjs"
+		}
+	},
 	"files": [
-		"/dist"
+		"/dist",
+		"LICENSE",
+		"package.json",
+		"README.md"
 	],
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
@@ -12,12 +23,35 @@
 		"start": "npm run format ; webpack serve --config ./webpack.config.js",
 		"build": "npm run format ; rollup -c"
 	},
-	"keywords": [],
-	"author": "",
-	"license": "ISC",
+	"keywords": [
+		"rain",
+		"matrix",
+		"javascript",
+		"webgl",
+		"webgl-computer-graphics",
+		"matrix-rain",
+		"matrix-digital-rain"
+	],
+	"author": {
+		"name": "Rezmason",
+		"url": "https://rezmason.net"
+	},
+	"contributors": [
+		{
+			"name": "nohren"
+		}
+	],
+	"homepage": "https://github.com/Rezmason/matrix",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Rezmason/matrix"
+	},
+	"bugs": {
+		"url": "https://github.com/Rezmason/matrix/issues"
+	},
+	"license": "MIT",
 	"dependencies": {
 		"gl-matrix": "^3.4.3",
-		"holoplay-core": "^0.0.9",
 		"regl": "^2.1.0"
 	},
 	"devDependencies": {
@@ -46,5 +80,13 @@
 	"peerDependencies": {
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0"
+	},
+	"peerDependenciesMeta": {
+		"react": {
+			"optional": true
+		},
+		"react-dom": {
+			"optional": true
+		}
 	}
 }

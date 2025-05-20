@@ -112,7 +112,9 @@ export const Matrix = memo((props) => {
 	const [rRenderer, setRenderer] = useState(null);
 	const [rRain, setRain] = useState(null);
 
-	const configProps = Object.fromEntries(Object.entries(rawConfigProps).filter(([_, value]) => value != null));
+	const configProps = Object.fromEntries(
+		Object.entries(rawConfigProps).filter(([_, value]) => value != null),
+	);
 
 	const supportsWebGPU = () => {
 		return (
@@ -155,7 +157,12 @@ export const Matrix = memo((props) => {
 		setCanvas(canvas);
 
 		const loadRain = async () => {
-			const renderer = await import(`./${useWebGPU ? "webgpu" : "regl"}/main.js`);
+			let renderer;
+			if (useWebGPU) {
+				renderer = await import("./webgpu/main.js");
+			} else {
+				renderer = await import("./regl/main.js");
+			}
 			setRenderer(renderer);
 			const rain = await renderer.init(canvas);
 			setRain(rain);

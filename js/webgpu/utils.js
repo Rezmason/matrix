@@ -62,7 +62,11 @@ const makeComputeTarget = (device, size, mipLevelCount = 1) =>
 			GPUTextureUsage.STORAGE_BINDING,
 	});
 
-const loadShader = async (device, url) => {
+const loadShader = async (device, cache, url) => {
+	const key = url;
+	if (cache.has(key)) {
+		return cache.get(key);
+	}
 	const response = await fetch(url);
 	const code = await response.text();
 	return {

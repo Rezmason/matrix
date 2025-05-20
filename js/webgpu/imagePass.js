@@ -17,7 +17,7 @@ export default ({ config, cache, device }) => {
 	const bgURL = "bgURL" in config ? config.bgURL : defaultBGURL;
 	const assets = [
 		loadTexture(device, cache, bgURL),
-		loadShader(device, "shaders/wgsl/imagePass.wgsl"),
+		loadShader(device, cache, "shaders/wgsl/imagePass.wgsl"),
 	];
 
 	const linearSampler = device.createSampler({

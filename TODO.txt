@@ -1,4 +1,19 @@
 TODO:
+  Make sure component works right
+    bundled, of course
+    webpack?
+  Minimum react requirement?
+  Move off of regl
+    Unify implementations?
+  Responsive changes
+    Move start time to rain object
+      Matrix component should record, then overwrite it
+    Reshape all passes to react to config changes, ie. "configure"
+      main.js "formulate" --> "configure"
+      simple deltas only require updating the uniforms
+      return boolean of whether all deltas are simple
+        Resource changes are simple if they're cached and loaded, false otherwise
+      remake the pipeline if anything returns false
   Create multiple distributions
     core
       One embedded MSDF, combined from the two main glyph sets and their configs
@@ -7,7 +22,6 @@ TODO:
     and then one with built-in MSDF generation
       (TTF + glyphString) --> MSDF
         Is MSDF strictly necessary?
-  Move off of regl
   Expanded configurability
     Modify regl pass
       async build(config, inputs)

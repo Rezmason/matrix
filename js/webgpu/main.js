@@ -24,11 +24,12 @@ const effects = {
 	mirror: makeMirrorPass,
 };
 
-let glMatrix;
+let glMatrix, inclusions;
 
 export const init = async (canvas) => {
 	const libraries = await fetchLibraries();
 	glMatrix = libraries.glMatrix;
+	inclusions = libraries.inclusions;
 
 	const resize = () => {
 		const devicePixelRatio = window.devicePixelRatio ?? 1;

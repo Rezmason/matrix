@@ -73,7 +73,7 @@ const makePalette = (device, paletteUniforms, entries) => {
 // won't persist across subsequent frames. This is a safe trick
 // in screen space.
 
-export default ({ config, device, timeBuffer }) => {
+export default ({ config, device, cache, timeBuffer }) => {
 	const linearSampler = device.createSampler({
 		magFilter: "linear",
 		minFilter: "linear",
@@ -86,7 +86,7 @@ export default ({ config, device, timeBuffer }) => {
 	let output;
 	let screenSize;
 
-	const assets = [loadShader(device, "shaders/wgsl/palettePass.wgsl")];
+	const assets = [loadShader(device, cache, "shaders/wgsl/palettePass.wgsl")];
 
 	const loaded = (async () => {
 		const [paletteShader] = await Promise.all(assets);

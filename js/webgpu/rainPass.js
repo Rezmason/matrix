@@ -39,7 +39,7 @@ export default ({ config, glMatrix, cache, device, timeBuffer }) => {
 		loadTexture(device, cache, config.glintMSDFURL),
 		loadTexture(device, cache, config.baseTextureURL, false, true),
 		loadTexture(device, cache, config.glintTextureURL, false, true),
-		loadShader(device, "shaders/wgsl/rainPass.wgsl"),
+		loadShader(device, cache, "shaders/wgsl/rainPass.wgsl"),
 	];
 
 	// The volumetric mode multiplies the number of columns

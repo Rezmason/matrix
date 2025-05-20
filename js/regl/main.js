@@ -21,12 +21,13 @@ const effects = {
 	mirror: makeMirrorPass,
 };
 
-let createREGL, glMatrix;
+let createREGL, glMatrix, inclusions;
 
 export const init = async (canvas) => {
 	const libraries = await fetchLibraries();
 	createREGL = libraries.createREGL;
 	glMatrix = libraries.glMatrix;
+	inclusions = libraries.inclusions;
 
 	const resize = () => {
 		const devicePixelRatio = window.devicePixelRatio ?? 1;
