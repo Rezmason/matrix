@@ -16,7 +16,14 @@ const loadTexture = async (device, cache, url) => {
 				GPUTextureUsage.RENDER_ATTACHMENT,
 		});
 	} else {
-		const response = await fetch(url);
+		let imageURL;
+		if (typeof cache.get(`import::${url}`) === "function") {
+			imageURL = (await cache.get(`import::${url}`)()).default;
+		} else {
+			imageURL = url;
+		}
+
+		const response = await fetch(imageURL);
 		const data = await response.blob();
 		const source = await createImageBitmap(data);
 		const size = [source.width, source.height, 1];
@@ -67,7 +74,13 @@ const loadShader = async (device, cache, url) => {
 	if (cache.has(key)) {
 		return cache.get(key);
 	}
-	const response = await fetch(url);
+	let textURL;
+	if (typeof cache.get(`import::${url}`) === "function") {
+		textURL = (await cache.get(`import::${url}`)()).default;
+	} else {
+		textURL = url;
+	}
+	const response = await fetch(textURL);
 	const code = await response.text();
 	return {
 		code,

@@ -56,7 +56,7 @@ export const init = async (canvas) => {
 	const adapter = await navigator.gpu.requestAdapter();
 	const device = await adapter.requestDevice();
 
-	const cache = new Map();
+	const cache = new Map(inclusions);
 	const rain = {
 		canvas,
 		resize,

@@ -59,7 +59,7 @@ export const init = async (canvas) => {
 	];
 
 	const regl = createREGL({ canvas, pixelRatio: 1, extensions, optionalExtensions });
-	const cache = new Map();
+	const cache = new Map(inclusions);
 	const rain = { canvas, resize, doubleClick, cache, regl, resolution: 1 };
 
 	window.addEventListener("dblclick", doubleClick);
