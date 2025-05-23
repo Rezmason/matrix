@@ -60,8 +60,8 @@ const loadImage = (cache, regl, url, mipmap) => {
 				const data = new Image();
 				data.crossOrigin = "anonymous";
 				let imageURL;
-				if (typeof cache.get(`import::${url}`) === "function") {
-					imageURL = (await cache.get(`import::${url}`)()).default;
+				if (typeof cache.get(`url::${url}`) === "function") {
+					imageURL = (await cache.get(`url::${url}`)()).default;
 				} else {
 					imageURL = url;
 				}
@@ -103,13 +103,11 @@ const loadText = (cache, url) => {
 		},
 		loaded: (async () => {
 			if (url != null) {
-				let textURL;
-				if (typeof cache.get(`import::${url}`) === "function") {
-					textURL = (await cache.get(`import::${url}`)()).default;
+				if (typeof cache.get(`raw::${url}`) === "function") {
+					text = (await cache.get(`raw::${url}`)()).default;
 				} else {
-					textURL = url;
+					text = await (await fetch(url)).text();
 				}
-				text = await (await fetch(textURL)).text();
 				loaded = true;
 			}
 		})(),

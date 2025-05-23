@@ -107,14 +107,32 @@ import makeConfig from "./utils/config";
 export const Matrix = memo((props) => {
 	const { style, className, ...rawConfigProps } = props;
 	const elProps = { style, className };
-	const matrix = useRef(null);
-	const [rCanvas, setCanvas] = useState(null);
+	const domElement = useRef(null);
 	const [rRenderer, setRenderer] = useState(null);
-	const [rRain, setRain] = useState(null);
+	const [rSize, setSize] = useState([1, 1]);
+	const [rConfig, setConfig] = useState(makeConfig({}));
+	const rendererClasses = {};
 
-	const configProps = Object.fromEntries(
-		Object.entries(rawConfigProps).filter(([_, value]) => value != null),
-	);
+	const resizeObserver = new ResizeObserver(entries => {
+		for (const entry of entries) {
+			const contentBoxSize = entry.contentBoxSize[0];
+			setSize([contentBoxSize.inlineSize, contentBoxSize.blockSize]);
+			return;
+		}
+	});
+
+	useEffect(() => {
+		if (domElement.current == null) return;
+		resizeObserver.observe(domElement.current);
+	}, [domElement]);
+
+	useEffect(() => {
+		setConfig(makeConfig({
+			...Object.fromEntries(
+				Object.entries(rawConfigProps).filter(([_, value]) => value != null),
+			)
+		}));
+	}, [props]);
 
 	const supportsWebGPU = () => {
 		return (
@@ -125,62 +143,50 @@ export const Matrix = memo((props) => {
 	};
 
 	const cleanup = () => {
-		if (rCanvas != null) {
-			rCanvas.remove();
-			setCanvas(null);
-		}
-
-		if (rRain != null) {
-			rRenderer?.destroy(rRain);
-			setRain(null);
-		}
-
-		if (rRenderer != null) {
-			setRenderer(null);
-		}
+		if (rRenderer == null) return;
+		rRenderer.canvas.remove();
+		rRenderer.destroy();
+		setRenderer(null);
 	};
 
 	useEffect(() => {
-		const useWebGPU = supportsWebGPU() && ["webgpu"].includes(configProps.renderer?.toLowerCase());
+		const useWebGPU = supportsWebGPU() && rConfig.renderer === "webgpu";
 		const isWebGPU = rRenderer?.type === "webgpu";
-
-		if (rRenderer != null && useWebGPU === isWebGPU) {
-			return;
-		}
-
-		cleanup();
-
-		const canvas = document.createElement("canvas");
-		canvas.style.width = "100%";
-		canvas.style.height = "100%";
-		matrix.current.appendChild(canvas);
-		setCanvas(canvas);
 
 		const loadRain = async () => {
 			let renderer;
 			if (useWebGPU) {
-				renderer = await import("./webgpu/main.js");
+				rendererClasses.webgpu ??= (await import("./webgpu/renderer.js")).default;
+				renderer = new (rendererClasses.webgpu)();
 			} else {
-				renderer = await import("./regl/main.js");
+				rendererClasses.regl ??= (await import("./regl/renderer.js")).default;
+				renderer = new (rendererClasses.regl)();
 			}
 			setRenderer(renderer);
-			const rain = await renderer.init(canvas);
-			setRain(rain);
+			await renderer.ready;
+			const canvas = renderer.canvas;
+			canvas.style.width = "100%";
+			canvas.style.height = "100%";
+			domElement.current.appendChild(canvas);
 		};
-		loadRain();
+
+		if (rRenderer == null || useWebGPU !== isWebGPU) {
+			cleanup();
+			loadRain();
+		}
 
 		return cleanup;
-	}, [props.renderer]);
+	}, [rConfig.renderer]);
 
 	useEffect(() => {
-		if (rRain == null || rRain.destroyed) {
-			return;
-		}
-		const refresh = async () => {
-			await rRenderer.formulate(rRain, makeConfig(configProps));
-		};
-		refresh();
-	}, [props, rRain]);
+		if (rRenderer?.destroyed ?? true) return;
+		rRenderer.formulate(rConfig);
+	}, [rRenderer, rConfig]);
 
-	return <div ref={matrix} {...elProps}></div>;
+	useEffect(() => {
+		if (rRenderer?.destroyed ?? true) return;
+		rRenderer.size = rSize.map(n => n * rConfig.resolution);
+	}, [rRenderer, rConfig.resolution, rSize]);
+
+	return <div ref={domElement} {...elProps}></div>;
 });

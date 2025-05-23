@@ -1,9 +1,23 @@
 import React, { useState } from "react";
 import { unmountComponentAtNode } from "react-dom";
 import { createRoot } from "react-dom/client";
-import { Matrix } from "./Matrix";
 
-const root = createRoot(document.getElementById("root"));
+const urlParams = new URLSearchParams(import.meta.url.replaceAll(/.*?\?/g, ""));
+const rootID = urlParams.get("root-id") ?? "root";
+const root = createRoot(document.getElementById(rootID));
+
+let componentModule;
+switch (urlParams.get("bundle")) {
+	case "core": {
+		componentModule = (await import("../../dist/digital-rain.core.js"));
+		break;
+	}
+	default: {
+		componentModule = (await import("../../js/Matrix"));
+	}
+}
+const { Matrix } = componentModule;
+
 const versions = [
 	"classic",
 	"3d",
@@ -16,11 +30,12 @@ const versions = [
 	"bugs",
 	"morpheus",
 ];
-const effects = ["none", "plain", "palette", "stripes", "pride", "trans", "image", "mirror"];
+const effects = ["none", "palette", "stripes", "pride", "trans", "image", "mirror"];
 const App = () => {
 	const [version, setVersion] = useState(versions[0]);
-	const [effect, setEffect] = useState("plain");
+	const [effect, setEffect] = useState("palette");
 	const [numColumns, setNumColumns] = useState(80);
+	const [resolution, setResolution] = useState(0.75);
 	const [cursorColor, setCursorColor] = useState(null);
 	const [backgroundColor, setBackgroundColor] = useState("0,0,0");
 	const [rendererType, setRendererType] = useState(null);
@@ -60,8 +75,7 @@ const App = () => {
 	};
 
 	return (
-		<div>
-			<h1>Rain</h1>
+		<>
 			<button onClick={onVersionButtonClick}>Version: "{version}"</button>
 			<button onClick={onEffectButtonClick}>Effect: "{effect}"</button>
 			<button onClick={onRendererButtonClick}>Renderer: {rendererType ?? "default (regl)"}</button>
@@ -94,25 +108,37 @@ const App = () => {
 			<input
 				name="num-columns"
 				type="range"
+				value={numColumns}
 				min="10"
 				max="160"
 				step="1"
 				onInput={(e) => setNumColumns(parseInt(e.target.value))}
 			/>
+			<label htmlFor="resolution">resolution:</label>
+			<input
+				name="resolution"
+				type="range"
+				value={resolution}
+				min="0"
+				max="1"
+				step="0.01"
+				onInput={(e) => setResolution(parseFloat(e.target.value))}
+			/>
 
 			{!destroyed && (
 				<Matrix
-					style={{ width: "80vw", height: "45vh" }}
+					style={{ width: "40vw", height: "22vh" }}
 					version={version}
 					effect={effect}
 					numColumns={numColumns}
+					resolution={resolution}
 					renderer={rendererType}
 					cursorColor={cursorColor}
 					backgroundColor={backgroundColor}
 					density={2.0}
 				/>
 			)}
-		</div>
+		</>
 	);
 };
 root.render(<App />);

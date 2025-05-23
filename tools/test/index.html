@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Vite + React</title>
+	</head>
+	<body>
+		<details open id="test-standard">
+			<summary><strong>standard</strong></summary>
+			<iframe src="../../index.html?version=palimpsest"></iframe>
+		</details>
+		<details open id="test-react">
+			<summary><strong>standard react</strong></summary>
+			<div id="test-react-container"></div>
+			<script type="module" src="test-react.jsx?root-id=test-react-container"></script>
+		</details>
+		<details id="test-core-bundled">
+			<summary><strong>core bundled</strong></summary>
+			<script type="module">
+				import { REGLRenderer, WebGPURenderer, makeConfig } from "../../dist/digital-rain.core.js";
+				const useWebGPU = false;
+				const RendererClass = useWebGPU ? WebGPURenderer : REGLRenderer;
+				const renderer = new RendererClass();
+				await renderer.ready;
+				document.querySelector("#test-core-bundled").appendChild(renderer.canvas);
+				await renderer.formulate(makeConfig({once: false}));
+			</script>
+		</details>
+		<details id="test-core-react-bundled">
+			<summary><strong>core react bundled</strong></summary>
+			<div id="test-core-react-bundled-container"></div>
+			<script type="module" src="test-react.jsx?bundle=core&root-id=test-core-react-bundled-container"></script>
+		</details>
+		<details id="test-full-bundled">
+			<summary><strong>full bundled</strong></summary>
+			<script type="module">
+				import { REGLRenderer, WebGPURenderer, makeConfig } from "../../dist/digital-rain.full.js";
+				const useWebGPU = false;
+				const RendererClass = useWebGPU ? WebGPURenderer : REGLRenderer;
+				const renderer = new RendererClass();
+				await renderer.ready;
+				document.querySelector("#test-full-bundled").appendChild(renderer.canvas);
+				await renderer.formulate(makeConfig({once: false, version: "twilight"}));
+			</script>
+		</details>
+	</body>
+</html>

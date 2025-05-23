@@ -1,10 +1,10 @@
 export default async () => {
-	let glMatrix, createREGL, inclusions;
+	let glMatrix, createREGL, staticAssets;
 
 	try {
 		glMatrix = await import("gl-matrix");
 		createREGL = (await import("regl")).default;
-		inclusions = (await import("./inclusions.js")).default;
+		staticAssets = (await import("./staticAssets.js")).default;
 	} catch {
 		const loadJS = (src) =>
 			new Promise((resolve, reject) => {
@@ -15,8 +15,8 @@ export default async () => {
 		await Promise.all([loadJS("lib/regl.min.js"), loadJS("lib/gl-matrix.js")]);
 		glMatrix = globalThis.glMatrix;
 		createREGL = globalThis.createREGL;
-		inclusions = [];
+		staticAssets = [];
 	}
 
-	return { glMatrix, createREGL, inclusions };
+	return { glMatrix, createREGL, staticAssets };
 };

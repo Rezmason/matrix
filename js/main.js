@@ -1,7 +1,5 @@
 import makeConfig from "./utils/config.js";
 
-const canvas = document.createElement("canvas");
-document.body.appendChild(canvas);
 document.addEventListener("touchmove", (e) => e.preventDefault(), {
 	passive: false,
 });
@@ -25,12 +23,21 @@ document.body.onload = async () => {
 	const urlParams = new URLSearchParams(window.location.search);
 	const config = makeConfig(Object.fromEntries(urlParams.entries()));
 	const useWebGPU = (await supportsWebGPU()) && ["webgpu"].includes(config.renderer?.toLowerCase());
-	const solution = import(`./${useWebGPU ? "webgpu" : "regl"}/main.js`);
+	const rendererModule = import(`./${useWebGPU ? "webgpu" : "regl"}/renderer.js`);
 
-	const initialize = async (canvas, config) => {
-		const { init, formulate } = await solution;
-		const rain = await init(canvas);
-		await formulate(rain, config);
+	const initialize = async (config) => {
+		const Renderer = (await rendererModule).default;
+		const renderer = new Renderer();
+		await renderer.ready;
+		renderer.size = [window.innerWidth, window.innerHeight].map(n => n * (window.devicePixelRatio ?? 1) * config.resolution);
+		window.onresize = () => {
+			renderer.size = [window.innerWidth, window.innerHeight].map(n => n * (window.devicePixelRatio ?? 1) * config.resolution);
+		};
+		window.addEventListener("dblclick", () => {
+			renderer.fullscreen = !renderer.fullscreen;
+		});
+		document.body.appendChild(renderer.canvas);
+		await renderer.formulate(config);
 	};
 
 	if (isRunningSwiftShader() && !config.suppressWarnings) {
@@ -41,17 +48,15 @@ document.body.onload = async () => {
 		<button class="blue pill">Plug me in</button>
 		<a class="red pill" target="_blank" href="https://www.google.com/search?q=chrome+enable+hardware+acceleration">Free me</a>
 		`;
-		canvas.style.display = "none";
 		document.body.appendChild(notice);
 		document.querySelector(".blue.pill").addEventListener("click", async () => {
 			config.suppressWarnings = true;
 			urlParams.set("suppressWarnings", true);
 			history.replaceState({}, "", "?" + unescape(urlParams.toString()));
-			await initialize(canvas, config);
-			canvas.style.display = "unset";
+			await initialize(config);
 			document.body.removeChild(notice);
 		});
 	} else {
-		await initialize(canvas, config);
+		await initialize(config);
 	}
 };

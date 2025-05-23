@@ -249,7 +249,6 @@ const versions = {
 		baseContrast: 1.5,
 		highPassThreshold: 0,
 		numColumns: 60,
-		cycleSpeed: 0.03,
 		bloomStrength: 0.7,
 		fallSpeed: 0.3,
 		palette: [
@@ -278,7 +277,6 @@ const versions = {
 		baseContrast: 1.5,
 		highPassThreshold: 0,
 		numColumns: 60,
-		cycleSpeed: 0.03,
 		bloomStrength: 0.7,
 		fallSpeed: 0.3,
 		palette: [
@@ -307,7 +305,6 @@ const versions = {
 		baseContrast: 1.5,
 		highPassThreshold: 0,
 		numColumns: 60,
-		cycleSpeed: 0.03,
 		bloomStrength: 0.7,
 		fallSpeed: 0.3,
 		palette: [
@@ -368,7 +365,7 @@ versions["2021"] = versions.resurrections;
 
 const range = (f, min = -Infinity, max = Infinity) => Math.max(min, Math.min(max, f));
 const nullNaN = (f) => (isNaN(f) ? null : f);
-const isTrue = (s) => s.toLowerCase().includes("true");
+const isTrue = (v) => (typeof v === "string" && v.toLowerCase().includes("true")) || v;
 
 const parseColor = (isHSL) => (s) => ({
 	space: isHSL ? "hsl" : "rgb",
@@ -491,7 +488,7 @@ paramMapping.dropLength = paramMapping.raindropLength;
 paramMapping.angle = paramMapping.slant;
 paramMapping.colors = paramMapping.stripeColors;
 
-export default (urlParams) => {
+export default (urlParams = {}) => {
 	const validParams = Object.fromEntries(
 		Object.entries(urlParams)
 			.filter(([key]) => key in paramMapping)

@@ -17,8 +17,8 @@ const loadTexture = async (device, cache, url) => {
 		});
 	} else {
 		let imageURL;
-		if (typeof cache.get(`import::${url}`) === "function") {
-			imageURL = (await cache.get(`import::${url}`)()).default;
+		if (typeof cache.get(`url::${url}`) === "function") {
+			imageURL = (await cache.get(`url::${url}`)()).default;
 		} else {
 			imageURL = url;
 		}
@@ -74,14 +74,12 @@ const loadShader = async (device, cache, url) => {
 	if (cache.has(key)) {
 		return cache.get(key);
 	}
-	let textURL;
-	if (typeof cache.get(`import::${url}`) === "function") {
-		textURL = (await cache.get(`import::${url}`)()).default;
+	let code;
+	if (typeof cache.get(`raw::${url}`) === "function") {
+		code = (await cache.get(`raw::${url}`)()).default;
 	} else {
-		textURL = url;
+		code = await (await fetch(url)).text();
 	}
-	const response = await fetch(textURL);
-	const code = await response.text();
 	return {
 		code,
 		module: device.createShaderModule({ code }),
