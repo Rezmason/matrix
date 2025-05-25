@@ -1,20 +1,23 @@
 const loadTexture = async (device, cache, url) => {
-	const key = url;
-	if (cache.has(key)) {
-		return cache.get(key);
-	}
 
-	let texture;
+	const format = "rgba8unorm";
+	const usage =
+		GPUTextureUsage.TEXTURE_BINDING |
+		GPUTextureUsage.COPY_DST |
+		GPUTextureUsage.RENDER_ATTACHMENT;
 
 	if (url == null) {
-		texture = device.createTexture({
+		return device.createTexture({
 			size: [1, 1, 1],
-			format: "rgba8unorm",
-			usage:
-				GPUTextureUsage.TEXTURE_BINDING |
-				GPUTextureUsage.COPY_DST |
-				GPUTextureUsage.RENDER_ATTACHMENT,
+			format,
+			usage,
 		});
+	}
+
+	let source;
+	const key = url;
+	if (cache.has(key)) {
+		source = cache.get(key);
 	} else {
 		let imageURL;
 		if (typeof cache.get(`url::${url}`) === "function") {
@@ -25,23 +28,17 @@ const loadTexture = async (device, cache, url) => {
 
 		const response = await fetch(imageURL);
 		const data = await response.blob();
-		const source = await createImageBitmap(data);
-		const size = [source.width, source.height, 1];
-
-		texture = device.createTexture({
-			size,
-			format: "rgba8unorm",
-			usage:
-				GPUTextureUsage.TEXTURE_BINDING |
-				GPUTextureUsage.COPY_DST |
-				GPUTextureUsage.RENDER_ATTACHMENT,
-		});
-
-		device.queue.copyExternalImageToTexture({ source, flipY: true }, { texture }, size);
+		source = await createImageBitmap(data);
+		cache.set(key, source);
 	}
 
-	cache.set(key, texture);
-
+	const size = [source.width, source.height, 1];
+	const texture = device.createTexture({
+		size,
+		format,
+		usage,
+	});
+	device.queue.copyExternalImageToTexture({ source, flipY: true }, { texture }, size);
 	return texture;
 };
 
@@ -71,14 +68,16 @@ const makeComputeTarget = (device, size, mipLevelCount = 1) =>
 
 const loadShader = async (device, cache, url) => {
 	const key = url;
-	if (cache.has(key)) {
-		return cache.get(key);
-	}
 	let code;
-	if (typeof cache.get(`raw::${url}`) === "function") {
-		code = (await cache.get(`raw::${url}`)()).default;
+	if (cache.has(key)) {
+		code = cache.get(key);
 	} else {
-		code = await (await fetch(url)).text();
+		if (typeof cache.get(`raw::${url}`) === "function") {
+			code = (await cache.get(`raw::${url}`)()).default;
+		} else {
+			code = await (await fetch(url)).text();
+		}
+		cache.set(key, code);
 	}
 	return {
 		code,

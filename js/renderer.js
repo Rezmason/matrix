@@ -11,6 +11,7 @@ export default class Renderer {
 	#fullscreen = false;
 	#cache = new Map();
 	#destroyed = false;
+	#running = false;
 
 	constructor(type, ready) {
 		this.#type = type;
@@ -18,48 +19,46 @@ export default class Renderer {
 		this.#ready = Renderer.libraries.then(libraries => {
 			this.#cache = new Map(libraries.staticAssets);
 		}).then(ready);
+		this.#ready.then(() => this.start());
 	}
 
-	get canvas() {
-		return this.#canvas;
+	get running() { return this.#running; }
+
+	start() {
+		this.#running = true;
+		this.update();
 	}
 
-	get cache() {
-		return this.#cache;
+	stop() {
+		this.#running = false;
 	}
 
-	get type () {
-		return this.#type;
+	update(now) {
+		if (!this.#running) return;
+		requestAnimationFrame(now => this.update(now));
 	}
 
-	get ready () {
-		return this.#ready;
-	}
+	get canvas() { return this.#canvas; }
 
-	get size() {
-		return [this.#width, this.#height];
-	}
+	get cache() { return this.#cache; }
+
+	get type () { return this.#type; }
+
+	get ready () { return this.#ready; }
+
+	get size() { return ([this.#width, this.#height]); }
 
 	set size([width, height]) {
 		[width, height] = [Math.ceil(width), Math.ceil(height)];
-		if (width === this.#width && height === this.#height) {
-			return;
-		}
+		if (width === this.#width && height === this.#height) return;
 		[this.#canvas.width, this.#canvas.height] = [this.#width, this.#height] = [width, height];
 	}
 
-	get fullscreen() {
-		return this.#fullscreen;
-	}
+	get fullscreen() { return this.#fullscreen; }
 
 	set fullscreen(value) {
-		if (!!value === this.#fullscreen) {
-			return;
-		}
-
-		if (!document.fullscreenEnabled && !document.webkitFullscreenEnabled) {
-			return;
-		}
+		if (!!value === this.#fullscreen) return;
+		if (!document.fullscreenEnabled && !document.webkitFullscreenEnabled) return;
 
 		this.#fullscreen = value;
 		if (document.fullscreenElement != null) {
@@ -74,18 +73,17 @@ export default class Renderer {
 		}
 	}
 
-	async formulate(config) {
+	async configure(config) {
 		await this.ready;
 		if (this.destroyed) {
-			throw new Error("Cannot formulate a destroyed rain instance.");
+			throw new Error("Cannot configure a destroyed rain instance.");
 		}
 	}
 
-	get destroyed() {
-		return this.#destroyed;
-	}
+	get destroyed() { return this.#destroyed; }
 
 	destroy() {
+		this.stop();
 		this.#destroyed = true;
 		this.#cache.clear();
 	}

@@ -1,22 +1,16 @@
 TODO:
-	WebGPU formulate is expensive
-	Mirror pass clicks bug
-
+	Minimum react requirement?
 	Minify bundles
 	Naming "matrix" for the github repo, "digital-rain" and "DigitalRain" for everything else
-	Minimum react requirement?
 	Retire fetchLibraries?
+	Preserve time across configure calls, move times into renderer and uniforms
 	Move off of regl
 		Unify implementations?
-	Responsive changes
-		Move start time to rain object
-			Matrix component should record, then overwrite it
-		Reshape all passes to react to config changes, ie. "configure"
-			main.js "formulate" --> "configure"
-			simple deltas only require updating the uniforms
-			return boolean of whether all deltas are simple
-				Resource changes are simple if they're cached and loaded, false otherwise
-			remake the pipeline if anything returns false
+	Reshape all passes to react to config changes, ie. "configure"
+		simple deltas only require updating the uniforms
+		return boolean of whether all deltas are simple
+			Resource changes are simple if they're cached and loaded, false otherwise
+		remake the pipeline if anything returns false
 	Core vs full
 		core
 			One embedded MSDF, combined from the two main glyph sets and their configs

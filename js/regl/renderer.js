@@ -24,7 +24,7 @@ const effects = {
 
 export default class REGLRenderer extends Renderer {
 
-	#tick;
+	#renderFunc;
 	#regl;
 	#glMatrix;
 
@@ -43,26 +43,24 @@ export default class REGLRenderer extends Renderer {
 		});
 	}
 
-	async formulate(config) {
-		await super.formulate(config);
-
-		const canvas = this.canvas;
-		const cache = this.cache;
-		const regl = this.#regl;
-		const glMatrix = this.#glMatrix;
-
-		const dimensions = { width: 1, height: 1 };
+	async configure(config) {
+		await super.configure(config);
 
 		if (config.useCamera) {
 			await setupCamera();
 		}
 
+		const canvas = this.canvas;
+		const cache = this.cache;
+		const regl = this.#regl;
+		const glMatrix = this.#glMatrix;
+		const dimensions = { width: 1, height: 1 };
 		const cameraTex = regl.texture(cameraCanvas);
 
 		// All this takes place in a full screen quad.
 		const fullScreenQuad = makeFullScreenQuad(regl);
 		const effectName = config.effect in effects ? config.effect : "palette";
-		const context = { regl, cache, config, cameraTex, cameraAspectRatio, glMatrix };
+		const context = { regl, canvas, cache, config, cameraTex, cameraAspectRatio, glMatrix };
 		const pipeline = makePipeline(context, [makeRain, makeBloomPass, effects[effectName]]);
 
 		const screenUniforms = { tex: pipeline[pipeline.length - 1].outputs.primary };
@@ -75,17 +73,15 @@ export default class REGLRenderer extends Renderer {
 		const targetFrameTimeMilliseconds = 1000 / config.fps;
 		let last = NaN;
 
-		resetREGLTime: {
-			const reset = regl.frame((o) => {
-				o.time = 0;
-				o.tick = 0;
-				reset.cancel();
-			});
-		}
+		const reset = regl.frame((reglContext) => {
+			reglContext.tick = 0;
+			reset.cancel();
+		});
 
-		const tick = regl.frame(({ viewportWidth, viewportHeight }) => {
+		this.#renderFunc = (reglContext) => {
+
 			if (config.once) {
-				tick.cancel();
+				this.stop();
 			}
 
 			const now = regl.now() * 1000;
@@ -106,6 +102,7 @@ export default class REGLRenderer extends Renderer {
 			if (config.useCamera) {
 				cameraTex(cameraCanvas);
 			}
+			const {viewportWidth, viewportHeight} = reglContext;
 			if (dimensions.width !== viewportWidth || dimensions.height !== viewportHeight) {
 				dimensions.width = viewportWidth;
 				dimensions.height = viewportHeight;
@@ -119,20 +116,31 @@ export default class REGLRenderer extends Renderer {
 				}
 				drawToScreen();
 			});
+		};
+
+		const frame = this.#regl.frame(o => {
+			this.#renderFunc(o);
+			frame.cancel();
 		});
+	}
 
-		if (this.#tick != null) {
-			this.#tick.cancel();
+	stop() {
+		super.stop();
+		this.#renderFunc = null;
+	}
+
+	update(now) {
+		if (this.#renderFunc != null) {
+			const frame = this.#regl.frame(o => {
+				this.#renderFunc(o);
+				frame.cancel();
+			})
 		}
-
-		this.#tick = tick;
+		super.update(now);
 	}
 
 	destroy() {
-		if (this.destroyed) {
-			return;
-		}
-		this.#tick.cancel(); // stop RAF
+		if (this.destroyed) return;
 		this.#regl.destroy(); // releases all GPU resources & event listeners
 		super.destroy();
 	}

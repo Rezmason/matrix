@@ -24,7 +24,7 @@
 				const renderer = new RendererClass();
 				await renderer.ready;
 				document.querySelector("#test-core-bundled").appendChild(renderer.canvas);
-				await renderer.formulate(makeConfig({once: false}));
+				await renderer.configure(makeConfig({once: false}));
 			</script>
 		</details>
 		<details id="test-core-react-bundled">
@@ -41,7 +41,7 @@
 				const renderer = new RendererClass();
 				await renderer.ready;
 				document.querySelector("#test-full-bundled").appendChild(renderer.canvas);
-				await renderer.formulate(makeConfig({once: false, version: "twilight"}));
+				await renderer.configure(makeConfig({once: false, version: "twilight"}));
 			</script>
 		</details>
 	</body>

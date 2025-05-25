@@ -49,7 +49,7 @@ export default ({ device, cache, canvasFormat, canvasContext }) => {
 			nearestSampler,
 			inputs.primary.createView(),
 		]);
-		return null;
+		return {};
 	};
 
 	const run = (encoder, shouldRender) => {

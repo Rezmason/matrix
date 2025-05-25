@@ -37,7 +37,7 @@ document.body.onload = async () => {
 			renderer.fullscreen = !renderer.fullscreen;
 		});
 		document.body.appendChild(renderer.canvas);
-		await renderer.formulate(config);
+		await renderer.configure(config);
 	};
 
 	if (isRunningSwiftShader() && !config.suppressWarnings) {

@@ -38,7 +38,7 @@ const App = () => {
 	const [resolution, setResolution] = useState(0.75);
 	const [cursorColor, setCursorColor] = useState(null);
 	const [backgroundColor, setBackgroundColor] = useState("0,0,0");
-	const [rendererType, setRendererType] = useState(null);
+	const [rendererType, setRendererType] = useState("webgpu");
 	const [density, setDensity] = useState(2);
 	const [destroyed, setDestroyed] = useState(false);
 	const onVersionButtonClick = () => {
@@ -68,7 +68,7 @@ const App = () => {
 		setBackgroundColor(null);
 	};
 	const onRendererButtonClick = () => {
-		setRendererType(() => (rendererType === "webgpu" ? "regl" : "webgpu"));
+		setRendererType(rendererType === "webgpu" ? "regl" : "webgpu");
 	};
 	const onDestroyButtonClick = () => {
 		setDestroyed(true);
@@ -76,54 +76,60 @@ const App = () => {
 
 	return (
 		<>
-			<button onClick={onVersionButtonClick}>Version: "{version}"</button>
-			<button onClick={onEffectButtonClick}>Effect: "{effect}"</button>
-			<button onClick={onRendererButtonClick}>Renderer: {rendererType ?? "default (regl)"}</button>
-			<button onClick={onDestroyButtonClick}>Destroy</button>
-			<label htmlFor="cursor-color">Cursor color: </label>
-			<input
-				name="cursor-color"
-				type="color"
-				onChange={(e) => {
-					const values = e.target.value
-						.match(/[\da-fA-F]{2}/g)
-						.map((s) => parseInt(s, 16) / 0xff)
-						.join(",");
-					setCursorColor(values);
-				}}
-			/>
-			<label htmlFor="background-color">Background color: </label>
-			<input
-				name="background-color"
-				type="color"
-				onChange={(e) => {
-					const values = e.target.value
-						.match(/[\da-fA-F]{2}/g)
-						.map((s) => parseInt(s, 16) / 0xff)
-						.join(",");
-					setBackgroundColor(values);
-				}}
-			/>
-			<label htmlFor="num-columns"># of columns:</label>
-			<input
-				name="num-columns"
-				type="range"
-				value={numColumns}
-				min="10"
-				max="160"
-				step="1"
-				onInput={(e) => setNumColumns(parseInt(e.target.value))}
-			/>
-			<label htmlFor="resolution">resolution:</label>
-			<input
-				name="resolution"
-				type="range"
-				value={resolution}
-				min="0"
-				max="1"
-				step="0.01"
-				onInput={(e) => setResolution(parseFloat(e.target.value))}
-			/>
+			<div>
+				<button onClick={onVersionButtonClick}>Version: "{version}"</button>
+				<button onClick={onEffectButtonClick}>Effect: "{effect}"</button>
+				<button onClick={onRendererButtonClick}>Renderer: {rendererType ?? "default (regl)"}</button>
+				<button onClick={onDestroyButtonClick}>Destroy</button>
+			</div>
+			<div>
+				<label htmlFor="cursor-color">Cursor color: </label>
+				<input
+					name="cursor-color"
+					type="color"
+					onChange={(e) => {
+						const values = e.target.value
+							.match(/[\da-fA-F]{2}/g)
+							.map((s) => parseInt(s, 16) / 0xff)
+							.join(",");
+						setCursorColor(values);
+					}}
+				/>
+				<label htmlFor="background-color">Background color: </label>
+				<input
+					name="background-color"
+					type="color"
+					onChange={(e) => {
+						const values = e.target.value
+							.match(/[\da-fA-F]{2}/g)
+							.map((s) => parseInt(s, 16) / 0xff)
+							.join(",");
+						setBackgroundColor(values);
+					}}
+				/>
+			</div>
+			<div>
+				<label htmlFor="num-columns"># of columns:</label>
+				<input
+					name="num-columns"
+					type="range"
+					value={numColumns}
+					min="10"
+					max="160"
+					step="1"
+					onInput={(e) => setNumColumns(parseInt(e.target.value))}
+				/>
+				<label htmlFor="resolution">resolution:</label>
+				<input
+					name="resolution"
+					type="range"
+					value={resolution}
+					min="0"
+					max="1"
+					step="0.01"
+					onInput={(e) => setResolution(parseFloat(e.target.value))}
+				/>
+			</div>
 
 			{!destroyed && (
 				<Matrix

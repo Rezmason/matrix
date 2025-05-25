@@ -31,7 +31,7 @@ import makeConfig from "./utils/config";
  *   volumetric?: boolean,
  *   loops?: boolean,
  *   skipIntro?: boolean,
- *   renderer?: "regl" | "three" | string,
+ *   renderer?: "regl" | "webgpu" | string,
  *   suppressWarnings?: boolean,
  *   useHalfFloat?: boolean,
  *   isometric?: boolean,
@@ -109,9 +109,10 @@ export const Matrix = memo((props) => {
 	const elProps = { style, className };
 	const domElement = useRef(null);
 	const [rRenderer, setRenderer] = useState(null);
+	const rendererType = useRef(null);
 	const [rSize, setSize] = useState([1, 1]);
 	const [rConfig, setConfig] = useState(makeConfig({}));
-	const rendererClasses = {};
+	const rendererModules = {};
 
 	const resizeObserver = new ResizeObserver(entries => {
 		for (const entry of entries) {
@@ -126,14 +127,6 @@ export const Matrix = memo((props) => {
 		resizeObserver.observe(domElement.current);
 	}, [domElement]);
 
-	useEffect(() => {
-		setConfig(makeConfig({
-			...Object.fromEntries(
-				Object.entries(rawConfigProps).filter(([_, value]) => value != null),
-			)
-		}));
-	}, [props]);
-
 	const supportsWebGPU = () => {
 		return (
 			window.GPUQueue != null &&
@@ -141,6 +134,18 @@ export const Matrix = memo((props) => {
 			navigator.gpu.getPreferredCanvasFormat != null
 		);
 	};
+
+	useEffect(() => {
+		const config = makeConfig({
+			...Object.fromEntries(
+				Object.entries(rawConfigProps).filter(([_, value]) => value != null),
+			)
+		});
+		if (config.renderer === "webgpu" && !supportsWebGPU()) {
+			config.renderer = "regl";
+		}
+		setConfig(config);
+	}, [props]);
 
 	const cleanup = () => {
 		if (rRenderer == null) return;
@@ -150,37 +155,40 @@ export const Matrix = memo((props) => {
 	};
 
 	useEffect(() => {
-		const useWebGPU = supportsWebGPU() && rConfig.renderer === "webgpu";
-		const isWebGPU = rRenderer?.type === "webgpu";
+		rendererType.current = rConfig.renderer;
+		let rendererModule;
+		if (rConfig.renderer === "webgpu") {
+			rendererModules.webgpu ??= import("./webgpu/renderer.js");
+			rendererModule = rendererModules.webgpu;
+		} else {
+			rendererModules.regl ??= import("./regl/renderer.js");
+			rendererModule = rendererModules.regl;
+		}
 
-		const loadRain = async () => {
-			let renderer;
-			if (useWebGPU) {
-				rendererClasses.webgpu ??= (await import("./webgpu/renderer.js")).default;
-				renderer = new (rendererClasses.webgpu)();
-			} else {
-				rendererClasses.regl ??= (await import("./regl/renderer.js")).default;
-				renderer = new (rendererClasses.regl)();
-			}
-			setRenderer(renderer);
+		(async () => {
+			const rendererClass = (await rendererModule).default;
+			if (rendererType.current !== rConfig.renderer) return;
+			const renderer = new rendererClass();
 			await renderer.ready;
+			if (rendererType.current !== rConfig.renderer) {
+				console.warn("Destroyed a redundant renderer late.");
+				renderer.destroy();
+				return;
+			}
+			cleanup();
+			setRenderer(renderer);
 			const canvas = renderer.canvas;
 			canvas.style.width = "100%";
 			canvas.style.height = "100%";
 			domElement.current.appendChild(canvas);
-		};
-
-		if (rRenderer == null || useWebGPU !== isWebGPU) {
-			cleanup();
-			loadRain();
-		}
+		})();
 
 		return cleanup;
 	}, [rConfig.renderer]);
 
 	useEffect(() => {
 		if (rRenderer?.destroyed ?? true) return;
-		rRenderer.formulate(rConfig);
+		rRenderer.configure(rConfig);
 	}, [rRenderer, rConfig]);
 
 	useEffect(() => {
