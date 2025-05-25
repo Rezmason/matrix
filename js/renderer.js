@@ -76,7 +76,7 @@ export default class Renderer {
 	async configure(config) {
 		await this.ready;
 		if (this.destroyed) {
-			throw new Error("Cannot configure a destroyed rain instance.");
+			throw new Error("Cannot configure a destroyed renderer.");
 		}
 	}
 
