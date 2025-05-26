@@ -24,16 +24,16 @@ export default ({ device, cache, canvasFormat, canvasContext }) => {
 	const assets = [loadShader(device, cache, "shaders/wgsl/endPass.wgsl")];
 
 	const loaded = (async () => {
-		const [imageShader] = await Promise.all(assets);
+		const [endShader] = await Promise.all(assets);
 
 		renderPipeline = await device.createRenderPipelineAsync({
 			layout: "auto",
 			vertex: {
-				module: imageShader.module,
+				module: endShader.module,
 				entryPoint: "vertMain",
 			},
 			fragment: {
-				module: imageShader.module,
+				module: endShader.module,
 				entryPoint: "fragMain",
 				targets: [
 					{

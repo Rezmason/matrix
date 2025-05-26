@@ -184,6 +184,7 @@ export default class REGLRenderer extends Renderer {
 		await this.#rebuildingPipeline;
 		this.#renderFunc(performance.now());
 		if (oldDevice != null) {
+			await oldDevice.queue.onSubmittedWorkDone();
 			oldDevice.destroy();
 		}
 	}
@@ -202,10 +203,14 @@ export default class REGLRenderer extends Renderer {
 
 	destroy() {
 		if (this.destroyed) return;
-		if (this.#device != null) {
-			this.#device.destroy(); // This also destroys any objects created with the device
-			this.#device = null;
+		const oldDevice = this.#device;
+		if (oldDevice != null) {
+			(async () => {
+				await oldDevice.queue.onSubmittedWorkDone();
+				oldDevice.destroy();
+			});
 		}
+		this.#device = null;
 		super.destroy();
 	}
 }
