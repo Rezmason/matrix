@@ -1,8 +1,17 @@
 TODO:
+	Rethink bundling
+		Core
+			Includes core assets
+			Does not require React
+		Extras
+			Includes other fonts, presets
+			Does not require React
+		React
+			Includes react component
+			Requires React
 	Minimum react requirement?
 	Minify bundles
 	Naming "matrix" for the github repo, "digital-rain" and "DigitalRain" for everything else
-	Retire fetchLibraries?
 	Preserve time across configure calls, move times into renderer and uniforms
 	Move off of regl
 		Unify implementations?
@@ -11,14 +20,6 @@ TODO:
 		return boolean of whether all deltas are simple
 			Resource changes are simple if they're cached and loaded, false otherwise
 		remake the pipeline if anything returns false
-	Core vs full
-		core
-			One embedded MSDF, combined from the two main glyph sets and their configs
-		full
-			Other MSDFs and configs
-		and then one with built-in MSDF generation
-			(TTF + glyphString) --> MSDF
-				Is MSDF strictly necessary?
 	Expanded configurability
 		Modify regl pass
 			async build(config, inputs)
