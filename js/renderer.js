@@ -1,7 +1,6 @@
 import fetchLibraries from "./fetchLibraries.js";
 
 export default class Renderer {
-
 	static libraries = fetchLibraries();
 	#type;
 	#canvas;
@@ -16,13 +15,17 @@ export default class Renderer {
 	constructor(type, ready) {
 		this.#type = type;
 		this.#canvas = document.createElement("canvas");
-		this.#ready = Renderer.libraries.then(libraries => {
-			this.#cache = new Map(libraries.staticAssets);
-		}).then(ready);
+		this.#ready = Renderer.libraries
+			.then((libraries) => {
+				this.#cache = new Map(libraries.staticAssets);
+			})
+			.then(ready);
 		this.#ready.then(() => this.start());
 	}
 
-	get running() { return this.#running; }
+	get running() {
+		return this.#running;
+	}
 
 	start() {
 		this.#running = true;
@@ -35,18 +38,28 @@ export default class Renderer {
 
 	update(now) {
 		if (!this.#running) return;
-		requestAnimationFrame(now => this.update(now));
+		requestAnimationFrame((now) => this.update(now));
 	}
 
-	get canvas() { return this.#canvas; }
+	get canvas() {
+		return this.#canvas;
+	}
 
-	get cache() { return this.#cache; }
+	get cache() {
+		return this.#cache;
+	}
 
-	get type () { return this.#type; }
+	get type() {
+		return this.#type;
+	}
 
-	get ready () { return this.#ready; }
+	get ready() {
+		return this.#ready;
+	}
 
-	get size() { return ([this.#width, this.#height]); }
+	get size() {
+		return [this.#width, this.#height];
+	}
 
 	set size([width, height]) {
 		[width, height] = [Math.ceil(width), Math.ceil(height)];
@@ -54,7 +67,9 @@ export default class Renderer {
 		[this.#canvas.width, this.#canvas.height] = [this.#width, this.#height] = [width, height];
 	}
 
-	get fullscreen() { return this.#fullscreen; }
+	get fullscreen() {
+		return this.#fullscreen;
+	}
 
 	set fullscreen(value) {
 		if (!!value === this.#fullscreen) return;
@@ -80,7 +95,9 @@ export default class Renderer {
 		}
 	}
 
-	get destroyed() { return this.#destroyed; }
+	get destroyed() {
+		return this.#destroyed;
+	}
 
 	destroy() {
 		this.stop();

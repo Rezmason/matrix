@@ -29,9 +29,13 @@ document.body.onload = async () => {
 		const Renderer = (await rendererModule).default;
 		const renderer = new Renderer();
 		await renderer.ready;
-		renderer.size = [window.innerWidth, window.innerHeight].map(n => n * (window.devicePixelRatio ?? 1) * config.resolution);
+		renderer.size = [window.innerWidth, window.innerHeight].map(
+			(n) => n * (window.devicePixelRatio ?? 1) * config.resolution,
+		);
 		window.onresize = () => {
-			renderer.size = [window.innerWidth, window.innerHeight].map(n => n * (window.devicePixelRatio ?? 1) * config.resolution);
+			renderer.size = [window.innerWidth, window.innerHeight].map(
+				(n) => n * (window.devicePixelRatio ?? 1) * config.resolution,
+			);
 		};
 		window.addEventListener("dblclick", () => {
 			renderer.fullscreen = !renderer.fullscreen;

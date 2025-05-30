@@ -1,10 +1,11 @@
 import { loadText, makePassFBO, makePass } from "./utils.js";
 
 export default ({ regl, canvas, cache, config, cameraTex, cameraAspectRatio }, inputs) => {
-
 	let start;
 	const numClicks = 5;
-	const clicks = Array(numClicks).fill().map(_ => ([0, 0, -Infinity]));
+	const clicks = Array(numClicks)
+		.fill()
+		.map((_) => [0, 0, -Infinity]);
 	let aspectRatio = 1;
 
 	let index = 0;

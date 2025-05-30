@@ -23,7 +23,6 @@ const effects = {
 };
 
 export default class REGLRenderer extends Renderer {
-
 	#renderFunc;
 	#regl;
 	#glMatrix;
@@ -38,7 +37,12 @@ export default class REGLRenderer extends Renderer {
 				"WEBGL_color_buffer_float",
 				"OES_standard_derivatives",
 			];
-			this.#regl = libraries.createREGL({ canvas: this.canvas, pixelRatio: 1, extensions, optionalExtensions });
+			this.#regl = libraries.createREGL({
+				canvas: this.canvas,
+				pixelRatio: 1,
+				extensions,
+				optionalExtensions,
+			});
 			this.#glMatrix = libraries.glMatrix;
 		});
 	}
@@ -79,7 +83,6 @@ export default class REGLRenderer extends Renderer {
 		});
 
 		this.#renderFunc = (reglContext) => {
-
 			if (config.once) {
 				this.stop();
 			}
@@ -102,7 +105,7 @@ export default class REGLRenderer extends Renderer {
 			if (config.useCamera) {
 				cameraTex(cameraCanvas);
 			}
-			const {viewportWidth, viewportHeight} = reglContext;
+			const { viewportWidth, viewportHeight } = reglContext;
 			if (dimensions.width !== viewportWidth || dimensions.height !== viewportHeight) {
 				dimensions.width = viewportWidth;
 				dimensions.height = viewportHeight;
@@ -118,7 +121,7 @@ export default class REGLRenderer extends Renderer {
 			});
 		};
 
-		const frame = this.#regl.frame(o => {
+		const frame = this.#regl.frame((o) => {
 			this.#renderFunc(o);
 			frame.cancel();
 		});
@@ -131,10 +134,10 @@ export default class REGLRenderer extends Renderer {
 
 	update(now) {
 		if (this.#renderFunc != null) {
-			const frame = this.#regl.frame(o => {
+			const frame = this.#regl.frame((o) => {
 				this.#renderFunc(o);
 				frame.cancel();
-			})
+			});
 		}
 		super.update(now);
 	}

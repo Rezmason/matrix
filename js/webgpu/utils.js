@@ -1,10 +1,7 @@
 const loadTexture = async (device, cache, url) => {
-
 	const format = "rgba8unorm";
 	const usage =
-		GPUTextureUsage.TEXTURE_BINDING |
-		GPUTextureUsage.COPY_DST |
-		GPUTextureUsage.RENDER_ATTACHMENT;
+		GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT;
 
 	if (url == null) {
 		return device.createTexture({

@@ -114,7 +114,7 @@ export const Matrix = memo((props) => {
 	const [rConfig, setConfig] = useState(makeConfig({}));
 	const rendererModules = {};
 
-	const resizeObserver = new ResizeObserver(entries => {
+	const resizeObserver = new ResizeObserver((entries) => {
 		for (const entry of entries) {
 			const contentBoxSize = entry.contentBoxSize[0];
 			setSize([contentBoxSize.inlineSize, contentBoxSize.blockSize]);
@@ -137,9 +137,7 @@ export const Matrix = memo((props) => {
 
 	useEffect(() => {
 		const config = makeConfig({
-			...Object.fromEntries(
-				Object.entries(rawConfigProps).filter(([_, value]) => value != null),
-			)
+			...Object.fromEntries(Object.entries(rawConfigProps).filter(([_, value]) => value != null)),
 		});
 		if (config.renderer === "webgpu" && !supportsWebGPU()) {
 			config.renderer = "regl";
@@ -193,7 +191,7 @@ export const Matrix = memo((props) => {
 
 	useEffect(() => {
 		if (rRenderer?.destroyed ?? true) return;
-		rRenderer.size = rSize.map(n => n * rConfig.resolution);
+		rRenderer.size = rSize.map((n) => n * rConfig.resolution);
 	}, [rRenderer, rConfig.resolution, rSize]);
 
 	return <div ref={domElement} {...elProps}></div>;

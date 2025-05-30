@@ -25,7 +25,6 @@ const effects = {
 };
 
 export default class REGLRenderer extends Renderer {
-
 	#glMatrix;
 	#device;
 	#canvasContext;
@@ -72,7 +71,6 @@ export default class REGLRenderer extends Renderer {
 		}
 
 		this.#rebuildingPipeline = (async () => {
-
 			const glMatrix = this.#glMatrix;
 			const canvas = this.canvas;
 			const cache = this.cache;
@@ -205,10 +203,10 @@ export default class REGLRenderer extends Renderer {
 		if (this.destroyed) return;
 		const oldDevice = this.#device;
 		if (oldDevice != null) {
-			(async () => {
+			async () => {
 				await oldDevice.queue.onSubmittedWorkDone();
 				oldDevice.destroy();
-			});
+			};
 		}
 		this.#device = null;
 		super.destroy();
