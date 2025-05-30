@@ -14,7 +14,7 @@
 		"test": "npm run format && npm run build && vite --config tools/dev.config.js --open /tools/test/index.html",
 		"dev": "npm run format && vite --config tools/dev.config.js",
 		"build": "npm run format && rm -rf ./dist/* && vite build --config tools/vite/core.config.js && vite build --config tools/vite/full.config.js",
-		"format": "eslint . && prettier --write --no-error-on-unmatched-pattern 'src/**/*.{js,jsx,mjs,json}' '*.{js,jsx,mjs,json,html}' 'assets/**/*.{json,css}'"
+		"format": "eslint . && prettier --write --no-error-on-unmatched-pattern 'js/**/*.{js,jsx,mjs,json}' '*.{js,jsx,mjs,json,html}' 'assets/**/*.{json,css}'"
 	},
 	"prettier": {
 		"useTabs": true,
