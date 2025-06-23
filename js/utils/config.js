@@ -125,7 +125,6 @@ const defaults = {
 	renderer: "regl", // The preferred web graphics API
 	suppressWarnings: false, // Whether to show warnings to visitors on load
 	isometric: false,
-	useHoloplay: false,
 	loops: false,
 	skipIntro: true,
 	testFix: null,
@@ -250,7 +249,6 @@ const versions = {
 		baseContrast: 1.5,
 		highPassThreshold: 0,
 		numColumns: 60,
-		cycleSpeed: 0.03,
 		bloomStrength: 0.7,
 		fallSpeed: 0.3,
 		palette: [
@@ -279,7 +277,6 @@ const versions = {
 		baseContrast: 1.5,
 		highPassThreshold: 0,
 		numColumns: 60,
-		cycleSpeed: 0.03,
 		bloomStrength: 0.7,
 		fallSpeed: 0.3,
 		palette: [
@@ -308,7 +305,6 @@ const versions = {
 		baseContrast: 1.5,
 		highPassThreshold: 0,
 		numColumns: 60,
-		cycleSpeed: 0.03,
 		bloomStrength: 0.7,
 		fallSpeed: 0.3,
 		palette: [
@@ -352,41 +348,6 @@ const versions = {
 			// { color: hsl(0.1, 1.0, 0.9), at: 1.0 },
 		],
 	},
-
-	holoplay: {
-		font: "resurrections",
-		glintTexture: "metal",
-		glyphEdgeCrop: 0.1,
-		cursorColor: hsl(0.292, 1, 0.8),
-		cursorIntensity: 2,
-		isolateGlint: true,
-		glintColor: hsl(0.131, 1, 0.6),
-		glintIntensity: 3,
-		glintBrightness: -0.5,
-		glintContrast: 1.5,
-		baseBrightness: -0.4,
-		baseContrast: 1.5,
-		highPassThreshold: 0,
-		cycleSpeed: 0.03,
-		bloomStrength: 0.7,
-		fallSpeed: 0.3,
-		palette: [
-			{ color: hsl(0.37, 0.6, 0.0), at: 0.0 },
-			{ color: hsl(0.37, 0.6, 0.5), at: 1.0 },
-		],
-		cycleSpeed: 0.01,
-		raindropLength: 0.3,
-
-		renderer: "regl",
-		numColumns: 20,
-		ditherMagnitude: 0,
-		bloomStrength: 0,
-		volumetric: true,
-		forwardSpeed: 0,
-		density: 3,
-		useHoloplay: true,
-	},
-
 	["3d"]: {
 		volumetric: true,
 		fallSpeed: 0.5,
@@ -404,7 +365,7 @@ versions["2021"] = versions.resurrections;
 
 const range = (f, min = -Infinity, max = Infinity) => Math.max(min, Math.min(max, f));
 const nullNaN = (f) => (isNaN(f) ? null : f);
-const isTrue = (s) => s.toLowerCase().includes("true");
+const isTrue = (v) => (typeof v === "string" && v.toLowerCase().includes("true")) || v;
 
 const parseColor = (isHSL) => (s) => ({
 	space: isHSL ? "hsl" : "rgb",
@@ -527,7 +488,7 @@ paramMapping.dropLength = paramMapping.raindropLength;
 paramMapping.angle = paramMapping.slant;
 paramMapping.colors = paramMapping.stripeColors;
 
-export default (urlParams) => {
+export default (urlParams = {}) => {
 	const validParams = Object.fromEntries(
 		Object.entries(urlParams)
 			.filter(([key]) => key in paramMapping)
@@ -553,13 +514,16 @@ export default (urlParams) => {
 		}
 	}
 
-	const version = validParams.version in versions ? versions[validParams.version] : versions.classic;
+	const version =
+		validParams.version in versions ? versions[validParams.version] : versions.classic;
 	const fontName = [validParams.font, version.font, defaults.font].find((name) => name in fonts);
 	const font = fonts[fontName];
 
-	const baseTextureURL = textureURLs[[version.baseTexture, defaults.baseTexture].find((name) => name in textureURLs)];
+	const baseTextureURL =
+		textureURLs[[version.baseTexture, defaults.baseTexture].find((name) => name in textureURLs)];
 	const hasBaseTexture = baseTextureURL != null;
-	const glintTextureURL = textureURLs[[version.glintTexture, defaults.glintTexture].find((name) => name in textureURLs)];
+	const glintTextureURL =
+		textureURLs[[version.glintTexture, defaults.glintTexture].find((name) => name in textureURLs)];
 	const hasGlintTexture = glintTextureURL != null;
 
 	const config = {

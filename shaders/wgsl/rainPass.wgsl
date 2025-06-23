@@ -283,7 +283,6 @@ fn computeSymbol (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, scre
 	var symbol = previousSymbol;
 	if (time.frames % config.cycleFrameSkip == 0) {
 		age += cycleSpeed * f32(config.cycleFrameSkip);
-		var advance = floor(age);
 		if (age > 1.0) {
 			symbol = floor(config.glyphSequenceLength * randomFloat(screenPos + simTime));
 			age = fract(age);

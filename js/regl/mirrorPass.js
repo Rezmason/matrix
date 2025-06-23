@@ -1,21 +1,24 @@
 import { loadText, makePassFBO, makePass } from "./utils.js";
 
-let start;
-const numClicks = 5;
-const clicks = Array(numClicks).fill([0, 0, -Infinity]).flat();
-let aspectRatio = 1;
+export default ({ regl, canvas, cache, config, cameraTex, cameraAspectRatio }, inputs) => {
+	let start;
+	const numClicks = 5;
+	const clicks = Array(numClicks)
+		.fill()
+		.map((_) => [0, 0, -Infinity]);
+	let aspectRatio = 1;
 
-let index = 0;
-window.onclick = (e) => {
-	clicks[index * 3 + 0] = 0 + e.clientX / e.srcElement.clientWidth;
-	clicks[index * 3 + 1] = 1 - e.clientY / e.srcElement.clientHeight;
-	clicks[index * 3 + 2] = (Date.now() - start) / 1000;
-	index = (index + 1) % numClicks;
-};
+	let index = 0;
+	canvas.onmousedown = (e) => {
+		const rect = e.srcElement.getBoundingClientRect();
+		clicks[index][0] = 0 + (e.clientX - rect.x) / rect.width;
+		clicks[index][1] = 1 - (e.clientY - rect.y) / rect.height;
+		clicks[index][2] = (performance.now() - start) / 1000;
+		index = (index + 1) % numClicks;
+	};
 
-export default ({ regl, config, cameraTex, cameraAspectRatio }, inputs) => {
 	const output = makePassFBO(regl, config.useHalfFloat);
-	const mirrorPassFrag = loadText("shaders/glsl/mirrorPass.frag.glsl");
+	const mirrorPassFrag = loadText(cache, "shaders/glsl/mirrorPass.frag.glsl");
 	const render = regl({
 		frag: regl.prop("frag"),
 		uniforms: {
@@ -23,14 +26,19 @@ export default ({ regl, config, cameraTex, cameraAspectRatio }, inputs) => {
 			tex: inputs.primary,
 			bloomTex: inputs.bloom,
 			cameraTex,
-			clicks: () => clicks,
+			// REGL bug can misinterpret array uniforms
+			["clicks[0]"]: () => clicks[0],
+			["clicks[1]"]: () => clicks[1],
+			["clicks[2]"]: () => clicks[2],
+			["clicks[3]"]: () => clicks[3],
+			["clicks[4]"]: () => clicks[4],
 			aspectRatio: () => aspectRatio,
 			cameraAspectRatio,
 		},
 		framebuffer: output,
 	});
 
-	start = Date.now();
+	start = performance.now();
 
 	return makePass(
 		{
@@ -45,6 +53,6 @@ export default ({ regl, config, cameraTex, cameraAspectRatio }, inputs) => {
 			if (shouldRender) {
 				render({ frag: mirrorPassFrag.text() });
 			}
-		}
+		},
 	);
 };

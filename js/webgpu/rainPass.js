@@ -1,5 +1,12 @@
 import { structs } from "../../lib/gpu-buffer.js";
-import { makeRenderTarget, loadTexture, loadShader, makeUniformBuffer, makeBindGroup, makePass } from "./utils.js";
+import {
+	makeRenderTarget,
+	loadTexture,
+	loadShader,
+	makeUniformBuffer,
+	makeBindGroup,
+	makePass,
+} from "./utils.js";
 
 const rippleTypes = {
 	box: 0,
@@ -25,15 +32,14 @@ const makeConfigBuffer = (device, configUniforms, config, density, gridSize, gly
 	return makeUniformBuffer(device, configUniforms, configData);
 };
 
-export default ({ config, device, timeBuffer }) => {
+export default ({ config, glMatrix, cache, device, timeBuffer }) => {
 	const { mat2, mat4, vec2, vec3 } = glMatrix;
-
 	const assets = [
-		loadTexture(device, config.glyphMSDFURL),
-		loadTexture(device, config.glintMSDFURL),
-		loadTexture(device, config.baseTextureURL, false, true),
-		loadTexture(device, config.glintTextureURL, false, true),
-		loadShader(device, "shaders/wgsl/rainPass.wgsl"),
+		loadTexture(device, cache, config.glyphMSDFURL),
+		loadTexture(device, cache, config.glintMSDFURL),
+		loadTexture(device, cache, config.baseTextureURL, false, true),
+		loadTexture(device, cache, config.glintTextureURL, false, true),
+		loadShader(device, cache, "shaders/wgsl/rainPass.wgsl"),
 	];
 
 	// The volumetric mode multiplies the number of columns
@@ -46,7 +52,10 @@ export default ({ config, device, timeBuffer }) => {
 	// rather than a single quad for our geometry
 	const numQuads = config.volumetric ? numCells : 1;
 
-	const glyphTransform = mat2.fromScaling(mat2.create(), vec2.fromValues(config.glyphFlip ? -1 : 1, 1));
+	const glyphTransform = mat2.fromScaling(
+		mat2.create(),
+		vec2.fromValues(config.glyphFlip ? -1 : 1, 1),
+	);
 	mat2.rotate(glyphTransform, glyphTransform, (config.glyphRotation * Math.PI) / 180);
 
 	const transform = mat4.create();
@@ -98,10 +107,18 @@ export default ({ config, device, timeBuffer }) => {
 	let highPassOutput;
 
 	const loaded = (async () => {
-		const [glyphMSDFTexture, glintMSDFTexture, baseTexture, glintTexture, rainShader] = await Promise.all(assets);
+		const [glyphMSDFTexture, glintMSDFTexture, baseTexture, glintTexture, rainShader] =
+			await Promise.all(assets);
 
 		const rainShaderUniforms = structs.from(rainShader.code);
-		configBuffer = makeConfigBuffer(device, rainShaderUniforms.Config, config, density, gridSize, glyphTransform);
+		configBuffer = makeConfigBuffer(
+			device,
+			rainShaderUniforms.Config,
+			config,
+			density,
+			gridSize,
+			glyphTransform,
+		);
 
 		const introCellsBuffer = device.createBuffer({
 			size: gridSize[0] * rainShaderUniforms.IntroCell.minSize,
@@ -168,8 +185,17 @@ export default ({ config, device, timeBuffer }) => {
 			}),
 		]);
 
-		introBindGroup = makeBindGroup(device, introPipeline, 0, [configBuffer, timeBuffer, introCellsBuffer]);
-		computeBindGroup = makeBindGroup(device, computePipeline, 0, [configBuffer, timeBuffer, cellsBuffer, introCellsBuffer]);
+		introBindGroup = makeBindGroup(device, introPipeline, 0, [
+			configBuffer,
+			timeBuffer,
+			introCellsBuffer,
+		]);
+		computeBindGroup = makeBindGroup(device, computePipeline, 0, [
+			configBuffer,
+			timeBuffer,
+			cellsBuffer,
+			introCellsBuffer,
+		]);
 		renderBindGroup = makeBindGroup(device, renderPipeline, 0, [
 			configBuffer,
 			timeBuffer,
@@ -196,7 +222,11 @@ export default ({ config, device, timeBuffer }) => {
 			mat4.perspectiveZO(camera, (Math.PI / 180) * 90, aspectRatio, 0.0001, 1000);
 		}
 		const screenSize = aspectRatio > 1 ? [1, aspectRatio] : [1 / aspectRatio, 1];
-		device.queue.writeBuffer(sceneBuffer, 0, sceneUniforms.toBuffer({ screenSize, camera, transform }));
+		device.queue.writeBuffer(
+			sceneBuffer,
+			0,
+			sceneUniforms.toBuffer({ screenSize, camera, transform }),
+		);
 
 		// Update
 		output?.destroy();

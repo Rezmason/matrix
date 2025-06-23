@@ -1,6 +1,12 @@
-import colorToRGB from "../colorToRGB.js";
+import colorToRGB from "../utils/colorToRGB.js";
 import { structs } from "../../lib/gpu-buffer.js";
-import { loadShader, makeUniformBuffer, makeBindGroup, makeComputeTarget, makePass } from "./utils.js";
+import {
+	loadShader,
+	makeUniformBuffer,
+	makeBindGroup,
+	makeComputeTarget,
+	makePass,
+} from "./utils.js";
 
 // Maps the brightness of the rendered rain and bloom to colors
 // in a linear gradient buffer generated from the passed-in color sequence
@@ -67,7 +73,7 @@ const makePalette = (device, paletteUniforms, entries) => {
 // won't persist across subsequent frames. This is a safe trick
 // in screen space.
 
-export default ({ config, device, timeBuffer }) => {
+export default ({ config, device, cache, timeBuffer }) => {
 	const linearSampler = device.createSampler({
 		magFilter: "linear",
 		minFilter: "linear",
@@ -80,7 +86,7 @@ export default ({ config, device, timeBuffer }) => {
 	let output;
 	let screenSize;
 
-	const assets = [loadShader(device, "shaders/wgsl/palettePass.wgsl")];
+	const assets = [loadShader(device, cache, "shaders/wgsl/palettePass.wgsl")];
 
 	const loaded = (async () => {
 		const [paletteShader] = await Promise.all(assets);

@@ -1,4 +1,4 @@
-import colorToRGB from "../colorToRGB.js";
+import colorToRGB from "../utils/colorToRGB.js";
 import { loadText, make1DTexture, makePassFBO, makePass } from "./utils.js";
 
 // Multiplies the rendered rain and bloom by a 1D gradient texture
@@ -27,19 +27,31 @@ const prideStripeColors = [
 	.map((color) => Array(2).fill(color))
 	.flat();
 
-export default ({ regl, config }, inputs) => {
+export default ({ regl, cache, config }, inputs) => {
 	const output = makePassFBO(regl, config.useHalfFloat);
 
-	const { backgroundColor, cursorColor, glintColor, cursorIntensity, glintIntensity, ditherMagnitude } = config;
+	const {
+		backgroundColor,
+		cursorColor,
+		glintColor,
+		cursorIntensity,
+		glintIntensity,
+		ditherMagnitude,
+	} = config;
 
 	// Expand and convert stripe colors into 1D texture data
-	const stripeColors = "stripeColors" in config ? config.stripeColors : config.effect === "pride" ? prideStripeColors : transPrideStripeColors;
+	const stripeColors =
+		"stripeColors" in config
+			? config.stripeColors
+			: config.effect === "pride"
+				? prideStripeColors
+				: transPrideStripeColors;
 	const stripeTex = make1DTexture(
 		regl,
-		stripeColors.map((color) => [...colorToRGB(color), 1])
+		stripeColors.map((color) => [...colorToRGB(color), 1]),
 	);
 
-	const stripePassFrag = loadText("shaders/glsl/stripePass.frag.glsl");
+	const stripePassFrag = loadText(cache, "shaders/glsl/stripePass.frag.glsl");
 
 	const render = regl({
 		frag: regl.prop("frag"),
@@ -68,6 +80,6 @@ export default ({ regl, config }, inputs) => {
 			if (shouldRender) {
 				render({ frag: stripePassFrag.text() });
 			}
-		}
+		},
 	);
 };

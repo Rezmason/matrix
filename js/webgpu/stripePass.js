@@ -1,6 +1,13 @@
-import colorToRGB from "../colorToRGB.js";
+import colorToRGB from "../utils/colorToRGB.js";
 import { structs } from "../../lib/gpu-buffer.js";
-import { loadShader, make1DTexture, makeUniformBuffer, makeBindGroup, makeComputeTarget, makePass } from "./utils.js";
+import {
+	loadShader,
+	make1DTexture,
+	makeUniformBuffer,
+	makeBindGroup,
+	makeComputeTarget,
+	makePass,
+} from "./utils.js";
 
 // Multiplies the rendered rain and bloom by a 1D gradient texture
 // generated from the passed-in color sequence
@@ -36,12 +43,17 @@ const numVerticesPerQuad = 2 * 3;
 // won't persist across subsequent frames. This is a safe trick
 // in screen space.
 
-export default ({ config, device, timeBuffer }) => {
+export default ({ config, device, cache, timeBuffer }) => {
 	// Expand and convert stripe colors into 1D texture data
-	const stripeColors = "stripeColors" in config ? config.stripeColors : config.effect === "pride" ? prideStripeColors : transPrideStripeColors;
+	const stripeColors =
+		"stripeColors" in config
+			? config.stripeColors
+			: config.effect === "pride"
+				? prideStripeColors
+				: transPrideStripeColors;
 	const stripeTex = make1DTexture(
 		device,
-		stripeColors.map((color) => [...colorToRGB(color), 1])
+		stripeColors.map((color) => [...colorToRGB(color), 1]),
 	);
 
 	const linearSampler = device.createSampler({
@@ -56,7 +68,7 @@ export default ({ config, device, timeBuffer }) => {
 	let output;
 	let screenSize;
 
-	const assets = [loadShader(device, "shaders/wgsl/stripePass.wgsl")];
+	const assets = [loadShader(device, cache, "shaders/wgsl/stripePass.wgsl")];
 
 	const loaded = (async () => {
 		const [stripeShader] = await Promise.all(assets);

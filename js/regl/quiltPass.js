@@ -2,7 +2,7 @@ import { loadText, makePassFBO, makePass } from "./utils.js";
 
 // Multiplies the rendered rain and bloom by a loaded in image
 
-export default ({ regl, config, lkg }, inputs) => {
+export default ({ regl, cache, config, lkg }, inputs) => {
 	if (!lkg.enabled) {
 		return makePass({
 			primary: inputs.primary,
@@ -10,7 +10,8 @@ export default ({ regl, config, lkg }, inputs) => {
 	}
 
 	const output = makePassFBO(regl, config.useHalfFloat);
-	const quiltPassFrag = loadText("shaders/glsl/quiltPass.frag.glsl");
+
+	const quiltPassFrag = loadText(cache, "shaders/glsl/quiltPass.frag.glsl");
 	const render = regl({
 		frag: regl.prop("frag"),
 		uniforms: {
@@ -23,12 +24,12 @@ export default ({ regl, config, lkg }, inputs) => {
 		{
 			primary: output,
 		},
-		Promise.all([quiltPassFrag.loaded]),
+		quiltPassFrag.loaded,
 		(w, h) => output.resize(w, h),
 		(shouldRender) => {
 			if (shouldRender) {
 				render({ frag: quiltPassFrag.text() });
 			}
-		}
+		},
 	);
 };

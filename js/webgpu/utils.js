@@ -1,25 +1,41 @@
-const loadTexture = async (device, url) => {
+const loadTexture = async (device, cache, url) => {
+	const format = "rgba8unorm";
+	const usage =
+		GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT;
+
 	if (url == null) {
 		return device.createTexture({
 			size: [1, 1, 1],
-			format: "rgba8unorm",
-			usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+			format,
+			usage,
 		});
 	}
 
-	const response = await fetch(url);
-	const data = await response.blob();
-	const source = await createImageBitmap(data);
-	const size = [source.width, source.height, 1];
+	let source;
+	const key = url;
+	if (cache.has(key)) {
+		source = cache.get(key);
+	} else {
+		let imageURL;
+		if (typeof cache.get(`url::${url}`) === "function") {
+			imageURL = (await cache.get(`url::${url}`)()).default;
+		} else {
+			imageURL = url;
+		}
 
+		const response = await fetch(imageURL);
+		const data = await response.blob();
+		source = await createImageBitmap(data);
+		cache.set(key, source);
+	}
+
+	const size = [source.width, source.height, 1];
 	const texture = device.createTexture({
 		size,
-		format: "rgba8unorm",
-		usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+		format,
+		usage,
 	});
-
 	device.queue.copyExternalImageToTexture({ source, flipY: true }, { texture }, size);
-
 	return texture;
 };
 
@@ -28,7 +44,11 @@ const makeRenderTarget = (device, size, format, mipLevelCount = 1) =>
 		size: [...size, 1],
 		mipLevelCount,
 		format,
-		usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+		usage:
+			GPUTextureUsage.TEXTURE_BINDING |
+			GPUTextureUsage.COPY_SRC |
+			GPUTextureUsage.COPY_DST |
+			GPUTextureUsage.RENDER_ATTACHMENT,
 	});
 
 const makeComputeTarget = (device, size, mipLevelCount = 1) =>
@@ -36,12 +56,26 @@ const makeComputeTarget = (device, size, mipLevelCount = 1) =>
 		size: [...size, 1],
 		mipLevelCount,
 		format: "rgba8unorm",
-		usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.STORAGE_BINDING,
+		usage:
+			GPUTextureUsage.TEXTURE_BINDING |
+			GPUTextureUsage.COPY_SRC |
+			GPUTextureUsage.COPY_DST |
+			GPUTextureUsage.STORAGE_BINDING,
 	});
 
-const loadShader = async (device, url) => {
-	const response = await fetch(url);
-	const code = await response.text();
+const loadShader = async (device, cache, url) => {
+	const key = url;
+	let code;
+	if (cache.has(key)) {
+		code = cache.get(key);
+	} else {
+		if (typeof cache.get(`raw::${url}`) === "function") {
+			code = (await cache.get(`raw::${url}`)()).default;
+		} else {
+			code = await (await fetch(url)).text();
+		}
+		cache.set(key, code);
+	}
 	return {
 		code,
 		module: device.createShaderModule({ code }),
@@ -105,4 +139,14 @@ const makePipeline = async (context, steps) => {
 	};
 };
 
-export { makeRenderTarget, makeComputeTarget, make1DTexture, loadTexture, loadShader, makeUniformBuffer, makePass, makePipeline, makeBindGroup };
+export {
+	makeRenderTarget,
+	makeComputeTarget,
+	make1DTexture,
+	loadTexture,
+	loadShader,
+	makeUniformBuffer,
+	makePass,
+	makePipeline,
+	makeBindGroup,
+};

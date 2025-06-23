@@ -180,3 +180,19 @@ The glyphs used in the "Palimpsest" and "Twilight" versions are derived from [Te
 The glyphs are formatted as a multi-channel distance field (or MSDF) via Victor Chlumsky's [msdfgen](https://github.com/Chlumsky/msdfgen). This format preserves the crisp edges and corners of vector graphics when rendered as textures. Chlumsky's thesis paper, which is in English and is also easy to read, is [available to download here](https://dspace.cvut.cz/handle/10467/62770).
 
 The raindrops themselves are particles [computed on the GPU and stored in textures](https://threejs.org/examples/webgl_gpgpu_water.html), much smaller than the final render. The data sent from the CPU to the GPU every frame is negligible.
+
+
+## react-matrix-rain
+This is an effort to produce an npm package that bundles this repo's effects as a single react component for use in SPA applications.  Work on the legacy code will update the component. Steps to build the component are as follows.
+
+### Offline testing
+```
+npm pack --dry-run # assess that the package is viable.
+
+npm pack # creates the tarball
+
+npm install react-matrix-rain-<version>.tgz
+```
+
+### Publishing
+... TBD

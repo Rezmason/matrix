@@ -1,30 +1,37 @@
 import { structs } from "../../lib/gpu-buffer.js";
-import { makeComputeTarget, makeUniformBuffer, loadShader, makeBindGroup, makePass } from "./utils.js";
+import {
+	makeComputeTarget,
+	makeUniformBuffer,
+	loadShader,
+	makeBindGroup,
+	makePass,
+} from "./utils.js";
 
-let start;
-const numTouches = 5;
-const touches = Array(numTouches)
-	.fill()
-	.map((_) => [0, 0, -Infinity, 0]);
-let aspectRatio = 1;
-
-let index = 0;
-let touchesChanged = true;
-window.onclick = (e) => {
-	touches[index][0] = 0 + e.clientX / e.srcElement.clientWidth;
-	touches[index][1] = 1 - e.clientY / e.srcElement.clientHeight;
-	touches[index][2] = (Date.now() - start) / 1000;
-	index = (index + 1) % numTouches;
-	touchesChanged = true;
-};
-
-export default ({ config, device, cameraTex, cameraAspectRatio, timeBuffer }) => {
-	const assets = [loadShader(device, "shaders/wgsl/mirrorPass.wgsl")];
+export default ({ config, device, canvas, cache, cameraTex, cameraAspectRatio, timeBuffer }) => {
+	const assets = [loadShader(device, cache, "shaders/wgsl/mirrorPass.wgsl")];
 
 	const linearSampler = device.createSampler({
 		magFilter: "linear",
 		minFilter: "linear",
 	});
+
+	let start;
+	const numTouches = 5;
+	const touches = Array(numTouches)
+		.fill()
+		.map((_) => [0, 0, -Infinity, 0]);
+	let aspectRatio = 1;
+
+	let index = 0;
+	let touchesChanged = true;
+	canvas.onmousedown = (e) => {
+		const rect = e.srcElement.getBoundingClientRect();
+		touches[index][0] = 0 + (e.clientX - rect.x) / rect.width;
+		touches[index][1] = 1 - (e.clientY - rect.y) / rect.height;
+		touches[index][2] = (performance.now() - start) / 1000;
+		index = (index + 1) % numTouches;
+		touchesChanged = true;
+	};
 
 	let computePipeline;
 	let configBuffer;
@@ -77,7 +84,11 @@ export default ({ config, device, cameraTex, cameraAspectRatio, timeBuffer }) =>
 		]);
 
 		const screenAspectRatio = size[0] / size[1];
-		device.queue.writeBuffer(sceneBuffer, 0, sceneUniforms.toBuffer({ screenAspectRatio, cameraAspectRatio }));
+		device.queue.writeBuffer(
+			sceneBuffer,
+			0,
+			sceneUniforms.toBuffer({ screenAspectRatio, cameraAspectRatio }),
+		);
 
 		return { primary: output };
 	};
@@ -99,7 +110,7 @@ export default ({ config, device, cameraTex, cameraAspectRatio, timeBuffer }) =>
 		computePass.end();
 	};
 
-	start = Date.now();
+	start = performance.now();
 
 	return makePass("Mirror", loaded, build, run);
 };
