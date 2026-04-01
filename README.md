@@ -1,4 +1,5 @@
-# Matrix Digital Rain Effect
+# Simplified version
+[![Matrix screenshot](https://github.com/rezmason/matrix/master/screenshot.png?raw=true "Matrix's default appearance.")](https://rezmason.github.io/matrix)
 
 This is a single self-contained offline-capable HTML file version of the Matrix digital rain effect.
 
