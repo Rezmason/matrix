@@ -131,3 +131,33 @@ export default async (canvas, config) => {
 
 	requestAnimationFrame(renderLoop);
 };
+
+// Rebuild pipeline on fullscreen/resize when canvas visual size changes
+const recalcOutputs = () => {
+	const devicePixelRatio = window.devicePixelRatio ?? 1;
+	const canvasWidth = Math.ceil(canvas.clientWidth * devicePixelRatio * config.resolution);
+	const canvasHeight = Math.ceil(canvas.clientHeight * devicePixelRatio * config.resolution);
+	const canvasSize = [canvasWidth, canvasHeight];
+	if (canvas.width !== canvasWidth || canvas.height !== canvasHeight) {
+		canvas.width = canvasWidth;
+		canvas.height = canvasHeight;
+		outputs = pipeline.build(canvasSize);
+	}
+};
+
+const recalcFullscreenChange = () => {
+	recalcOutputs();
+	if (config.useCamera) {
+		device.queue.copyExternalImageToTexture({ source: cameraCanvas }, { texture: cameraTex }, cameraSize);
+	}
+};
+
+const recalcResize = () => {
+	recalcOutputs();
+};
+
+document.addEventListener("fullscreenchange", recalcFullscreenChange);
+document.addEventListener("webkitfullscreenchange", recalcFullscreenChange);
+document.addEventListener("mozfullscreenchange", recalcFullscreenChange);
+document.addEventListener("MSFullscreenChange", recalcFullscreenChange);
+window.addEventListener("resize", recalcResize);

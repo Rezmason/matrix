@@ -62,6 +62,16 @@ export default async (canvas, config) => {
 		canvas.height = Math.ceil(canvas.clientHeight * devicePixelRatio * config.resolution);
 	};
 	window.onresize = resize;
+	const recalcOnFullscreenChange = () => {
+		resize();
+		if (config.useCamera) {
+			device.queue.copyExternalImageToTexture({ source: cameraCanvas }, { texture: cameraTex }, cameraSize);
+		}
+	};
+	document.addEventListener("fullscreenchange", recalcOnFullscreenChange);
+	document.addEventListener("webkitfullscreenchange", recalcOnFullscreenChange);
+	document.addEventListener("mozfullscreenchange", recalcOnFullscreenChange);
+	document.addEventListener("MSFullscreenChange", recalcOnFullscreenChange);
 
 	// Setup fullscreen toggle with proper cleanup
 	const cleanupFullscreen = setupFullscreenToggle(canvas);
