@@ -46,7 +46,6 @@ struct Config {
 	isolateGlint : i32,
 	loops : i32,
 	skipIntro : i32,
-	highPassThreshold : f32,
 };
 
 // The properties that change over time get their own buffer.
@@ -120,7 +119,6 @@ struct VertOutput {
 
 struct FragOutput {
 	@location(0) color : vec4<f32>,
-	@location(1) highPassColor : vec4<f32>,
 };
 
 // Constants
@@ -130,6 +128,8 @@ const PI : f32 = 3.14159265359;
 const TWO_PI : f32 = 6.28318530718;
 const SQRT_2 : f32 = 1.4142135623730951;
 const SQRT_5 : f32 = 2.23606797749979;
+// The rain is seeded by cell centres, as it is in the regl renderer (gl_FragCoord), so both renderers rain the same
+const CELL_CENTER : vec2<f32> = vec2<f32>(0.5, 0.5);
 
 // Helper functions for generating randomness, borrowed from elsewhere
 
@@ -244,8 +244,9 @@ fn computeIntroProgress (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32
 
 fn computeRaindrop (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, screenPos : vec2<f32>, previous : vec4<f32>, progress : vec4<f32>) -> vec4<f32> {
 
-	var brightness = getRainBrightness(simTime, glyphPos);
-	var brightnessBelow = getRainBrightness(simTime, glyphPos + vec2(0.0, -1.0));
+	var cellCenter = glyphPos + CELL_CENTER;
+	var brightness = getRainBrightness(simTime, cellCenter);
+	var brightnessBelow = getRainBrightness(simTime, cellCenter + vec2(0.0, -1.0));
 
 	var introProgress = progress.r - (1.0 - glyphPos.y / config.gridSize.y);
 	var introProgressBelow = progress.r - (1.0 - (glyphPos.y - 1.0) / config.gridSize.y);
@@ -567,18 +568,6 @@ fn getSymbol(cellUV : vec2<f32>, index : i32) -> vec2<f32> {
 	} else {
 		output.color = vec4(brightness.rg * symbol.r, brightness.b * symbol.g, 0.0);
 	}
-
-	var highPassColor = output.color;
-	if (highPassColor.r < config.highPassThreshold) {
-		highPassColor.r = 0.0;
-	}
-	if (highPassColor.g < config.highPassThreshold) {
-		highPassColor.g = 0.0;
-	}
-	if (highPassColor.b < config.highPassThreshold) {
-		highPassColor.b = 0.0;
-	}
-	output.highPassColor = highPassColor;
 
 	return output;
 }

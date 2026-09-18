@@ -38,6 +38,8 @@ fn getBrightness(uv : vec2<f32>, intensity : f32) -> vec4<f32> {
 	return primary * (1.0 + intensity * 0.3) + bloom * 0.5;
 }
 
+const TEXEL_CENTER : vec2<f32> = vec2<f32>(0.5, 0.5);
+
 @compute @workgroup_size(32, 1, 1) fn computeMain(input : ComputeInput) {
 
 	var unused = config.unused;
@@ -50,7 +52,8 @@ fn getBrightness(uv : vec2<f32>, intensity : f32) -> vec4<f32> {
 		return;
 	}
 
-	var uv = vec2<f32>(coord) / vec2<f32>(screenSize);
+	// Sample at the texel's centre; sampling at its corner would blend it with its neighbors
+	var uv = (vec2<f32>(coord) + TEXEL_CENTER) / vec2<f32>(screenSize);
 
 	var intensity = 0.0;
 	for (var i = 0; i < 5; i++) {

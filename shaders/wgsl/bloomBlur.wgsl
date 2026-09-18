@@ -1,7 +1,7 @@
-const ONE_OVER_SQRT_2PI = 0.39894;
+// A three-tap blur, one texel wide, applied in one direction.
+// Applying it to every level of the bloom pyramid approximates a much wider blur.
 
 struct Config {
-	bloomRadius : f32,
 	direction : vec2<f32>,
 };
 
@@ -14,11 +14,9 @@ struct ComputeInput {
 	@builtin(global_invocation_id) id : vec3<u32>,
 };
 
-fn gaussianPDF(x : f32) -> f32 {
-	return ONE_OVER_SQRT_2PI * exp( -0.5 *
-		( x * x ) / ( config.bloomRadius * config.bloomRadius )
-	) / config.bloomRadius;
-}
+const TEXEL_CENTER : vec2<f32> = vec2<f32>(0.5, 0.5);
+const CENTER_WEIGHT : f32 = 0.442;
+const NEIGHBOR_WEIGHT : f32 = 0.279;
 
 @compute @workgroup_size(32, 1, 1) fn computeMain(input : ComputeInput) {
 
@@ -29,17 +27,12 @@ fn gaussianPDF(x : f32) -> f32 {
 		return;
 	}
 
-	var uv = (vec2<f32>(coord) + 0.5) / vec2<f32>(outputSize);
+	var uv = (vec2<f32>(coord) + TEXEL_CENTER) / vec2<f32>(outputSize);
 	var uvOffset = config.direction / vec2<f32>(outputSize);
 
-	var weightSum = gaussianPDF(0.0);
-	var sum = textureSampleLevel( tex, linearSampler, uv, 0.0) * weightSum;
-	for (var x : f32 = 1.0; x < config.bloomRadius; x += 1.0) {
-		var weight = gaussianPDF(x);
-		sum += textureSampleLevel( tex, linearSampler, uv + uvOffset * x, 0.0) * weight;
-		sum += textureSampleLevel( tex, linearSampler, uv - uvOffset * x, 0.0) * weight;
-		weightSum += weight * 2.0;
-	}
+	var sum = textureSampleLevel( tex, linearSampler, uv, 0.0 ) * CENTER_WEIGHT;
+	sum += textureSampleLevel( tex, linearSampler, uv + uvOffset, 0.0 ) * NEIGHBOR_WEIGHT;
+	sum += textureSampleLevel( tex, linearSampler, uv - uvOffset, 0.0 ) * NEIGHBOR_WEIGHT;
 
-	textureStore(outputTex, coord, sum / weightSum);
+	textureStore(outputTex, coord, sum);
 }

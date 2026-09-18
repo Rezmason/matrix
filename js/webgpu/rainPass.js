@@ -77,11 +77,6 @@ export default ({ config, device, timeBuffer }) => {
 				loadOp: "clear",
 				storeOp: "store",
 			},
-			{
-				// view: null,
-				loadOp: "clear",
-				storeOp: "store",
-			},
 		],
 	};
 
@@ -95,7 +90,6 @@ export default ({ config, device, timeBuffer }) => {
 	let computeBindGroup;
 	let renderBindGroup;
 	let output;
-	let highPassOutput;
 
 	const loaded = (async () => {
 		const [glyphMSDFTexture, glintMSDFTexture, baseTexture, glintTexture, rainShader] = await Promise.all(assets);
@@ -156,13 +150,6 @@ export default ({ config, device, timeBuffer }) => {
 								alpha: additiveBlendComponent,
 							},
 						},
-						{
-							format: renderFormat,
-							blend: {
-								color: additiveBlendComponent,
-								alpha: additiveBlendComponent,
-							},
-						},
 					],
 				},
 			}),
@@ -202,12 +189,8 @@ export default ({ config, device, timeBuffer }) => {
 		output?.destroy();
 		output = makeRenderTarget(device, size, renderFormat);
 
-		highPassOutput?.destroy();
-		highPassOutput = makeRenderTarget(device, size, renderFormat);
-
 		return {
 			primary: output,
-			highPass: highPassOutput,
 		};
 	};
 
@@ -228,7 +211,6 @@ export default ({ config, device, timeBuffer }) => {
 
 		if (shouldRender) {
 			renderPassConfig.colorAttachments[0].view = output.createView();
-			renderPassConfig.colorAttachments[1].view = highPassOutput.createView();
 			const renderPass = encoder.beginRenderPass(renderPassConfig);
 			renderPass.setPipeline(renderPipeline);
 			renderPass.setBindGroup(0, renderBindGroup);
