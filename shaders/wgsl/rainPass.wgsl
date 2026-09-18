@@ -46,7 +46,6 @@ struct Config {
 	isolateGlint : i32,
 	loops : i32,
 	skipIntro : i32,
-	highPassThreshold : f32,
 };
 
 // The properties that change over time get their own buffer.
@@ -120,7 +119,6 @@ struct VertOutput {
 
 struct FragOutput {
 	@location(0) color : vec4<f32>,
-	@location(1) highPassColor : vec4<f32>,
 };
 
 // Constants
@@ -570,18 +568,6 @@ fn getSymbol(cellUV : vec2<f32>, index : i32) -> vec2<f32> {
 	} else {
 		output.color = vec4(brightness.rg * symbol.r, brightness.b * symbol.g, 0.0);
 	}
-
-	var highPassColor = output.color;
-	if (highPassColor.r < config.highPassThreshold) {
-		highPassColor.r = 0.0;
-	}
-	if (highPassColor.g < config.highPassThreshold) {
-		highPassColor.g = 0.0;
-	}
-	if (highPassColor.b < config.highPassThreshold) {
-		highPassColor.b = 0.0;
-	}
-	output.highPassColor = highPassColor;
 
 	return output;
 }
