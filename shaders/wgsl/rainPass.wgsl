@@ -130,6 +130,8 @@ const PI : f32 = 3.14159265359;
 const TWO_PI : f32 = 6.28318530718;
 const SQRT_2 : f32 = 1.4142135623730951;
 const SQRT_5 : f32 = 2.23606797749979;
+// The rain is seeded by cell centres, as it is in the regl renderer (gl_FragCoord), so both renderers rain the same
+const CELL_CENTER : vec2<f32> = vec2<f32>(0.5, 0.5);
 
 // Helper functions for generating randomness, borrowed from elsewhere
 
@@ -244,8 +246,9 @@ fn computeIntroProgress (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32
 
 fn computeRaindrop (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, screenPos : vec2<f32>, previous : vec4<f32>, progress : vec4<f32>) -> vec4<f32> {
 
-	var brightness = getRainBrightness(simTime, glyphPos);
-	var brightnessBelow = getRainBrightness(simTime, glyphPos + vec2(0.0, -1.0));
+	var cellCenter = glyphPos + CELL_CENTER;
+	var brightness = getRainBrightness(simTime, cellCenter);
+	var brightnessBelow = getRainBrightness(simTime, cellCenter + vec2(0.0, -1.0));
 
 	var introProgress = progress.r - (1.0 - glyphPos.y / config.gridSize.y);
 	var introProgressBelow = progress.r - (1.0 - (glyphPos.y - 1.0) / config.gridSize.y);
