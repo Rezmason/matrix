@@ -2,9 +2,9 @@ import React, { useEffect, useState, useRef, memo } from "react";
 import makeConfig from "./utils/config";
 
 /**
- * @typedef {object} Colour
- * @property {"hsl"|"rgb"} space
- * @property {number[]} values   // 3-tuple [0-1] or [0-360,0-1,0-1]
+ * @typedef {{space?: "hsl"|"rgb", values: number[]} | number[] | string} Colour
+ *   An object, a 3-tuple of 0-1 values, or a string like "1,0,0".
+ *   Plain colour props are RGB; use the *HSL props (eg. cursorHSL) for HSL.
  */
 
 /**
@@ -59,7 +59,7 @@ import makeConfig from "./utils/config";
  *   fallSpeed?: number,
  *   forwardSpeed?: number,
  *   raindropLength?: number,
- *   slant?: number,                // radians
+ *   slant?: number,                // degrees
  *
  *   /* ------------- optical effects ------------- * /
  *   bloomStrength?: number,
@@ -114,17 +114,18 @@ export const Matrix = memo((props) => {
 	const [rConfig, setConfig] = useState(makeConfig({}));
 	const rendererModules = {};
 
-	const resizeObserver = new ResizeObserver((entries) => {
-		for (const entry of entries) {
-			const contentBoxSize = entry.contentBoxSize[0];
-			setSize([contentBoxSize.inlineSize, contentBoxSize.blockSize]);
-			return;
-		}
-	});
-
 	useEffect(() => {
 		if (domElement.current == null) return;
+		// Created in an effect so the component can render on the server
+		const resizeObserver = new ResizeObserver((entries) => {
+			for (const entry of entries) {
+				const contentBoxSize = entry.contentBoxSize[0];
+				setSize([contentBoxSize.inlineSize, contentBoxSize.blockSize]);
+				return;
+			}
+		});
 		resizeObserver.observe(domElement.current);
+		return () => resizeObserver.disconnect();
 	}, [domElement]);
 
 	const supportsWebGPU = () => {

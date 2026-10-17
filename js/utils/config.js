@@ -367,13 +367,23 @@ const range = (f, min = -Infinity, max = Infinity) => Math.max(min, Math.min(max
 const nullNaN = (f) => (isNaN(f) ? null : f);
 const isTrue = (v) => (typeof v === "string" && v.toLowerCase().includes("true")) || v;
 
-const parseColor = (isHSL) => (s) => ({
-	space: isHSL ? "hsl" : "rgb",
-	values: s.split(",").map(parseFloat),
-});
+// Colors may arrive as URL strings ("1,0,0"), number arrays, or { space, values } objects
+const toNumbers = (s) => (Array.isArray(s) ? s : String(s).split(",")).map(parseFloat);
+const isObjectList = (s) => Array.isArray(s) && s.some((item) => typeof item === "object");
+
+const parseColor = (isHSL) => (s) => {
+	const space = isHSL ? "hsl" : "rgb";
+	if (s != null && typeof s === "object" && !Array.isArray(s)) {
+		return { space, ...s };
+	}
+	return { space, values: toNumbers(s) };
+};
 
 const parseColors = (isHSL) => (s) => {
-	const values = s.split(",").map(parseFloat);
+	if (isObjectList(s)) {
+		return s.map(parseColor(isHSL));
+	}
+	const values = toNumbers(s);
 	const space = isHSL ? "hsl" : "rgb";
 	return Array(Math.floor(values.length / 3))
 		.fill()
@@ -384,7 +394,10 @@ const parseColors = (isHSL) => (s) => {
 };
 
 const parsePalette = (isHSL) => (s) => {
-	const values = s.split(",").map(parseFloat);
+	if (isObjectList(s)) {
+		return s.map(({ color, at }) => ({ color: parseColor(isHSL)(color), at }));
+	}
+	const values = toNumbers(s);
 	const space = isHSL ? "hsl" : "rgb";
 	return Array(Math.floor(values.length / 4))
 		.fill()
@@ -488,12 +501,35 @@ paramMapping.dropLength = paramMapping.raindropLength;
 paramMapping.angle = paramMapping.slant;
 paramMapping.colors = paramMapping.stripeColors;
 
+// Any other key in defaults (ie. passed as a React prop) is accepted as-is;
+// string values are coerced to the type of the default
+const coerceToDefault = (key, value) => {
+	if (typeof value !== "string") return value;
+	switch (typeof defaults[key]) {
+		case "number":
+			return nullNaN(parseFloat(value));
+		case "boolean":
+			return value.toLowerCase() === "true";
+		default:
+			return value;
+	}
+};
+
+const parseParam = ([key, value]) => {
+	if (key in paramMapping) {
+		return [paramMapping[key].key, paramMapping[key].parser(value)];
+	}
+	if (key in defaults) {
+		return [key, coerceToDefault(key, value)];
+	}
+	return null;
+};
+
 export default (urlParams = {}) => {
 	const validParams = Object.fromEntries(
 		Object.entries(urlParams)
-			.filter(([key]) => key in paramMapping)
-			.map(([key, value]) => [paramMapping[key].key, paramMapping[key].parser(value)])
-			.filter(([_, value]) => value != null),
+			.map(parseParam)
+			.filter((entry) => entry != null && entry[1] != null),
 	);
 
 	if (validParams.effect != null) {
@@ -520,10 +556,18 @@ export default (urlParams = {}) => {
 	const font = fonts[fontName];
 
 	const baseTextureURL =
-		textureURLs[[version.baseTexture, defaults.baseTexture].find((name) => name in textureURLs)];
+		textureURLs[
+			[validParams.baseTexture, version.baseTexture, defaults.baseTexture].find(
+				(name) => name in textureURLs,
+			)
+		];
 	const hasBaseTexture = baseTextureURL != null;
 	const glintTextureURL =
-		textureURLs[[version.glintTexture, defaults.glintTexture].find((name) => name in textureURLs)];
+		textureURLs[
+			[validParams.glintTexture, version.glintTexture, defaults.glintTexture].find(
+				(name) => name in textureURLs,
+			)
+		];
 	const hasGlintTexture = glintTextureURL != null;
 
 	const config = {

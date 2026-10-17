@@ -3,7 +3,19 @@
 	"version": "0.1.0",
 	"description": "web-based green code rain, made with love",
 	"type": "module",
-	"module": "./dist/digital-rain.module.js",
+	"main": "./dist/digital-rain.core.cjs",
+	"module": "./dist/digital-rain.core.js",
+	"exports": {
+		".": {
+			"import": "./dist/digital-rain.core.js",
+			"require": "./dist/digital-rain.core.cjs"
+		},
+		"./full": {
+			"import": "./dist/digital-rain.full.js",
+			"require": "./dist/digital-rain.full.cjs"
+		},
+		"./package.json": "./package.json"
+	},
 	"files": [
 		"/dist",
 		"LICENSE",
@@ -67,8 +79,8 @@
 		"vite": "^6.3.5"
 	},
 	"peerDependencies": {
-		"react": "^18.2.0",
-		"react-dom": "^18.2.0"
+		"react": ">=17.0.0",
+		"react-dom": ">=17.0.0"
 	},
 	"peerDependenciesMeta": {
 		"react": {

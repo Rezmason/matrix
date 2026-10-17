@@ -1,10 +1,14 @@
 // TODO: switch to video-based texture
 // TODO: mipmap?
-const video = document.createElement("video");
-const cameraCanvas = document.createElement("canvas");
-cameraCanvas.width = 1;
-cameraCanvas.height = 1;
-const context = cameraCanvas.getContext("2d");
+// Guarded so the module can be imported during server-side rendering
+const isBrowser = typeof document !== "undefined";
+const video = isBrowser ? document.createElement("video") : null;
+const cameraCanvas = isBrowser ? document.createElement("canvas") : null;
+if (isBrowser) {
+	cameraCanvas.width = 1;
+	cameraCanvas.height = 1;
+}
+const context = cameraCanvas?.getContext("2d");
 let cameraAspectRatio = 1.0;
 const cameraSize = [1, 1];
 
