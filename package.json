@@ -1,11 +1,22 @@
 {
 	"name": "digital-rain",
-	"version": "0.1.0",
+	"version": "0.1.5",
 	"description": "web-based green code rain, made with love",
 	"type": "module",
-	"module": "./dist/digital-rain.module.js",
+	"main": "./dist/digital-rain.react.js",
+	"module": "./dist/digital-rain.react.js",
+	"types": "./types/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./types/index.d.ts",
+			"default": "./dist/digital-rain.react.js"
+		},
+		"./package.json": "./package.json"
+	},
 	"files": [
-		"/dist",
+		"/dist/digital-rain.react.js",
+		"/dist/chunks",
+		"/types",
 		"LICENSE",
 		"package.json",
 		"README.md"
@@ -14,7 +25,7 @@
 		"test": "http-server -c-1 --cors -o tools/test/index.html",
 		"test-bundles": "npm run build && vite --config tools/dev.config.js --open /tools/test/index.html",
 		"dev": "npm run format && vite --config tools/dev.config.js",
-		"build": "npm run format && rm -rf ./dist/* && vite build --config tools/vite/core.config.js && vite build --config tools/vite/full.config.js",
+		"build": "npm run format && rm -rf ./dist/* && vite build --config tools/vite/core.config.js && vite build --config tools/vite/full.config.js && vite build --config tools/vite/react.config.js",
 		"format": "eslint . && prettier --write --no-error-on-unmatched-pattern 'js/**/*.{js,jsx,mjs,json}' '*.{js,jsx,mjs,json,html}' 'assets/**/*.{json,css}'"
 	},
 	"prettier": {
@@ -49,10 +60,6 @@
 		"url": "https://github.com/Rezmason/matrix/issues"
 	},
 	"license": "MIT",
-	"dependencies": {
-		"gl-matrix": "^3.4.3",
-		"regl": "^2.1.0"
-	},
 	"devDependencies": {
 		"@eslint/js": "^9.25.0",
 		"@types/react": "^19.1.2",
@@ -61,21 +68,15 @@
 		"eslint": "^9.25.0",
 		"eslint-plugin-react-hooks": "^5.2.0",
 		"eslint-plugin-react-refresh": "^0.4.19",
+		"gl-matrix": "^3.4.3",
 		"globals": "^16.0.0",
 		"http-server": "^14.1.1",
 		"prettier": "^3.5.3",
+		"regl": "^2.1.0",
 		"vite": "^6.3.5"
 	},
 	"peerDependencies": {
-		"react": "^18.2.0",
-		"react-dom": "^18.2.0"
-	},
-	"peerDependenciesMeta": {
-		"react": {
-			"optional": true
-		},
-		"react-dom": {
-			"optional": true
-		}
+		"react": ">=17.0.0",
+		"react-dom": ">=17.0.0"
 	}
 }

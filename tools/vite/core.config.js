@@ -8,6 +8,8 @@ export default defineConfig({
 		outDir: "./dist",
 		emptyOutDir: false,
 		minify: true,
+		// Older consumers (eg. Next 11's webpack + terser) can't parse ES2020+ syntax
+		target: "es2019",
 		// sourcemap: true,
 		lib: {
 			entry: "./js/bundles/core.js",
