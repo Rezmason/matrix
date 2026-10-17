@@ -1,5 +1,5 @@
 import Renderer from "../renderer.js";
-import { makeFullScreenQuad, makePipeline } from "./utils.js";
+import { makeFullScreenQuad, makePipeline, trackResources } from "./utils.js";
 
 import makeRain from "./rainPass.js";
 import makeBloomPass from "./bloomPass.js";
@@ -26,6 +26,8 @@ export default class REGLRenderer extends Renderer {
 	#renderFunc;
 	#regl;
 	#glMatrix;
+	#configureIndex = 0;
+	#pipelineRegl = null;
 
 	constructor() {
 		super("regl", async () => {
@@ -48,15 +50,18 @@ export default class REGLRenderer extends Renderer {
 	}
 
 	async configure(config) {
+		const index = ++this.#configureIndex;
 		await super.configure(config);
 
 		if (config.useCamera) {
 			await setupCamera();
 		}
+		if (index !== this.#configureIndex || this.destroyed) return;
 
 		const canvas = this.canvas;
 		const cache = this.cache;
-		const regl = this.#regl;
+		// Everything this pipeline allocates, so it can be freed when replaced
+		const regl = trackResources(this.#regl);
 		const glMatrix = this.#glMatrix;
 		const dimensions = { width: 1, height: 1 };
 		const cameraTex = regl.texture(cameraCanvas);
@@ -70,6 +75,12 @@ export default class REGLRenderer extends Renderer {
 		const screenUniforms = { tex: pipeline[pipeline.length - 1].outputs.primary };
 		const drawToScreen = regl({ uniforms: screenUniforms });
 		await Promise.all(pipeline.map((step) => step.ready));
+		if (this.destroyed) return;
+		// A newer configure call started while this one was loading, and replaces it
+		if (index !== this.#configureIndex) {
+			regl.destroyResources();
+			return;
+		}
 		pipeline.forEach((step) => step.setSize(canvas.width, canvas.height));
 		dimensions.width = canvas.width;
 		dimensions.height = canvas.height;
@@ -120,6 +131,10 @@ export default class REGLRenderer extends Renderer {
 				drawToScreen();
 			});
 		};
+
+		// The new pipeline is live; free the one it replaced
+		this.#pipelineRegl?.destroyResources();
+		this.#pipelineRegl = regl;
 
 		const frame = this.#regl.frame((o) => {
 			this.#renderFunc(o);

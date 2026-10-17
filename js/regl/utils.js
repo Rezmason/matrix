@@ -28,12 +28,14 @@ const makeDoubleBuffer = (regl, props) => {
 
 const isPowerOfTwo = (x) => Math.log2(x) % 1 == 0;
 
-const loadImage = (cache, regl, url, mipmap) => {
+const loadImage = (cache, pipelineRegl, url, mipmap) => {
 	const key = `${url}_${mipmap}`;
 	if (cache.has(key)) {
 		return cache.get(key);
 	}
 
+	// Cached textures are shared by every pipeline, so they aren't freed with one
+	const regl = pipelineRegl.untracked ?? pipelineRegl;
 	let texture = regl.texture([[0]]);
 	let loaded = false;
 	const resource = {
@@ -172,6 +174,52 @@ const makePass = (outputs, ready, setSize, execute) => ({
 	execute: execute ?? (() => {}),
 });
 
+const resourceTypes = [
+	"texture",
+	"cube",
+	"buffer",
+	"elements",
+	"renderbuffer",
+	"framebuffer",
+	"framebufferCube",
+];
+
+const isArrayData = (value) => Array.isArray(value) || ArrayBuffer.isView(value);
+
+// Wraps regl so that everything a pipeline allocates can be freed when the
+// pipeline is replaced. Inline vertex arrays in draw commands become tracked
+// buffers, because the buffers regl makes for them can never be freed.
+const trackResources = (regl) => {
+	const resources = [];
+	const track = (resource) => {
+		resources.push(resource);
+		return resource;
+	};
+	const tracked = (options) => {
+		if (options?.attributes == null) return regl(options);
+		const attributes = Object.fromEntries(
+			Object.entries(options.attributes).map(([name, value]) => [
+				name,
+				isArrayData(value) ? track(regl.buffer(value)) : value,
+			]),
+		);
+		return regl({ ...options, attributes });
+	};
+	Object.assign(tracked, regl);
+	for (const type of resourceTypes) {
+		tracked[type] = (...args) => track(regl[type](...args));
+	}
+	tracked.untracked = regl;
+	// Newest first, so framebuffers release their attachments before the
+	// textures themselves are destroyed
+	tracked.destroyResources = () => {
+		for (const resource of resources.splice(0).reverse()) {
+			resource.destroy();
+		}
+	};
+	return tracked;
+};
+
 const makePipeline = (context, steps) =>
 	steps
 		.filter((f) => f != null)
@@ -190,4 +238,5 @@ export {
 	make1DTexture,
 	makePass,
 	makePipeline,
+	trackResources,
 };

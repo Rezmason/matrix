@@ -1,6 +1,6 @@
 {
 	"name": "digital-rain",
-	"version": "0.1.3",
+	"version": "0.1.4",
 	"description": "web-based green code rain, made with love",
 	"type": "module",
 	"main": "./dist/digital-rain.react.js",
