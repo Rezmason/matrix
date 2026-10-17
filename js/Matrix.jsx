@@ -109,7 +109,7 @@ export const Matrix = memo((props) => {
 	const elProps = { style, className };
 	const domElement = useRef(null);
 	const [rRenderer, setRenderer] = useState(null);
-	const rendererType = useRef(null);
+	const rendererRef = useRef(null);
 	const [rSize, setSize] = useState([1, 1]);
 	const [rConfig, setConfig] = useState(makeConfig({}));
 	const rendererModules = {};
@@ -146,15 +146,8 @@ export const Matrix = memo((props) => {
 		setConfig(config);
 	}, [props]);
 
-	const cleanup = () => {
-		if (rRenderer == null) return;
-		rRenderer.canvas.remove();
-		rRenderer.destroy();
-		setRenderer(null);
-	};
-
 	useEffect(() => {
-		rendererType.current = rConfig.renderer;
+		let cancelled = false;
 		let rendererModule;
 		if (rConfig.renderer === "webgpu") {
 			rendererModules.webgpu ??= import("./webgpu/renderer.js");
@@ -166,15 +159,15 @@ export const Matrix = memo((props) => {
 
 		(async () => {
 			const rendererClass = (await rendererModule).default;
-			if (rendererType.current !== rConfig.renderer) return;
+			if (cancelled) return;
 			const renderer = new rendererClass();
 			await renderer.ready;
-			if (rendererType.current !== rConfig.renderer) {
-				console.warn("Destroyed a redundant renderer late.");
+			// Unmounted or switched renderers while this one was loading
+			if (cancelled) {
 				renderer.destroy();
 				return;
 			}
-			cleanup();
+			rendererRef.current = renderer;
 			setRenderer(renderer);
 			const canvas = renderer.canvas;
 			canvas.style.width = "100%";
@@ -182,7 +175,16 @@ export const Matrix = memo((props) => {
 			domElement.current.appendChild(canvas);
 		})();
 
-		return cleanup;
+		// Runs on unmount and before switching renderers. Reads the ref, not
+		// rRenderer, because this closure is created before the renderer exists.
+		return () => {
+			cancelled = true;
+			const renderer = rendererRef.current;
+			if (renderer == null) return;
+			rendererRef.current = null;
+			renderer.canvas.remove();
+			renderer.destroy();
+		};
 	}, [rConfig.renderer]);
 
 	useEffect(() => {
