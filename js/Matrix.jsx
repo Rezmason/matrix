@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, memo } from "react";
 import makeConfig from "./utils/config";
+import { resolveConfig, importRenderer } from "./matrixLoader";
 
 /**
  * @typedef {{space?: "hsl"|"rgb", values: number[]} | number[] | string} Colour
@@ -112,7 +113,6 @@ export const Matrix = memo((props) => {
 	const rendererRef = useRef(null);
 	const [rSize, setSize] = useState([1, 1]);
 	const [rConfig, setConfig] = useState(makeConfig({}));
-	const rendererModules = {};
 
 	useEffect(() => {
 		if (domElement.current == null) return;
@@ -128,37 +128,15 @@ export const Matrix = memo((props) => {
 		return () => resizeObserver.disconnect();
 	}, [domElement]);
 
-	const supportsWebGPU = () => {
-		return (
-			window.GPUQueue != null &&
-			navigator.gpu != null &&
-			navigator.gpu.getPreferredCanvasFormat != null
-		);
-	};
-
 	useEffect(() => {
-		const config = makeConfig({
-			...Object.fromEntries(Object.entries(rawConfigProps).filter(([_, value]) => value != null)),
-		});
-		if (config.renderer === "webgpu" && !supportsWebGPU()) {
-			config.renderer = "regl";
-		}
-		setConfig(config);
+		setConfig(resolveConfig(rawConfigProps));
 	}, [props]);
 
 	useEffect(() => {
 		let cancelled = false;
-		let rendererModule;
-		if (rConfig.renderer === "webgpu") {
-			rendererModules.webgpu ??= import("./webgpu/renderer.js");
-			rendererModule = rendererModules.webgpu;
-		} else {
-			rendererModules.regl ??= import("./regl/renderer.js");
-			rendererModule = rendererModules.regl;
-		}
 
 		(async () => {
-			const rendererClass = (await rendererModule).default;
+			const rendererClass = (await importRenderer(rConfig.renderer)).default;
 			if (cancelled) return;
 			const renderer = new rendererClass();
 			await renderer.ready;
