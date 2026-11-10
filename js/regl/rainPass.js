@@ -37,9 +37,6 @@ export default ({ regl, config, lkg }) => {
 	// to reach the desired density, and then overlaps them
 	const volumetric = config.volumetric;
 	const density = volumetric && config.effect !== "none" ? config.density : 1;
-	// The viewport's aspect, kept current by setSize below; the render pass and
-	// the effect pass both read this same array
-	const screenSize = [1, 1];
 	const [numRows, numColumns] = [config.numColumns, Math.floor(config.numColumns * density)];
 
 	// The volumetric mode requires us to create a grid of quads,
@@ -118,9 +115,8 @@ export default ({ regl, config, lkg }) => {
 	const rainPassEffect = loadText("shaders/glsl/rainPass.effect.frag.glsl");
 	const effectUniforms = {
 		...commonUniforms,
-		...extractEntries(config, ["hasThunder", "rippleScale", "rippleSpeed", "rippleThickness", "hasPulse", "pulseSpeed", "pulseThickness", "pulseIntensity", "hasHeartbeat", "pulseAtBottom", "loops"]),
+		...extractEntries(config, ["hasThunder", "rippleScale", "rippleSpeed", "rippleThickness", "hasPulse", "pulseSpeed", "pulseThickness", "pulseIntensity", "loops"]),
 		rippleType,
-		screenSize,
 	};
 	const effect = regl({
 		frag: regl.prop("frag"),
@@ -221,6 +217,7 @@ export default ({ regl, config, lkg }) => {
 	});
 
 	// Camera and transform math for the volumetric mode
+	const screenSize = [1, 1];
 	const transform = mat4.create();
 	if (volumetric && config.isometric) {
 		mat4.rotateX(transform, transform, (Math.PI * 1) / 8);
