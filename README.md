@@ -23,6 +23,7 @@
   - [(AKA this stuff).](http://matrix.wikia.com/wiki/Paradise_Matrix)
 - [A custom variant I call "Palimpsest"](https://rezmason.github.io/matrix?version=palimpsest)
 - [A custom variant I call "Twilight"](https://rezmason.github.io/matrix?version=twilight)
+- [Pulse variant — green rain with flashing white heads, swept by a bright band that flares the glyphs it crosses](https://rezmason.github.io/matrix?version=pulse)
 - [Morpheus mode](https://rezmason.github.io/matrix?version=morpheus)
 - [Bugs mode](https://rezmason.github.io/matrix?version=bugs)
 - [Pride flag colors](https://rezmason.github.io/matrix/?effect=pride)
