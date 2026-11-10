@@ -9,7 +9,6 @@ struct Config {
 	glyphHeightToWidth : f32,
 	glyphTransform : mat2x2<f32>,
 	gridSize : vec2<f32>,
-	screenSize : vec2<f32>,
 	showDebugView : i32,
 
 	// compute-specific properties
@@ -30,8 +29,6 @@ struct Config {
 	pulseSpeed : f32,
 	pulseThickness : f32,
 	pulseIntensity : f32,
-	hasHeartbeat : i32,
-	pulseAtBottom : i32,
 
 	// render-specific properties
 	msdfPxRange : f32,
@@ -231,30 +228,12 @@ fn getPulse(simTime : f32, screenPos : vec2<f32>) -> f32 {
 		return 0.0;
 	}
 
-	// The band starts at the top of the screen and sweeps downward, again and again,
-	// unless it is pinned to the bottom of the screen. The rain is drawn enlarged
-	// (see screenSize in the vertex shader), so the bottom edge of the screen sits
-	// above zero in these coordinates; the pinned band rests half its thickness
-	// above that edge, so the whole band shows at the very bottom.
+	// The band starts at the top of the screen and sweeps downward, again and again
 	var pulseTime = fract(simTime * config.pulseSpeed);
-	var bottomEdge = 0.5 - 0.5 / config.screenSize.y;
 	var bandPos = 1.0 - pulseTime;
-	if (bool(config.pulseAtBottom)) {
-		bandPos = bottomEdge + config.pulseThickness * 0.5;
-	}
 	var distance = abs(screenPos.y - bandPos);
 	var flare = clamp(1.0 - distance / config.pulseThickness, 0.0, 1.0);
-	flare = flare * flare * config.pulseIntensity;
-
-	if (bool(config.hasHeartbeat)) {
-		// The band beats like a heart: a strong beat, a softer one right after, then a rest, once a second
-		var beatTime = fract(simTime);
-		var lub = clamp(1.0 - abs(beatTime - 0.07) / 0.07, 0.0, 1.0);
-		var dub = clamp(1.0 - abs(beatTime - 0.26) / 0.06, 0.0, 1.0);
-		flare *= max(lub * lub, dub * dub * 0.55);
-	}
-
-	return flare;
+	return flare * flare * config.pulseIntensity;
 }
 
 fn getCursorFlash(simTime : f32, raindrop : vec4<f32>) -> f32 {
