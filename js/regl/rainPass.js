@@ -115,7 +115,7 @@ export default ({ regl, config, lkg }) => {
 	const rainPassEffect = loadText("shaders/glsl/rainPass.effect.frag.glsl");
 	const effectUniforms = {
 		...commonUniforms,
-		...extractEntries(config, ["hasThunder", "rippleScale", "rippleSpeed", "rippleThickness", "loops"]),
+		...extractEntries(config, ["hasThunder", "rippleScale", "rippleSpeed", "rippleThickness", "hasPulse", "pulseSpeed", "pulseThickness", "pulseIntensity", "loops"]),
 		rippleType,
 	};
 	const effect = regl({

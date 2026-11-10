@@ -10,7 +10,7 @@ precision highp float;
 #define SQRT_2 1.4142135623730951
 #define SQRT_5 2.23606797749979
 
-uniform sampler2D previousEffectState;
+uniform sampler2D previousEffectState, raindropState;
 uniform float numColumns, numRows;
 uniform float time, tick;
 uniform float animationSpeed;
@@ -19,6 +19,8 @@ uniform bool hasThunder, loops;
 uniform float glyphHeightToWidth;
 uniform int rippleType;
 uniform float rippleScale, rippleSpeed, rippleThickness;
+uniform bool hasPulse;
+uniform float pulseSpeed, pulseThickness, pulseIntensity;
 
 // Helper functions for generating randomness, borrowed from elsewhere
 
@@ -78,12 +80,41 @@ float getRipple(float simTime, vec2 screenPos) {
 	return 0.;
 }
 
+float getPulse(float simTime, vec2 screenPos) {
+	if (!hasPulse) {
+		return 0.;
+	}
+
+	// The band starts at the top of the screen and sweeps downward, again and again
+	float pulseTime = fract(simTime * pulseSpeed);
+	float bandPos = 1. - pulseTime;
+	float distance = abs(screenPos.y - bandPos);
+	float flare = clamp(1. - distance / pulseThickness, 0., 1.);
+	return flare * flare * pulseIntensity;
+}
+
+float getCursorFlash(float simTime, vec4 raindrop) {
+	if (!hasPulse) {
+		return 0.;
+	}
+
+	// Only the cursor— the head of each raindrop— flashes
+	if (!bool(raindrop.g)) {
+		return 0.;
+	}
+
+	// The head alternates between plain and bright, twice a second
+	return step(0.5, fract(simTime * 2.)) * pulseIntensity * 0.75;
+}
+
 // Main function
 
-vec4 computeResult(float simTime, bool isFirstFrame, vec2 glyphPos, vec2 screenPos, vec4 previous) {
+vec4 computeResult(float simTime, bool isFirstFrame, vec2 glyphPos, vec2 screenPos, vec4 previous, vec4 raindrop) {
 
 	float multipliedEffects = 1. + getThunder(simTime, screenPos);
-	float addedEffects = getRipple(simTime, screenPos); // Round or square ripples across the grid
+	float addedEffects = getRipple(simTime, screenPos) // Round or square ripples across the grid
+		+ getPulse(simTime, screenPos) // A bright band sweeping down the grid
+		+ getCursorFlash(simTime, raindrop); // The flashing head of each raindrop
 
 	vec4 result = vec4(multipliedEffects, addedEffects, 0., 0.);
 	return result;
@@ -95,5 +126,6 @@ void main()	{
 	vec2 glyphPos = gl_FragCoord.xy;
 	vec2 screenPos = glyphPos / vec2(numColumns, numRows);
 	vec4 previous = texture2D( previousEffectState, screenPos );
-	gl_FragColor = computeResult(simTime, isFirstFrame, glyphPos, screenPos, previous);
+	vec4 raindrop = texture2D( raindropState, screenPos );
+	gl_FragColor = computeResult(simTime, isFirstFrame, glyphPos, screenPos, previous, raindrop);
 }

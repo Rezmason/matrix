@@ -109,6 +109,10 @@ const defaults = {
 	rippleThickness: 0.2, // The thickness of the ripple effect
 	rippleScale: 30, // The size of the ripple effect
 	rippleSpeed: 0.2, // The rate at which the ripple effect progresses
+	hasPulse: false, // An effect that sweeps a bright band down the rain, flaring glyphs white-hot as it crosses them
+	pulseSpeed: 0.15, // The rate at which the pulse band sweeps down the screen
+	pulseThickness: 0.15, // The thickness of the pulse band
+	pulseIntensity: 1.5, // The brightness the pulse band adds to the glyphs it crosses
 	numColumns: 80, // The maximum dimension of the glyph grid
 	density: 1, // In volumetric mode, the number of actual columns compared to the grid
 	palette: [
@@ -350,6 +354,25 @@ const versions = {
 			{ color: hsl(0.88, 0.8, 0.5), at: 0.5 },
 			{ color: hsl(0.15, 1.0, 0.6), at: 0.8 },
 			// { color: hsl(0.1, 1.0, 0.9), at: 1.0 },
+		],
+	},
+
+	pulse: {
+		cursorColor: hsl(0, 0, 1),
+		cursorIntensity: 1.2,
+		hasPulse: true,
+		pulseSpeed: 0.15,
+		pulseThickness: 0.15,
+		pulseIntensity: 1.5,
+		fallSpeed: 0.35,
+		fps: 30,
+		numColumns: 100,
+		raindropLength: 0.5,
+		palette: [
+			{ color: hsl(0.3, 0.9, 0.0), at: 0.0 },
+			{ color: hsl(0.3, 0.9, 0.2), at: 0.2 },
+			{ color: hsl(0.3, 0.9, 0.7), at: 0.7 },
+			{ color: hsl(0.0, 0.0, 1.0), at: 1.0 },
 		],
 	},
 

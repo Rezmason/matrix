@@ -25,6 +25,10 @@ struct Config {
 	rippleSpeed : f32,
 	rippleThickness : f32,
 	rippleType : i32,
+	hasPulse : i32,
+	pulseSpeed : f32,
+	pulseThickness : f32,
+	pulseIntensity : f32,
 
 	// render-specific properties
 	msdfPxRange : f32,
@@ -219,6 +223,33 @@ fn getRipple(simTime : f32, screenPos : vec2<f32>) -> f32 {
 	return 0.0;
 }
 
+fn getPulse(simTime : f32, screenPos : vec2<f32>) -> f32 {
+	if (!bool(config.hasPulse)) {
+		return 0.0;
+	}
+
+	// The band starts at the top of the screen and sweeps downward, again and again
+	var pulseTime = fract(simTime * config.pulseSpeed);
+	var bandPos = 1.0 - pulseTime;
+	var distance = abs(screenPos.y - bandPos);
+	var flare = clamp(1.0 - distance / config.pulseThickness, 0.0, 1.0);
+	return flare * flare * config.pulseIntensity;
+}
+
+fn getCursorFlash(simTime : f32, raindrop : vec4<f32>) -> f32 {
+	if (!bool(config.hasPulse)) {
+		return 0.0;
+	}
+
+	// Only the cursor— the head of each raindrop— flashes
+	if (!bool(raindrop.g)) {
+		return 0.0;
+	}
+
+	// The head alternates between plain and bright, twice a second
+	return step(0.5, fract(simTime * 2.0)) * config.pulseIntensity * 0.75;
+}
+
 // Compute shader main functions
 
 fn computeIntroProgress (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, screenPos : vec2<f32>, previous : vec4<f32>) -> vec4<f32> {
@@ -297,7 +328,9 @@ fn computeSymbol (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, scre
 fn computeEffect (simTime : f32, isFirstFrame : bool, glyphPos : vec2<f32>, screenPos : vec2<f32>, previous : vec4<f32>, raindrop : vec4<f32>) -> vec4<f32> {
 
 	var multipliedEffects = 1.0 + getThunder(simTime, screenPos);
-	var addedEffects = getRipple(simTime, screenPos); // Round or square ripples across the grid
+	var addedEffects = getRipple(simTime, screenPos) // Round or square ripples across the grid
+		+ getPulse(simTime, screenPos) // A bright band sweeping down the grid
+		+ getCursorFlash(simTime, raindrop); // The flashing head of each raindrop
 
 	var result = vec4<f32>(multipliedEffects, addedEffects, 0.0, 0.0);
 	return result;
