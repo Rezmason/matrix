@@ -21,8 +21,6 @@ uniform int rippleType;
 uniform float rippleScale, rippleSpeed, rippleThickness;
 uniform bool hasPulse;
 uniform float pulseSpeed, pulseThickness, pulseIntensity;
-uniform bool hasHeartbeat, pulseAtBottom;
-uniform vec2 screenSize;
 
 // Helper functions for generating randomness, borrowed from elsewhere
 
@@ -87,27 +85,12 @@ float getPulse(float simTime, vec2 screenPos) {
 		return 0.;
 	}
 
-	// The band starts at the top of the screen and sweeps downward, again and again,
-	// unless it is pinned to the bottom of the screen. The rain is drawn enlarged
-	// (see screenSize in the vertex shader), so the bottom edge of the screen sits
-	// above zero in these coordinates; the pinned band rests half its thickness
-	// above that edge, so the whole band shows at the very bottom.
+	// The band starts at the top of the screen and sweeps downward, again and again
 	float pulseTime = fract(simTime * pulseSpeed);
-	float bottomEdge = 0.5 - 0.5 / screenSize.y;
-	float bandPos = pulseAtBottom ? bottomEdge + pulseThickness * 0.5 : 1. - pulseTime;
+	float bandPos = 1. - pulseTime;
 	float distance = abs(screenPos.y - bandPos);
 	float flare = clamp(1. - distance / pulseThickness, 0., 1.);
-	flare = flare * flare * pulseIntensity;
-
-	if (hasHeartbeat) {
-		// The band beats like a heart: a strong beat, a softer one right after, then a rest, once a second
-		float beatTime = fract(simTime);
-		float lub = clamp(1. - abs(beatTime - 0.07) / 0.07, 0., 1.);
-		float dub = clamp(1. - abs(beatTime - 0.26) / 0.06, 0., 1.);
-		flare *= max(lub * lub, dub * dub * 0.55);
-	}
-
-	return flare;
+	return flare * flare * pulseIntensity;
 }
 
 float getCursorFlash(float simTime, vec4 raindrop) {
