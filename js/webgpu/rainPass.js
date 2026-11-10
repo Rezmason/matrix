@@ -8,11 +8,10 @@ const rippleTypes = {
 
 const numVerticesPerQuad = 2 * 3;
 
-const makeConfigBuffer = (device, configUniforms, config, density, gridSize, glyphTransform, screenSize) => {
+const makeConfigBuffer = (device, configUniforms, config, density, gridSize, glyphTransform) => {
 	const configData = {
 		...config,
 		gridSize,
-		screenSize,
 		density,
 		showDebugView: config.effect === "none",
 		rippleType: config.rippleTypeName in rippleTypes ? rippleTypes[config.rippleTypeName] : -1,
@@ -23,9 +22,7 @@ const makeConfigBuffer = (device, configUniforms, config, density, gridSize, gly
 	};
 	// console.table(configData);
 
-	// The data rides along with the buffer, so build() can rewrite the buffer
-	// with a fresh screenSize whenever the viewport changes size
-	return { buffer: makeUniformBuffer(device, configUniforms, configData), configData };
+	return makeUniformBuffer(device, configUniforms, configData);
 };
 
 export default ({ config, device, timeBuffer }) => {
@@ -89,11 +86,6 @@ export default ({ config, device, timeBuffer }) => {
 	};
 
 	let configBuffer;
-	let configUniforms;
-	let configData;
-	// The viewport's aspect, kept current by build() below; the config data
-	// holds this same array, so rewriting the config buffer picks up new values
-	const configScreenSize = [1, 1];
 	let sceneUniforms;
 	let sceneBuffer;
 	let introPipeline;
@@ -109,10 +101,7 @@ export default ({ config, device, timeBuffer }) => {
 		const [glyphMSDFTexture, glintMSDFTexture, baseTexture, glintTexture, rainShader] = await Promise.all(assets);
 
 		const rainShaderUniforms = structs.from(rainShader.code);
-		configUniforms = rainShaderUniforms.Config;
-		const madeConfig = makeConfigBuffer(device, configUniforms, config, density, gridSize, glyphTransform, configScreenSize);
-		configBuffer = madeConfig.buffer;
-		configData = madeConfig.configData;
+		configBuffer = makeConfigBuffer(device, rainShaderUniforms.Config, config, density, gridSize, glyphTransform);
 
 		const introCellsBuffer = device.createBuffer({
 			size: gridSize[0] * rainShaderUniforms.IntroCell.minSize,
@@ -208,13 +197,6 @@ export default ({ config, device, timeBuffer }) => {
 		}
 		const screenSize = aspectRatio > 1 ? [1, aspectRatio] : [1 / aspectRatio, 1];
 		device.queue.writeBuffer(sceneBuffer, 0, sceneUniforms.toBuffer({ screenSize, camera, transform }));
-
-		// The config buffer carries the same screenSize, for effects that are
-		// positioned against the edges of the screen
-		[configScreenSize[0], configScreenSize[1]] = screenSize;
-		if (configBuffer != null && configUniforms != null && configData != null) {
-			device.queue.writeBuffer(configBuffer, 0, configUniforms.toBuffer(configData));
-		}
 
 		// Update
 		output?.destroy();
